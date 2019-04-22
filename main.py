@@ -8,6 +8,7 @@ from random import randint
 from math import cos, sin, sqrt, pi, ceil, floor, atan2
 
 import pygame
+from pygame import gfxdraw
 from pygame.key import *
 from pygame.locals import *
 from pygame.color import *
@@ -222,8 +223,6 @@ class EatingBehaviour(BasicBehaviour):
     def selectAction(self, creature):
         
         if creature.eating is False:
-            
-            print('here')
         
             if 3*creature.headPosition.get_distance(self._resource.body.position) < creature.shape.radius:
                 creature.popBehaviour()
@@ -256,6 +255,28 @@ class Painter(object):
         
     def drawLine(self, color, start, end, width=1):
         pygame.draw.line(self._screen, color, (int(start[0]*self._mul), int(start[1]*self._mul)), (int(end[0]*self._mul), int(end[1]*self._mul)), width)
+    
+    def drawArc(self, color, center, radius, angle, open_angle, width=None):
+        
+        radius *= self._mul
+        radius = int(radius)
+        
+        center = (int(center[0]*self._mul), int(center[1]*self._mul))
+        
+        points = [center]
+        
+        n = int(10*open_angle) + 2
+        
+        cur_angle = open_angle/2 + angle
+        angle_diff = open_angle/(n-1)
+        for i in range(n):
+            
+            x = center[0] + radius*cos(cur_angle)
+            y = center[1] + radius*sin(cur_angle)
+            points.append((x, y))
+            cur_angle -= angle_diff
+        
+        pygame.draw.polygon(self._screen, color, points)
         
     @property
     def multiplier(self):
@@ -340,6 +361,7 @@ class Simulation(object):
                 shapes = (self._create_shape(creature, sensor_range, sensor_angle, offset_angle),)
             
             self._shapes = shapes
+            self._angle = sensor_angle
         
         @staticmethod
         def _create_shape(creature, sensor_range, sensor_angle, offset_angle):
@@ -377,8 +399,29 @@ class Simulation(object):
             return points
         
         @property
+        def distance(self):
+            return self._shapes[0].length
+        
+        @distance.setter
+        def distance(self, new_value):
+            
+            for shape in self._shapes:
+                
+                vision_vertices = shape.get_vertices()
+                
+                for i, vertice in enumerate(vision_vertices):
+                    if vertice.x != 0 or vertice.y != 0:
+                        vision_vertices[i].length = new_value
+                
+                shape.unsafe_set_vertices(vision_vertices)
+        
+        @property
         def shapes(self):
             return self._shapes
+        
+        @property
+        def angle(self):
+            return self._angle
     
     class Resource(CircleObject):
         
@@ -419,7 +462,7 @@ class Simulation(object):
         LAST_ID = -1
         MUTATION = 0.02
 
-        def __init__(self, space, x, y, structure, energy, parent=None):
+        def __init__(self, space, x, y, structure, energy, parent=None, dna_hex=None):
             
             self._spent_resources = 0
             self._energy = int(energy)
@@ -437,16 +480,45 @@ class Simulation(object):
             self._behaviours = [ BasicBehaviour() ]
             self._action = None
             
-            self._sound_sensor = Simulation.SoundSensor(self, 200)
-            self._vision_sensor = Simulation.VisionSensor(self, 400, pi*(30)/180)
-            
             self._is_eating = 0
-            
-            if parent is None:
-                self._speed, self._attack, self._defense, self._eating_speed = ( random.random() for i in range(4) )
+          
+            if dna_hex is not None:
+                self._attack = 0
+                self._defense = 0
+                self._speed = Simulation.Creature.readGene(dna_hex, 0, 16)
+                self._eating_speed = Simulation.Creature.readGene(dna_hex, 16, 16)
+                self._vision_angle = Simulation.Creature.readGene(dna_hex, 32, 16)
+                self._vision_distance = Simulation.Creature.readGene(dna_hex, 48, 16)
+                self._sound_distance = Simulation.Creature.readGene(dna_hex, 64, 16)
+            elif parent is None:
+                self._speed, self._attack, self._defense, self._eating_speed, 
+                self._vision_angle, self._vision_distance, self._sound_distance = ( random.random() for i in range(6) )
             else:
                 self._speed, self._attack, self._defense = parent._speed, parent._attack, parent._defense
                 self._mutate()
+            
+            #self._sound_sensor = Simulation.SoundSensor(self, 200)
+            self._vision_sensor = Simulation.VisionSensor(self, 400, pi*(10 + 210*self._vision_angle)/180)
+            
+            self._vision_sensor.distance = 150
+        
+        @staticmethod
+        def readGene(dna_hex, position, n_bits, is_integer = False):
+            
+            hex_pos = position//4
+            start_after_n_bits = position%4
+            
+            number = int(dna_hex[hex_pos : hex_pos + ceil((n_bits + start_after_n_bits)/4)], 16)
+            
+            n_bits_mod4 = n_bits%4
+            exclude_n_bits_after = ((4 - n_bits_mod4 if n_bits_mod4 != 0 else 0) + (4 - start_after_n_bits if start_after_n_bits != 0 else 0))%4
+            
+            number = ( (number >> exclude_n_bits_after) & (0xffffffff >> (32 - n_bits)))
+            
+            if is_integer is False:
+                return number/((1 << n_bits) - 1)
+            
+            return number
         
         @property
         def headPosition(self):
@@ -637,7 +709,8 @@ class Simulation(object):
             radius = self.shape.radius
             angle = self.body.angle
             
-            painter.drawLine((255, 255, 255), pos, (pos.x + radius*cos(angle), pos.y + radius*sin(angle)))
+            painter.drawArc((0, 255, 0), pos, radius, angle, self._vision_sensor.angle, width=1)
+            #painter.drawLine((255, 255, 255), pos, (pos.x + radius*cos(angle), pos.y + radius*sin(angle)))
         
         def _consume_energy(self, qtd):
             
@@ -696,8 +769,10 @@ class Simulation(object):
 
         self._running = True
         
+        # dna_hex = speed + eating_speed + vision_angle + vision_distance + sound_distance
+        dna_hex = '0000' + '0000' + '3000' + '0000' + '0000'
         for i in range(3):
-            self.newCreature(500 + 150*i, 300 + 300*i, 500000 + 200000*i, 500000)
+            self.newCreature(500 + 150*i, 300 + 300*i, 500000 + 200000*i, 500000, dna_hex=dna_hex)
             
         for i in range(7):
             self.newResource(100 + 250*i, 700 + 250*sin(i), 500000, 0)
@@ -729,9 +804,9 @@ class Simulation(object):
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
                 self._running = False
 
-    def newCreature(self, x, y, structure, energy, parent = None):
+    def newCreature(self, x, y, structure, energy, parent = None, dna_hex = None):
         
-        creature = self.Creature(self._space, x, y, structure, energy, parent=parent)
+        creature = self.Creature(self._space, x, y, structure, energy, parent=parent, dna_hex=dna_hex)
         
         self._creatures.append(creature)
         
@@ -754,7 +829,7 @@ class Simulation(object):
         for creature in itertools.chain(self._resources, self._creatures):
             creature.draw(self._painter)
             
-        #self._space.debug_draw(pymunk.pygame_util.DrawOptions(self._screen))
+        self._space.debug_draw(pymunk.pygame_util.DrawOptions(self._screen))
     
     def _sensor_alert(self, arbiter, space, _):
 
@@ -791,5 +866,6 @@ class Simulation(object):
         return False
 
 if __name__ == '__main__':
+
     game = Simulation()
     game.run()
