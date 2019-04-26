@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import time
+
 from abc import ABC, abstractmethod
 
 import random
@@ -8,7 +10,6 @@ from random import randint
 from math import cos, sin, sqrt, pi, ceil, floor, atan2
 
 import pygame
-from pygame import gfxdraw
 from pygame.key import *
 from pygame.locals import *
 from pygame.color import *
@@ -292,6 +293,7 @@ class Simulation(object):
     SOUND_SENSOR_COLLISION_TYPE = 2
     VISION_SENSOR_COLLISION_TYPE = 3
     RESOURCE_COLLISION_TYPE = 4
+    WALL_COLLISION_TYPE = 5
     
     class Object(object):
         
@@ -303,9 +305,10 @@ class Simulation(object):
 
             space.add(body, shape)
             self._shape = shape
-        
-        def destroy(self, space):
-            space.remove(self.shape, self.body)
+            self._space = space
+            
+        def destroy(self):
+            self._space.remove(self.shape, self.body)
         
         @staticmethod
         def newBody(mass, inertia):
@@ -400,7 +403,11 @@ class Simulation(object):
         
         @property
         def distance(self):
-            return self._shapes[0].length
+            for vertice in self._shapes[0].get_vertices():
+                if vertice.x != 0 or vertice.y != 0:
+                    return vertice.length
+            
+            return 0
         
         @distance.setter
         def distance(self, new_value):
@@ -464,6 +471,8 @@ class Simulation(object):
 
         def __init__(self, space, x, y, structure, energy, parent=None, dna_hex=None):
             
+            self.dna_hex = dna_hex
+            
             self._spent_resources = 0
             self._energy = int(energy)
             self._structure = int(structure)
@@ -498,9 +507,7 @@ class Simulation(object):
                 self._mutate()
             
             #self._sound_sensor = Simulation.SoundSensor(self, 200)
-            self._vision_sensor = Simulation.VisionSensor(self, 400, pi*(10 + 210*self._vision_angle)/180)
-            
-            self._vision_sensor.distance = 150
+            self._vision_sensor = Simulation.VisionSensor(self, 10*radius*self._vision_distance, pi*(10 + 210*self._vision_angle)/180)
         
         @staticmethod
         def readGene(dna_hex, position, n_bits, is_integer = False):
@@ -546,7 +553,7 @@ class Simulation(object):
             energy_gained -= spent_to_eat
             self._energy += energy_gained
             
-            print('Eating', energy_gained)
+            #print('Eating', energy_gained)
             
             self._is_eating = 5
             
@@ -633,6 +640,7 @@ class Simulation(object):
             new_radius = self._get_radius()
             if new_radius != self.shape.radius:
                 self.shape.unsafe_set_radius(new_radius)
+                self._vision_sensor.distance = 10*new_radius*self._vision_distance
         
         @property
         def eating(self):
@@ -709,7 +717,7 @@ class Simulation(object):
             radius = self.shape.radius
             angle = self.body.angle
             
-            painter.drawArc((0, 255, 0), pos, radius, angle, self._vision_sensor.angle, width=1)
+            painter.drawArc((int(254*(1 - self._vision_distance)), 255, 50), pos, radius, angle, self._vision_sensor.angle, width=1)
             #painter.drawLine((255, 255, 255), pos, (pos.x + radius*cos(angle), pos.y + radius*sin(angle)))
         
         def _consume_energy(self, qtd):
@@ -721,6 +729,9 @@ class Simulation(object):
             self._spent_resources += qtd
             
             return True
+        
+        def __repr__(self):
+            return "Creature<{}>".format(self._id)
         
         @staticmethod
         def _new_id():
@@ -734,11 +745,19 @@ class Simulation(object):
         @property
         def speed(self):
             return self._speed
+        
+        @property
+        def energy(self):
+            return self._energy
     
     def __init__(self):
+        
+        self._population_size = 8
 
         pygame.init()
         pygame.display.set_caption("Simulation")
+        
+        self._time = 0
         
         self._space = pymunk.Space()
         self._space.damping = 0.25
@@ -758,6 +777,9 @@ class Simulation(object):
         
         handler = self._space.add_collision_handler(self.CREATURE_COLLISION_TYPE, self.RESOURCE_COLLISION_TYPE)
         handler.pre_solve = self._resource_creature_collision
+        
+        handler = self._space.add_collision_handler(self.CREATURE_COLLISION_TYPE, self.WALL_COLLISION_TYPE)
+        handler.pre_solve = self._creature_wall_collision
 
         self._screen = pygame.display.set_mode((600, 600))
         self._clock = pygame.time.Clock()
@@ -768,16 +790,83 @@ class Simulation(object):
         self._resources = []
 
         self._running = True
+        screen_size = self._screen.get_size()
+        mul = 1/self._painter.multiplier
+        self._size = (screen_size[0]*mul, screen_size[1]*mul)
         
         # dna_hex = speed + eating_speed + vision_angle + vision_distance + sound_distance
-        dna_hex = '0000' + '0000' + '3000' + '0000' + '0000'
-        for i in range(3):
-            self.newCreature(500 + 150*i, 300 + 300*i, 500000 + 200000*i, 500000, dna_hex=dna_hex)
+        #dna_hex = '5000' + '0000' + '0000' + '0000' + '0000'
+        for i in range(self._population_size):
+            
+            dna_hex = ''.join(( '{:x}'.format(random.randint(0, 15)) for i in range(20)))
+            print(dna_hex)
+            self.newCreature(500 + 150*i, 300 + 300*i, 500000, 500000, dna_hex=dna_hex)
             
         for i in range(7):
             self.newResource(100 + 250*i, 700 + 250*sin(i), 500000, 0)
+            
         
-        #self.newCreature(200, 200, 50000, 50000)
+        self._add_walls()
+        
+    def _select_parent(self):
+        
+        if len(self._creatures) == 0:
+            return None
+        
+        while True:
+            for creature in self._creatures:
+                if random.random() < 0.3:
+                    return creature
+    
+    @staticmethod
+    def generateChildDNA(parent1, parent2):
+        
+        dna1 = bytearray.fromhex(parent1.dna_hex)
+        dna2 = bytearray.fromhex(parent2.dna_hex)
+        
+        half = len(dna1)//2
+        
+        dna_child = dna1[:half] + dna2[half:]
+        
+        if random.random() < 0.1:
+            
+            n_byte = randint(0, len(dna_child) - 1)
+            n_bit = randint(0, 7)
+            dna_child[n_bit] ^= 1 << n_bit
+        
+        return dna_child.hex()
+    
+    def newChildDNA(self):
+        
+        parent1 = self._select_parent()
+        
+        parent2 = self._select_parent()
+        while parent2 is parent1:
+            if parent2 is None:
+                return None
+            parent2 = self._select_parent()
+        
+        return self.generateChildDNA(parent1, parent2)
+    
+    def endGeneration(self):
+        
+        self._creatures.sort(key=lambda creature : creature.energy, reverse=True)
+        
+        print(self._creatures)
+        
+        for obj in itertools.chain(self._creatures, self._resources):
+            obj.destroy()
+        
+        new_children_dna = tuple(self.newChildDNA() for i in range(self._population_size))
+        
+        self._creatures = []
+        self._resources = []
+        
+        for dna in new_children_dna:
+            self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna_hex=dna)
+            
+        for i in range(7):
+            self.newResource(100 + 250*i, 700 + 250*sin(i), 500000, 0)
 
     def run(self):
         
@@ -795,6 +884,12 @@ class Simulation(object):
                 creature.act(self)
         
             self._clock.tick(self._ticks)
+            
+            self._time += 1
+            
+            if self._time == 2000:
+                self.endGeneration()
+                self._time = 0
 
     def _process_events(self):
 
@@ -829,7 +924,7 @@ class Simulation(object):
         for creature in itertools.chain(self._resources, self._creatures):
             creature.draw(self._painter)
             
-        self._space.debug_draw(pymunk.pygame_util.DrawOptions(self._screen))
+        #self._space.debug_draw(pymunk.pygame_util.DrawOptions(self._screen))
     
     def _sensor_alert(self, arbiter, space, _):
 
@@ -864,6 +959,33 @@ class Simulation(object):
             creature.eat(self, resource)
         
         return False
+    
+    def _creature_wall_collision(self, arbiter, space, _):
+
+        creature = arbiter.shapes[0].simulation_object
+        
+        creature._action = None
+        
+        return True
+    
+    def _add_walls(self):
+        
+        size = self._size
+        
+        static_body = self._space.static_body
+        static_lines = [pymunk.Segment(static_body, (0, 0), (size[0], 0), 0.0),
+                        pymunk.Segment(static_body, (size[0], 0), (size[0], size[1]), 0.0),
+                        pymunk.Segment(static_body, (size[0], size[1]), (0, size[1]), 0.0),
+                        pymunk.Segment(static_body, (0, size[1]), (0, 0), 0.0)]
+        
+        for shape in static_lines:
+            shape.collision_type = Simulation.WALL_COLLISION_TYPE
+        
+        for line in static_lines:
+            line.elasticity = 0.3
+            line.friction = 0.1
+        
+        self._space.add(static_lines)
 
 if __name__ == '__main__':
 
