@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-import time
+from pathlib import Path
+
+import os
 
 from abc import ABC, abstractmethod
 
@@ -648,6 +650,8 @@ class Simulation(object):
         
         def act(self, simulation):
             
+            self._consume_energy(int(0.1 + self._vision_distance)*(1 + self._vision_angle))
+            
             if self._is_eating > 0:
                 self._is_eating -= 1
             
@@ -681,7 +685,7 @@ class Simulation(object):
             if factor < 0:
                 speed = -speed
             
-            energy_consume = abs(floor(speed*self.body.mass*factor*sqrt(self._speed)))//100 + 1
+            energy_consume = int(abs(speed*self.body.mass*factor*(1 + 2*abs(factor - 0.5))*sqrt(self._speed))//100 + 1)
             
             if not self._consume_energy(energy_consume):
                 speed = 0
@@ -709,7 +713,7 @@ class Simulation(object):
         
         def draw(self, painter):
             
-            color = (230*self._attack, 230*self._defense, 230*self._speed)
+            color = (230*self._eating_speed, 0, 230*self._speed)
             
             super().draw(painter, color)
             
@@ -750,9 +754,19 @@ class Simulation(object):
         def energy(self):
             return self._energy
     
-    def __init__(self):
+    def __init__(self, population_size = 16, out_file = None):
         
-        self._population_size = 8
+        self._population_size = population_size
+        
+        if out_file is None:
+            self._out_file = str(Path.home()) + '/simulation_result.txt'
+        else:
+            self._out_file = out_file
+
+        try:
+            os.remove(self._out_file)
+        except FileNotFoundError:
+            pass
 
         pygame.init()
         pygame.display.set_caption("Simulation")
@@ -800,11 +814,13 @@ class Simulation(object):
             
             dna_hex = ''.join(( '{:x}'.format(random.randint(0, 15)) for i in range(20)))
             print(dna_hex)
-            self.newCreature(500 + 150*i, 300 + 300*i, 500000, 500000, dna_hex=dna_hex)
+            self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna_hex=dna_hex)
             
-        for i in range(7):
-            self.newResource(100 + 250*i, 700 + 250*sin(i), 500000, 0)
+        for i in range(20):
+            self.newResource(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 0)
             
+        self._generation = 1
+        self._save_generation_data()
         
         self._add_walls()
         
@@ -815,7 +831,7 @@ class Simulation(object):
         
         while True:
             for creature in self._creatures:
-                if random.random() < 0.3:
+                if random.random() < 0.15:
                     return creature
     
     @staticmethod
@@ -828,11 +844,12 @@ class Simulation(object):
         
         dna_child = dna1[:half] + dna2[half:]
         
-        if random.random() < 0.1:
-            
-            n_byte = randint(0, len(dna_child) - 1)
-            n_bit = randint(0, 7)
-            dna_child[n_bit] ^= 1 << n_bit
+        for i in range(10):        
+            if random.random() < 0.3:
+                
+                n_byte = randint(0, len(dna_child) - 1)
+                n_bit = randint(0, 7)
+                dna_child[n_bit] ^= 1 << n_bit
         
         return dna_child.hex()
     
@@ -865,8 +882,11 @@ class Simulation(object):
         for dna in new_children_dna:
             self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna_hex=dna)
             
-        for i in range(7):
-            self.newResource(100 + 250*i, 700 + 250*sin(i), 500000, 0)
+        self._generation += 1
+        self._save_generation_data()
+        
+        for i in range(20):
+            self.newResource(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 0)
 
     def run(self):
         
@@ -920,6 +940,8 @@ class Simulation(object):
         self._screen.fill(THECOLORS["white"])
 
     def _draw_objects(self):
+        
+        pygame.display.set_caption("Simulation - Generation %d" % self._generation)
         
         for creature in itertools.chain(self._resources, self._creatures):
             creature.draw(self._painter)
@@ -986,8 +1008,15 @@ class Simulation(object):
             line.friction = 0.1
         
         self._space.add(static_lines)
+    
+    def _save_generation_data(self):
+        
+        with open(self._out_file, 'a') as f:
+            f.write('[Generation %d]\n' % self._generation)
+            for creature in self._creatures:
+                f.write(creature.dna_hex + '\n')
 
 if __name__ == '__main__':
 
-    game = Simulation()
+    game = Simulation(population_size=32)
     game.run()
