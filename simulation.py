@@ -503,7 +503,7 @@ class Simulation(object):
         
         if out_file is not None:
             try:
-                os.remove(self._out_file)
+                os.remove(out_file)
             except FileNotFoundError:
                 pass
         
