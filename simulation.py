@@ -392,7 +392,7 @@ class Simulation(object):
         
         def act(self, simulation):
             
-            self._consume_energy(int(0.1 + self._vision_distance)*(1 + self._vision_angle) + self._speed)
+            self._consume_energy(int(10*((0.1 + self._vision_distance)*(1 + self._vision_angle) + self._speed + 0.1*self._eating_speed)))
             
             if self._is_eating > 0:
                 self._is_eating -= 1
@@ -496,10 +496,12 @@ class Simulation(object):
         def energy(self):
             return self._energy
     
-    def __init__(self, population_size = 16, starting_resources = 20, size=1000, out_file = None, screen_size=(600, 600)):
+    def __init__(self, population_size = 16, starting_resources = 20, size=1000, gen_time = 2000,
+                 out_file = None, in_file = None, screen_size=(600, 600)):
         
         self._population_size = population_size
         self._starting_resources = starting_resources
+        self._gen_time = gen_time
         
         if out_file is not None:
             try:
@@ -549,18 +551,29 @@ class Simulation(object):
         mul = 1/self._painter.multiplier
         self._size = (screen_size[0]*mul, screen_size[1]*mul)
         
-        # dna_hex = speed + eating_speed + vision_angle + vision_distance + sound_distance
-        #dna_hex = '5000' + '0000' + '0000' + '0000' + '0000'
-        for i in range(self._population_size):
+        if in_file is None:
             
-            dna_hex = ''.join(( '{:x}'.format(random.randint(0, 15)) for i in range(20)))
-            print(dna_hex)
+            dna_hex_list = (''.join(( '{:x}'.format(random.randint(0, 15)) for i in range(20))) for i in range(self._population_size))
+            self._generation = 1
+            
+        else:
+            
+            with open(in_file) as f:
+                content = f.read()
+                self._generation = content.count('[')
+                if self._generation == 0:
+                    self._generation = 1
+                dna_hex_list = content.rsplit(']\n', 1)[-1].split('\n')
+                dna_hex_list.remove('')
+                self._population_size = len(dna_hex_list)
+        
+        for dna_hex in dna_hex_list:
+                
             self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna_hex=dna_hex)
             
         for i in range(self._starting_resources):
             self.newResource(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 0)
             
-        self._generation = 1
         self._save_generation_data()
         
         self._add_walls()
@@ -648,7 +661,7 @@ class Simulation(object):
             
             self._time += 1
             
-            if self._time == 2000:
+            if self._time == self._gen_time:
                 self.endGeneration()
                 self._time = 0
 

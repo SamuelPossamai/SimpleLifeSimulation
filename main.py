@@ -28,10 +28,13 @@ if __name__ == '__main__':
     parser.add_argument('-H', '--screen-height', type=lambda x : integer_min_limit('Height', 100, x),
                         default=600, help='Window height')
     parser.add_argument('-o', '--out-file', default=None, help='Name of the output file')
+    parser.add_argument('-i', '--in-file', default=None, help='Name of the input file, if -p flag is specified it is ignored')
+    parser.add_argument('-t', '--time', default=2000, type=lambda x : integer_min_limit('Generation time', 1, x), help='Time of each generation')
 
     args = parser.parse_args()
 
     game = Simulation(population_size=args.pop_size, starting_resources=args.resources_qtd, 
                       size=args.size, out_file=args.out_file, 
-                      screen_size=(args.screen_width, args.screen_height))
+                      screen_size=(args.screen_width, args.screen_height),
+                      in_file=args.in_file, gen_time=args.time)
     game.run()
