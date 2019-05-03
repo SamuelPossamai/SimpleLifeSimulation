@@ -22,48 +22,7 @@ import pymunk.pygame_util
 
 from behaviours import BasicBehaviour
 
-class Painter(object):
-    
-    def __init__(self, screen, multiplier):
-        
-        self._screen = screen
-        self._mul = multiplier
-    
-    def drawCircle(self, color, center, radius, width=0):
-        pygame.draw.circle(self._screen, color, (int(center[0]*self._mul), int(center[1]*self._mul)), int(radius*self._mul), width)
-        
-    def drawLine(self, color, start, end, width=1):
-        pygame.draw.line(self._screen, color, (int(start[0]*self._mul), int(start[1]*self._mul)), (int(end[0]*self._mul), int(end[1]*self._mul)), width)
-    
-    def drawArc(self, color, center, radius, angle, open_angle, width=None):
-        
-        radius *= self._mul
-        radius = int(radius)
-        
-        center = (int(center[0]*self._mul), int(center[1]*self._mul))
-        
-        points = [center]
-        
-        n = int(10*open_angle) + 2
-        
-        cur_angle = open_angle/2 + angle
-        angle_diff = open_angle/(n-1)
-        for i in range(n):
-            
-            x = center[0] + radius*cos(cur_angle)
-            y = center[1] + radius*sin(cur_angle)
-            points.append((x, y))
-            cur_angle -= angle_diff
-        
-        pygame.draw.polygon(self._screen, color, points)
-        
-    @property
-    def multiplier(self):
-        return self._mul
-    
-    @multiplier.setter
-    def multiplier(self, mul):
-        self._mul = mul
+from painter import Painter
 
 class Simulation(object):
     
@@ -312,18 +271,16 @@ class Simulation(object):
         def eat(self, simulation, resource):
             
             eat_speed = (0.3 + self._eating_speed)/3
-            energy_gained = resource.consume(simulation, self.body.mass*eat_speed)
+            energy_gained = int(resource.consume(simulation, self.body.mass*eat_speed))
             
             if energy_gained == 0:
                 return None
             
-            spent_to_eat = (eat_speed/2)*energy_gained
+            spent_to_eat = int((eat_speed/2)*energy_gained)
             
             self._spent_resources += spent_to_eat
             energy_gained -= spent_to_eat
             self._energy += energy_gained
-            
-            #print('Eating', energy_gained)
             
             self._is_eating = 5
             
@@ -346,7 +303,6 @@ class Simulation(object):
         
         def soundAlert(self, x, y):
             
-            print('Sound Alert')
             new_action = self._behaviours[-1].soundAlert(self, x, y)
             
             if new_action is not None:
@@ -354,7 +310,6 @@ class Simulation(object):
             
         def visionAlert(self, creature):
             
-            print('Vision Alert')
             new_action = self._behaviours[-1].visionAlert(self, creature)
             
             if new_action is not None:
@@ -362,7 +317,6 @@ class Simulation(object):
         
         def visionResourceAlert(self, resource):
         
-            print('Creature saw resource')
             new_action = self._behaviours[-1].visionResourceAlert(self, resource)
             
             if new_action is not None:
@@ -392,7 +346,12 @@ class Simulation(object):
         
         def act(self, simulation):
             
-            self._consume_energy(int(10*((0.1 + self._vision_distance)*(1 + self._vision_angle) + self._speed + 0.1*self._eating_speed)))
+            energy_consume_vision = (0.1 + self._vision_distance)*(1 + self._vision_angle)
+            energy_consume_speed = self._speed
+            energy_consume_eat_speed = 0.2*self._eating_speed
+            base_energy_consume = int(self.body.mass*(energy_consume_vision + energy_consume_speed + energy_consume_eat_speed)//100) + 1
+            
+            self._consume_energy(base_energy_consume)
             
             if self._is_eating > 0:
                 self._is_eating -= 1
@@ -420,6 +379,10 @@ class Simulation(object):
             
             self._do_speed(speed_factor)
             self._do_angle_speed(angle_factor)
+            
+            if self._spent_resources > 0.05*(self._energy + self._structure):
+                self._spent_resources = 0
+                self._update_self()
         
         def _do_speed(self, factor):
             
@@ -427,7 +390,7 @@ class Simulation(object):
             if factor < 0:
                 speed = -speed
             
-            energy_consume = int(abs(speed*self.body.mass*factor*(1 + 2*abs(factor - 0.5))*sqrt(self._speed))//100 + 1)
+            energy_consume = int(abs(speed*self.body.mass*factor*(1 + 2*abs(factor - 0.5))*sqrt(self._speed + 0.01))//100)
             
             if not self._consume_energy(energy_consume):
                 speed = 0
@@ -444,9 +407,9 @@ class Simulation(object):
             velocity = self.body.velocity
             current_speed = sqrt(velocity.x**2 + velocity.y**2)
             
-            angular_speed = (-1 if factor < 0 else 1)*(factor**2)*(current_speed + 40*sqrt(self._speed) + 40)/1000
+            angular_speed = (-1 if factor < 0 else 1)*(factor**2)*(current_speed + 40*sqrt(self._speed) + 40)/100
             
-            energy_consume = abs(floor(angular_speed*self.body.mass*factor*sqrt(self._speed)))//100
+            energy_consume = abs(floor(angular_speed*self.body.mass*factor*sqrt(self._speed + 0.2)))//50
             
             if not self._consume_energy(energy_consume):
                 angular_speed = 0
@@ -464,7 +427,6 @@ class Simulation(object):
             angle = self.body.angle
             
             painter.drawArc((int(254*(1 - self._vision_distance)), 255, 50), pos, radius, angle, self._vision_sensor.angle, width=1)
-            #painter.drawLine((255, 255, 255), pos, (pos.x + radius*cos(angle), pos.y + radius*sin(angle)))
         
         def _consume_energy(self, qtd):
             
@@ -489,6 +451,10 @@ class Simulation(object):
             return self._name
         
         @property
+        def id_(self):
+            return self._id
+        
+        @property
         def speed(self):
             return self._speed
         
@@ -497,11 +463,14 @@ class Simulation(object):
             return self._energy
     
     def __init__(self, population_size = 16, starting_resources = 20, size=1000, gen_time = 2000,
-                 out_file = None, in_file = None, screen_size=(600, 600)):
+                 out_file = None, in_file = None, screen_size=(600, 600), use_graphic=True,
+                 max_generations=None, quiet=False):
         
         self._population_size = population_size
         self._starting_resources = starting_resources
         self._gen_time = gen_time
+        self._max_generations = max_generations
+        self._quiet = quiet
         
         if out_file is not None:
             try:
@@ -511,8 +480,16 @@ class Simulation(object):
         
         self._out_file = out_file
 
-        pygame.init()
-        pygame.display.set_caption("Simulation")
+        self._use_graphic = use_graphic
+        if use_graphic is True:
+
+            pygame.init()
+            pygame.display.set_caption("Simulation")
+            
+            self._screen = pygame.display.set_mode(screen_size)
+            self._clock = pygame.time.Clock()
+            
+            self._painter = Painter(self._screen, 300/size)
         
         self._time = 0
         
@@ -538,17 +515,12 @@ class Simulation(object):
         handler = self._space.add_collision_handler(self.CREATURE_COLLISION_TYPE, self.WALL_COLLISION_TYPE)
         handler.pre_solve = self._creature_wall_collision
 
-        self._screen = pygame.display.set_mode(screen_size)
-        self._clock = pygame.time.Clock()
-        
-        self._painter = Painter(self._screen, 300/size)
-
         self._creatures = []
         self._resources = []
 
         self._running = True
-        screen_size = self._screen.get_size()
-        mul = 1/self._painter.multiplier
+        screen_size = screen_size
+        mul = size/300
         self._size = (screen_size[0]*mul, screen_size[1]*mul)
         
         if in_file is None:
@@ -568,7 +540,6 @@ class Simulation(object):
                 self._population_size = len(dna_hex_list)
         
         for dna_hex in dna_hex_list:
-                
             self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna_hex=dna_hex)
             
         for i in range(self._starting_resources):
@@ -623,8 +594,6 @@ class Simulation(object):
         
         self._creatures.sort(key=lambda creature : creature.energy, reverse=True)
         
-        print(self._creatures)
-        
         for obj in itertools.chain(self._creatures, self._resources):
             obj.destroy()
         
@@ -649,21 +618,47 @@ class Simulation(object):
             for x in range(self._physics_steps_per_frame):
                 self._space.step(self._dt)
 
-            self._process_events()
-            self._clear_screen()
-            self._draw_objects()
-            pygame.display.flip()
+            if self._use_graphic is True:
+
+                self._process_events()
+                self._clear_screen()
+                self._draw_objects()
+                pygame.display.flip()
+            
+                self._clock.tick(self._ticks)
             
             for creature in self._creatures:
                 creature.act(self)
-        
-            self._clock.tick(self._ticks)
             
             self._time += 1
             
             if self._time == self._gen_time:
+                
+                if self._quiet is False:
+                    self._print_generation_resume()
+                
                 self.endGeneration()
                 self._time = 0
+            
+            if self._max_generations is not None and self._generation > self._max_generations:
+                self._running = False
+                
+    def _print_generation_resume(self):
+        
+        print('[ Generation %d ]' % self._generation)
+        print('Population: %d' % len(self._creatures))
+        print('Creatures:')
+        
+        for creature in self._creatures:
+            
+            print('  Creature %d:' % creature.id_)
+            print('    Mass: %.1f' % creature.body.mass)
+            print('    Diameter: %.1f' % (2*creature.shape.radius))
+            print('    Energy:', creature.energy)
+            print('    Speed: %.1f%%' % (100*creature.speed))
+            print('    Vision Distance: %.1f%%' % (100*creature._vision_distance))
+            print('    Vision Angle: %.1f%%' % (100*creature._vision_angle))
+            print('    Eating Speed: %.1f%%' % (100*creature._eating_speed))
 
     def _process_events(self):
 
