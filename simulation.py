@@ -204,9 +204,11 @@ class Simulation(object):
     class Creature(CircleObject):
         
         LAST_ID = -1
-        MUTATION = 0.02
 
-        def __init__(self, space, x, y, structure, energy, dna_hex=None):
+        def __init__(self, space, x, y, structure, energy, dna_hex):
+            
+            if len(dna_hex) != 26:
+                raise ValueError('Hex DNA must have exactly 26 characters')
             
             self.dna_hex = dna_hex
             
@@ -216,6 +218,7 @@ class Simulation(object):
             
             mass = self._get_mass()
             radius = self._get_radius(mass)
+            
             super().__init__(space, mass, radius, x, y)
             
             self.shape.collision_type = Simulation.CREATURE_COLLISION_TYPE
@@ -223,20 +226,35 @@ class Simulation(object):
             self._species = 'nameless'
             self._id = self._new_id()
             
-            self._behaviours = [ BasicBehaviour() ]
-            self._action = None
-            
             self._is_eating = 0
           
-            if dna_hex is not None:
-                self._speed = Simulation.Creature.readGene(dna_hex, 0, 16)
-                self._eating_speed = Simulation.Creature.readGene(dna_hex, 16, 16)
-                self._vision_angle = Simulation.Creature.readGene(dna_hex, 32, 16)
-                self._vision_distance = Simulation.Creature.readGene(dna_hex, 48, 16)
-                self._sound_distance = Simulation.Creature.readGene(dna_hex, 64, 16)
+            self._speed, self._eating_speed, self._vision_angle, \
+            self._vision_distance, self._sound_distance, \
+            self._walk_priority, self._run_priority, \
+            self._fast_run_priority, self._idle_priority, self._rotate_priority = self.readDNA(dna_hex)
+        
+            self._behaviours = [ BasicBehaviour(self._idle_priority + 1, self._walk_priority, 
+                                                self._run_priority, self._fast_run_priority, self._rotate_priority) ]
+            
+            self._action = None
             
             #self._sound_sensor = Simulation.SoundSensor(self, 200)
             self._vision_sensor = Simulation.VisionSensor(self, 10*radius*self._vision_distance, pi*(10 + 210*self._vision_angle)/180)
+        
+        @staticmethod
+        def readDNA(dna_hex, to_dict=False):
+            
+            speed, eating_speed, vision_ang, vision_dist, sound_dist = ( Simulation.Creature.readGene(dna_hex, 16*i, 16) for i in range(5) )
+            priorities = tuple( Simulation.Creature.readGene(dna_hex, 80 + 4*i, 4, is_integer=True) for i in range(5) )
+            
+            if to_dict:
+                return {'speed' : speed, 'eating_speed' : eating_speed, 'vision_angle' : vision_ang,
+                        'vision_distance' : vision_dist, 'sound_distance' : sound_dist,
+                        'walk_priority' : priorities[0], 'run_priority' : priorities[1],
+                        'fast_run_priority' : priorities[2], 'idle_priority' : priorities[3],
+                        'rotate_priority' : priorities[4] }
+            
+            return (speed, eating_speed, vision_ang, vision_dist, sound_dist, *priorities)
         
         @staticmethod
         def readGene(dna_hex, position, n_bits, is_integer = False):
@@ -525,7 +543,7 @@ class Simulation(object):
         
         if in_file is None:
             
-            dna_hex_list = (''.join(( '{:x}'.format(random.randint(0, 15)) for i in range(20))) for i in range(self._population_size))
+            dna_hex_list = (''.join(( '{:x}'.format(random.randint(0, 15)) for i in range(26))) for i in range(self._population_size))
             self._generation = 1
             
         else:
@@ -540,7 +558,7 @@ class Simulation(object):
                 self._population_size = len(dna_hex_list)
         
         for dna_hex in dna_hex_list:
-            self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna_hex=dna_hex)
+            self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna_hex)
             
         for i in range(self._starting_resources):
             self.newResource(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 0)
@@ -554,9 +572,10 @@ class Simulation(object):
         if len(self._creatures) == 0:
             return None
         
+        chance = 1.8/(len(self._creatures))
         while True:
             for creature in self._creatures:
-                if random.random() < 0.15:
+                if random.random() < chance:
                     return creature
     
     @staticmethod
@@ -570,7 +589,7 @@ class Simulation(object):
         dna_child = dna1[:half] + dna2[half:]
         
         for i in range(10):        
-            if random.random() < 0.3:
+            if random.random() < 0.3:   
                 
                 n_byte = randint(0, len(dna_child) - 1)
                 n_bit = randint(0, 7)
@@ -603,7 +622,7 @@ class Simulation(object):
         self._resources = []
         
         for dna in new_children_dna:
-            self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna_hex=dna)
+            self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna)
             
         self._generation += 1
         self._save_generation_data()
@@ -668,9 +687,9 @@ class Simulation(object):
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
                 self._running = False
 
-    def newCreature(self, x, y, structure, energy, dna_hex = None):
+    def newCreature(self, x, y, structure, energy, dna_hex):
         
-        creature = self.Creature(self._space, x, y, structure, energy, dna_hex=dna_hex)
+        creature = self.Creature(self._space, x, y, structure, energy, dna_hex)
         
         self._creatures.append(creature)
         
