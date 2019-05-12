@@ -38,6 +38,12 @@ class Painter(object):
         
         pygame.draw.polygon(self._screen, color, points)
         
+    def mapPointToScreen(self, point):
+        return (int(point[0]*self._mul), int(point[1]*self._mul))
+    
+    def mapPointFromScreen(self, point):
+        return (point[0]/self._mul, point[1]/self._mul)
+        
     @property
     def multiplier(self):
         return self._mul
@@ -45,3 +51,4 @@ class Painter(object):
     @multiplier.setter
     def multiplier(self, mul):
         self._mul = mul
+

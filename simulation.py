@@ -84,6 +84,7 @@ class Simulation(object):
             self._shape = pymunk.Circle(creature.body, sensor_range, (0, 0))
             
             self._shape.collision_type = Simulation.SOUND_SENSOR_COLLISION_TYPE
+            self.shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.SOUND_SENSOR_COLLISION_TYPE - 1)))
             self._shape.sensor = True
             
             self._shape.creature = creature
@@ -112,6 +113,7 @@ class Simulation(object):
             shape = pymunk.Poly(creature.body, points)
             
             shape.collision_type = Simulation.VISION_SENSOR_COLLISION_TYPE
+            shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.VISION_SENSOR_COLLISION_TYPE - 1)))
             shape.sensor = True
             
             shape.creature = creature
@@ -177,6 +179,7 @@ class Simulation(object):
             super().__init__(space, 1, self._get_radius(), x, y)
             
             self.shape.collision_type = Simulation.RESOURCE_COLLISION_TYPE
+            self.shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.RESOURCE_COLLISION_TYPE - 1)))
         
         def consume(self, simulation, quantity):
             
@@ -204,6 +207,48 @@ class Simulation(object):
     class Creature(CircleObject):
         
         LAST_ID = -1
+        
+        class Properties(object):
+            
+            def __init__(self, creature):
+                
+                self._creature = creature
+            
+            @property
+            def speed(self):
+                return self._creature._speed
+            
+            @property
+            def eatingSpeed(self):
+                return self._creature._eating_speed
+            
+            @property
+            def visionDistance(self):
+                return self._creature._vision_distance
+            
+            @property
+            def visionAngle(self):
+                return self._creature._vision_angle
+            
+            @property
+            def walkPriority(self):
+                return self._creature._walk_priority
+            
+            @property
+            def runPriority(self):
+                return self._creature._run_priority
+            
+            @property
+            def fastRunPriority(self):
+                return self._creature._fast_run_priority
+            
+            @property
+            def idlePriority(self):
+                return self._creature._idle_priority
+            
+            @property
+            def rotatePriority(self):
+                return self._creature._rotate_priority
 
         def __init__(self, space, x, y, structure, energy, dna_hex):
             
@@ -222,6 +267,7 @@ class Simulation(object):
             super().__init__(space, mass, radius, x, y)
             
             self.shape.collision_type = Simulation.CREATURE_COLLISION_TYPE
+            self.shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.CREATURE_COLLISION_TYPE - 1)))
             
             self._species = 'nameless'
             self._id = self._new_id()
@@ -240,6 +286,9 @@ class Simulation(object):
             
             #self._sound_sensor = Simulation.SoundSensor(self, 200)
             self._vision_sensor = Simulation.VisionSensor(self, 10*radius*self._vision_distance, pi*(10 + 210*self._vision_angle)/180)
+            
+            self._properties = Simulation.Creature.Properties(self)
+            self.selected = False
         
         @staticmethod
         def readDNA(dna_hex, to_dict=False):
@@ -438,11 +487,13 @@ class Simulation(object):
             
             color = (230*self._eating_speed, 0, 230*self._speed)
             
-            super().draw(painter, color)
-            
             pos = self.body.position
             radius = self.shape.radius
             angle = self.body.angle
+            
+            if self.selected is True:
+                painter.drawCircle((255, 80, 80), pos, radius + 8)
+            super().draw(painter, color)
             
             painter.drawArc((int(254*(1 - self._vision_distance)), 255, 50), pos, radius, angle, self._vision_sensor.angle, width=1)
         
@@ -473,22 +524,39 @@ class Simulation(object):
             return self._id
         
         @property
-        def speed(self):
-            return self._speed
-        
-        @property
         def energy(self):
             return self._energy
+        
+        @property
+        def properties(self):
+            return self._properties
+        
+        @property
+        def currentSpeed(self):
+            return self.body.velocity.length
+        
+        @property
+        def currentVisionDistance(self):
+            return self._vision_sensor.distance
+        
+        @property
+        def currentVisionAngle(self):
+            return self._vision_sensor.angle
     
     def __init__(self, population_size = 16, starting_resources = 20, size=1000, gen_time = 2000,
                  out_file = None, in_file = None, screen_size=(600, 600), use_graphic=True,
                  max_generations=None, quiet=False):
+        
+        screen_size = (screen_size[0] + 150, screen_size[1])
         
         self._population_size = population_size
         self._starting_resources = starting_resources
         self._gen_time = gen_time
         self._max_generations = max_generations
         self._quiet = quiet
+        
+        self._show_creature = None
+        self._paused = False
         
         if out_file is not None:
             try:
@@ -502,6 +570,9 @@ class Simulation(object):
         if use_graphic is True:
 
             pygame.init()
+            pygame.font.init()
+            self._small_font = pygame.font.SysFont('Arial', 12, bold=True)
+            self._medium_font = pygame.font.SysFont('Arial', 18, bold=True)
             pygame.display.set_caption("Simulation")
             
             self._screen = pygame.display.set_mode(screen_size)
@@ -539,7 +610,7 @@ class Simulation(object):
         self._running = True
         screen_size = screen_size
         mul = size/300
-        self._size = (screen_size[0]*mul, screen_size[1]*mul)
+        self._size = ((screen_size[0] - 150)*mul, screen_size[1]*mul)
         
         if in_file is None:
             
@@ -634,33 +705,37 @@ class Simulation(object):
         
         while self._running:
         
-            for x in range(self._physics_steps_per_frame):
-                self._space.step(self._dt)
+            if self._paused is False:
+                for x in range(self._physics_steps_per_frame):
+                    self._space.step(self._dt)
+                    
+                for creature in self._creatures:
+                    creature.act(self)
+                
+                self._time += 1
+                
+                if self._time == self._gen_time:
+                    
+                    if self._quiet is False:
+                        self._print_generation_resume()
+                    
+                    self.endGeneration()
+                    self._time = 0
+                
+                if self._max_generations is not None and self._generation > self._max_generations:
+                    self._running = False
 
             if self._use_graphic is True:
 
+                pygame.display.set_caption("Simulation - Generation %d" % self._generation)
+
                 self._process_events()
                 self._clear_screen()
+                self._draw_side_info()
                 self._draw_objects()
                 pygame.display.flip()
             
                 self._clock.tick(self._ticks)
-            
-            for creature in self._creatures:
-                creature.act(self)
-            
-            self._time += 1
-            
-            if self._time == self._gen_time:
-                
-                if self._quiet is False:
-                    self._print_generation_resume()
-                
-                self.endGeneration()
-                self._time = 0
-            
-            if self._max_generations is not None and self._generation > self._max_generations:
-                self._running = False
                 
     def _print_generation_resume(self):
         
@@ -674,18 +749,35 @@ class Simulation(object):
             print('    Mass: %.1f' % creature.body.mass)
             print('    Diameter: %.1f' % (2*creature.shape.radius))
             print('    Energy:', creature.energy)
-            print('    Speed: %.1f%%' % (100*creature.speed))
-            print('    Vision Distance: %.1f%%' % (100*creature._vision_distance))
-            print('    Vision Angle: %.1f%%' % (100*creature._vision_angle))
-            print('    Eating Speed: %.1f%%' % (100*creature._eating_speed))
+            print('    Speed: %.1f%%' % (100*creature.properties.speed))
+            print('    Vision Distance: %.1f%%' % (100*creature.properties.visionDistance))
+            print('    Vision Angle: %.1f%%' % (100*creature.properties.visionAngle))
+            print('    Eating Speed: %.1f%%' % (100*creature.properties.eatingSpeed))
 
     def _process_events(self):
 
         for event in pygame.event.get():
             if event.type == QUIT:
                 self._running = False
-            elif event.type == KEYDOWN and event.key == K_ESCAPE:
-                self._running = False
+            elif event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    self._running = False
+                elif event.key == K_SPACE or event.key == K_p:
+                    self._paused = not self._paused
+            elif event.type == MOUSEBUTTONUP:
+                
+                pos = self._painter.mapPointFromScreen(pygame.mouse.get_pos())
+                mask=( 1 << (Simulation.CREATURE_COLLISION_TYPE - 1) )
+                clicked = next(iter(self._space.point_query(pos, 0, pymunk.ShapeFilter(mask=mask))), None)
+                
+                if self._show_creature is not None:
+                    self._show_creature.selected = False
+                
+                if clicked is None:
+                    self._show_creature = None
+                else:
+                    self._show_creature = clicked.shape.simulation_object
+                    self._show_creature.selected = True
 
     def newCreature(self, x, y, structure, energy, dna_hex):
         
@@ -707,12 +799,77 @@ class Simulation(object):
 
         self._screen.fill(THECOLORS["white"])
 
+    def _draw_side_info(self):
+        
+        screen_size = pygame.display.get_surface().get_size()
+        start_point = screen_size[0] - 150, 0
+        creature = self._show_creature
+        
+        pygame.draw.rect(self._screen, (200, 200, 200), (start_point[0], start_point[1], 150, screen_size[1]))
+        
+        creature_number_text = '-' if self._show_creature is None else 'Creature %d' % self._show_creature.id_
+        
+        textsurface = self._medium_font.render(creature_number_text, False, (0, 0, 0))
+        text_size, _ = textsurface.get_size()
+        
+        self._screen.blit(textsurface, (start_point[0] + (150 - text_size)/2, start_point[1] + 20))
+        
+        textsurface = self._medium_font.render('Genes', False, (0, 0, 0))
+        text_size, _ = textsurface.get_size()
+        
+        self._screen.blit(textsurface, (start_point[0] + (150 - text_size)/2, screen_size[1] - 230))
+        
+        labels = ('Weight', 'Radius', 'Speed', 'Vision Dist.', 'Vision Angle')
+        
+        if creature is None:
+            values = ('-' for i in range(len(labels)))
+        else:
+            values = (creature.body.mass, creature.shape.radius, creature.currentSpeed, creature.currentVisionDistance, 
+                      180*creature.currentVisionAngle/pi)
+            values = ('%0.2f' % val if val < 10000 else '%.2E' % val for val in values)
+        
+        to_write_list = zip(labels, values)
+        
+        start_y = start_point[1] + 50
+        self._write_text(to_write_list, screen_size, start_point, start_y)
+        
+        labels = ('Speed', 'Eating Speed', 'Vision Dist.', 'Vision Angle', 'Walk Priority', 'Run Priority', 'F. Run Priority',
+                  'Idle Priority', 'Rotate Priority')
+        
+        if creature is None:
+            values = ('-' for i in range(len(labels)))
+        else:
+            pvalues = (creature.properties.speed, creature.properties.eatingSpeed, creature.properties.visionDistance, creature.properties.visionAngle)
+            
+            priority_values = (creature.properties.walkPriority, creature.properties.runPriority, creature.properties.fastRunPriority,
+                               creature.properties.idlePriority + 1, creature.properties.rotatePriority)
+            pr_val_sum = sum(priority_values)
+            priority_values = (val/pr_val_sum for val in priority_values)
+            
+            values = ('%.1f%%' % (100*val) for val in itertools.chain(pvalues, priority_values))
+        
+        to_write_list = zip(labels, values)
+        
+        start_y = screen_size[1] - 200
+        self._write_text(to_write_list, screen_size, start_point, start_y)
+        
+    def _write_text(self, to_write_list, screen_size, start_point, start_y):
+        
+        for prop, val_str in to_write_list:
+            
+            textsurface = self._small_font.render(prop + ':', False, (0, 0, 0))
+            self._screen.blit(textsurface, (start_point[0] + 10, start_point[1] + start_y))
+            
+            textsurface = self._small_font.render(val_str, False, (0, 0, 0))
+            text_size, _ = textsurface.get_size()
+            self._screen.blit(textsurface, (start_point[0] + 140 - text_size, start_point[1] + start_y))
+            
+            start_y += 20
+
     def _draw_objects(self):
         
-        pygame.display.set_caption("Simulation - Generation %d" % self._generation)
-        
-        for creature in itertools.chain(self._resources, self._creatures):
-            creature.draw(self._painter)
+        for obj in itertools.chain(self._resources, self._creatures):
+            obj.draw(self._painter)
             
         #self._space.debug_draw(pymunk.pygame_util.DrawOptions(self._screen))
     
@@ -770,6 +927,7 @@ class Simulation(object):
         
         for shape in static_lines:
             shape.collision_type = Simulation.WALL_COLLISION_TYPE
+            shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.WALL_COLLISION_TYPE - 1)))
         
         for line in static_lines:
             line.elasticity = 0.3

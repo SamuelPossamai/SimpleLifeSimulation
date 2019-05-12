@@ -62,7 +62,7 @@ class GoToPointAction(AbstractAction):
         
         angle1 = creature.body.angle%(2*pi)
         angle2 = pi + atan2(y_diff, x_diff)%(2*pi)
-        speed_factor = distance/((1 + creature.speed))
+        speed_factor = distance/((1 + creature.properties.speed))
         
         angle_diff1 = abs(angle1 - angle2)
         angle_diff2 = 2*pi - abs(angle1 - angle2)
@@ -78,9 +78,9 @@ class GoToPointAction(AbstractAction):
         velocity = creature.body.velocity
         current_speed = sqrt(velocity.x**2 + velocity.y**2)
 
-        angle_factor = 200*angle_diff/(1 + 149*creature.speed)
+        angle_factor = 200*angle_diff/(1 + 149*creature.properties.speed)
         
-        speed_factor = speed_factor/(0.1 + (100*(1 + creature.speed))*abs(angle_diff) + current_speed)
+        speed_factor = speed_factor/(0.1 + (100*(1 + creature.properties.speed))*abs(angle_diff) + current_speed)
         
         if speed_factor > 1:
             speed_factor = 1
