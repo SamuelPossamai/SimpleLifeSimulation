@@ -250,10 +250,12 @@ class Simulation(object):
             def rotatePriority(self):
                 return self._creature._rotate_priority
 
-        def __init__(self, space, x, y, structure, energy, dna_hex):
+        def __init__(self, space, generation, x, y, structure, energy, dna_hex):
             
             if len(dna_hex) != 26:
                 raise ValueError('Hex DNA must have exactly 26 characters')
+            
+            self._generation = generation
             
             self.dna_hex = dna_hex
             
@@ -542,6 +544,10 @@ class Simulation(object):
         @property
         def currentVisionAngle(self):
             return self._vision_sensor.angle
+        
+        @property
+        def generation(self):
+            return self._generation
     
     def __init__(self, population_size = 16, starting_resources = 20, size=1000, gen_time = 2000,
                  out_file = None, in_file = None, screen_size=(600, 600), use_graphic=True,
@@ -549,8 +555,19 @@ class Simulation(object):
         
         screen_size = (screen_size[0] + 150, screen_size[1])
         
-        self._population_size = population_size
-        self._starting_resources = starting_resources
+        if type(population_size) is int:
+            self._population_size_min = population_size
+            self._population_size_max = population_size
+        else:
+            self._population_size_min = population_size[0]
+            self._population_size_max = population_size[1]
+        
+        if type(starting_resources) is int:
+            self._resources_min = starting_resources
+            self._resources_max = starting_resources
+        else:
+            self._resources_min = starting_resources[0]
+            self._resources_max = starting_resources[1]
         self._gen_time = gen_time
         self._max_generations = max_generations
         self._quiet = quiet
@@ -614,7 +631,8 @@ class Simulation(object):
         
         if in_file is None:
             
-            dna_hex_list = (''.join(( '{:x}'.format(random.randint(0, 15)) for i in range(26))) for i in range(self._population_size))
+            dna_hex_list = (''.join(( '{:x}'.format(random.randint(0, 15)) for i in range(26))) 
+                            for i in range(randint(self._population_size_min, self._population_size_max)))
             self._generation = 1
             
         else:
@@ -626,14 +644,14 @@ class Simulation(object):
                     self._generation = 1
                 dna_hex_list = content.rsplit(']\n', 1)[-1].split('\n')
                 dna_hex_list.remove('')
-                self._population_size = len(dna_hex_list)
+                self._population_size_min = self._population_size_max = len(dna_hex_list)
         
         for dna_hex in dna_hex_list:
-            self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna_hex)
+            self.newCreature(self._generation, self._size[0]*(0.1 + 0.8*random.random()), 
+                             self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna_hex)
             
-        for i in range(self._starting_resources):
-            self.newResource(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 0)
-            
+        self._generate_resources()
+        
         self._save_generation_data()
         
         self._add_walls()
@@ -649,6 +667,12 @@ class Simulation(object):
                 if random.random() < chance:
                     return creature
     
+    def _generate_resources(self):
+        
+        resources_qtd = randint(self._resources_min, self._resources_max)
+        for i in range(resources_qtd):
+            self.newResource(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 0)
+    
     @staticmethod
     def generateChildDNA(parent1, parent2):
         
@@ -657,7 +681,10 @@ class Simulation(object):
         
         half = len(dna1)//2
         
-        dna_child = dna1[:half] + dna2[half:]
+        first_cut = randint(half//3 + 1, half)
+        second_cut = randint(half, half + 2*half//3)
+        
+        dna_child = dna1[:first_cut] + dna2[first_cut:second_cut] + dna1[second_cut:]
         
         for i in range(10):        
             if random.random() < 0.3:   
@@ -687,24 +714,24 @@ class Simulation(object):
         for obj in itertools.chain(self._creatures, self._resources):
             obj.destroy()
         
-        new_children_dna = tuple(self.newChildDNA() for i in range(self._population_size))
+        new_children_dna = tuple(self.newChildDNA() for i in range(randint(self._population_size_min, self._population_size_max)))
         
         self._creatures = []
         self._resources = []
         
         for dna in new_children_dna:
-            self.newCreature(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna)
+            self.newCreature(self._generation, self._size[0]*(0.1 + 0.8*random.random()), 
+                             self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna)
             
         self._generation += 1
         self._save_generation_data()
         
-        for i in range(self._starting_resources):
-            self.newResource(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 0)
+        self._generate_resources()
 
     def run(self):
         
         while self._running:
-        
+            
             if self._paused is False:
                 for x in range(self._physics_steps_per_frame):
                     self._space.step(self._dt)
@@ -779,9 +806,9 @@ class Simulation(object):
                     self._show_creature = clicked.shape.simulation_object
                     self._show_creature.selected = True
 
-    def newCreature(self, x, y, structure, energy, dna_hex):
+    def newCreature(self, generation, x, y, structure, energy, dna_hex):
         
-        creature = self.Creature(self._space, x, y, structure, energy, dna_hex)
+        creature = self.Creature(self._space, generation, x, y, structure, energy, dna_hex)
         
         self._creatures.append(creature)
         
@@ -819,14 +846,14 @@ class Simulation(object):
         
         self._screen.blit(textsurface, (start_point[0] + (150 - text_size)/2, screen_size[1] - 230))
         
-        labels = ('Weight', 'Radius', 'Speed', 'Vision Dist.', 'Vision Angle')
+        labels = ('Generation', 'Weight', 'Radius', 'Speed', 'Vision Dist.', 'Vision Angle')
         
         if creature is None:
             values = ('-' for i in range(len(labels)))
         else:
-            values = (creature.body.mass, creature.shape.radius, creature.currentSpeed, creature.currentVisionDistance, 
-                      180*creature.currentVisionAngle/pi)
-            values = ('%0.2f' % val if val < 10000 else '%.2E' % val for val in values)
+            values = (creature.generation + 1, creature.body.mass, creature.shape.radius, creature.currentSpeed, 
+                      creature.currentVisionDistance, 180*creature.currentVisionAngle/pi)
+            values = ('%d' % val if type(val) is int else '%0.2f' % val if val < 10000 else '%.2E' % val for val in values)
         
         to_write_list = zip(labels, values)
         

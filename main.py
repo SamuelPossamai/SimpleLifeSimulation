@@ -4,10 +4,30 @@ import argparse
 
 from simulation import Simulation
 
+def interval_integer_min_limit(arg_name, min_, arg):
+    
+    values = arg.split('-')
+    
+    if len(values) > 2:
+        raise argparse.ArgumentTypeError("%s cannot contain more than one '-' character" % arg_name)
+    
+    if len(values) == 2:
+        
+        min_, max_ = integer_min_limit(arg_name + '(min value)', min_, values[0]), integer_min_limit(arg_name + '(max value)', min_, values[1])
+        if min_ > max_:
+            raise argparse.ArgumentTypeError("%s min value must be lower than max value" % arg_name)
+        
+        return min_, max_
+    
+    return integer_min_limit(arg_name, min_, arg)
+
 def integer_min_limit(arg_name, min_, x):
     
-    x = int(x)
-    
+    try:
+        x = int(x)
+    except ValueError:
+        raise argparse.ArgumentTypeError("%s must be an integer" % arg_name)
+        
     if x < min_:
         raise argparse.ArgumentTypeError("%s must be higher or equal to %d" % (arg_name, min_))
     
@@ -17,10 +37,10 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('-p', '--pop-size', type=lambda x : integer_min_limit('Population size', 2, x),
-                        default=32, help='Number of starting creatures at the begin of each generation')
-    parser.add_argument('-r', '--resources-qtd', type=lambda x : integer_min_limit('Resources starting quantity', 0, x),
-                        default=20, help='Number of starting resources at the begin of each generation')
+    parser.add_argument('-p', '--pop-size', type=lambda x : interval_integer_min_limit('Population size', 2, x),
+                        default=32, help='Number of starting creatures at the begin of each generation, can be an interval min-max')
+    parser.add_argument('-r', '--resources-qtd', type=lambda x : interval_integer_min_limit('Resources starting quantity', 0, x),
+                        default=20, help='Number of starting resources at the begin of each generation, can be an inteval min-max')
     parser.add_argument('-s', '--size', type=lambda x : integer_min_limit('Environment size', 100, x),
                         default=1000, help='Size of the environment')
     parser.add_argument('-W', '--screen-width', type=lambda x : integer_min_limit('Width', 100, x),
