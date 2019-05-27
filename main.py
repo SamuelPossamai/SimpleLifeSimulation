@@ -33,6 +33,15 @@ def integer_min_limit(arg_name, min_, x):
     
     return x
 
+def interval_integer(arg_name, min_, max_, x):
+    
+    x = integer_min_limit(arg_name, min_, x)
+    
+    if x > max_:
+        raise argparse.ArgumentTypeError("%s must be lower or equal to %d" % (arg_name, max_))
+    
+    return x
+
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
@@ -53,6 +62,12 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--time', default=2000, type=lambda x : integer_min_limit('Generation time', 1, x), help='Time of each generation')
     parser.add_argument('-m', '--max-generations', default=None, type=lambda x : integer_min_limit('Max generations', 1, x), 
                         help='Max numbers of simulations that will run, if the number of generations until surpass this value, the simulation stops')
+    parser.add_argument('-u', '--max-survivors', default=0, type=lambda x : integer_min_limit('Max survivors', 0, x), 
+                        help='Max numbers of creatures that can remain for the next generation')
+    parser.add_argument('-R', '--survive-req', default=0, type=lambda x : integer_min_limit('Survive requirement', 0, x), 
+                        help='Minimal energy a creature need to survive to next generation')
+    parser.add_argument('-l', '--energy-loss', default=20, type=lambda x : interval_integer('Energy loss', 0, 99, x), 
+                        help='Energy a survivor lose when it advance to the next generation in percentage')
     parser.add_argument('--no-graphic', dest='use_graphic', action='store_false', help='Do not run graphics')
     parser.add_argument('--quiet', action='store_true', help='Print less information')
 
@@ -63,5 +78,7 @@ if __name__ == '__main__':
                       screen_size=(args.screen_width, args.screen_height),
                       in_file=args.in_file, gen_time=args.time,
                       use_graphic=args.use_graphic, max_generations=args.max_generations,
-                      quiet=args.quiet)
+                      quiet=args.quiet, max_survivors=args.max_survivors, 
+                      survivor_minimum_energy=args.survive_req, 
+                      survivor_energy_lost=args.energy_loss/100)
     game.run()

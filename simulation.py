@@ -529,6 +529,11 @@ class Simulation(object):
         def energy(self):
             return self._energy
         
+        @energy.setter
+        def energy(self, e):
+            self._energy = max(int(e), 0)
+            self._update_self()
+        
         @property
         def properties(self):
             return self._properties
@@ -551,7 +556,8 @@ class Simulation(object):
     
     def __init__(self, population_size = 16, starting_resources = 20, size=1000, gen_time = 2000,
                  out_file = None, in_file = None, screen_size=(600, 600), use_graphic=True,
-                 max_generations=None, quiet=False):
+                 max_generations=None, quiet=False, max_survivors = 2, survivor_minimum_energy=500000,
+                 survivor_energy_lost = 0.1):
         
         screen_size = (screen_size[0] + 150, screen_size[1])
         
@@ -568,6 +574,11 @@ class Simulation(object):
         else:
             self._resources_min = starting_resources[0]
             self._resources_max = starting_resources[1]
+        
+        self._max_survivors = max_survivors
+        self._survivor_minimum_energy = survivor_minimum_energy
+        self._survivor_energy_lost = survivor_energy_lost
+        
         self._gen_time = gen_time
         self._max_generations = max_generations
         self._quiet = quiet
@@ -711,19 +722,38 @@ class Simulation(object):
         
         self._creatures.sort(key=lambda creature : creature.energy, reverse=True)
         
-        for obj in itertools.chain(self._creatures, self._resources):
+        for n_survivors, creature in zip(range(self._max_survivors + 1), self._creatures):
+            if creature.energy < self._survivor_minimum_energy:
+                break
+        else:
+            n_survivors = min(n_survivors + 1, len(self._creatures))
+        
+        min_pop = max(self._population_size_min - n_survivors, 0)
+        max_pop = max(self._population_size_max - n_survivors, 0)
+        
+        new_children_dna = tuple(self.newChildDNA() for i in range(randint(min_pop, max_pop)))
+        
+        if n_survivors == 0:
+            old_creatures = self._creatures
+            self._creatures = []
+        else:
+            old_creatures = self._creatures[n_survivors:]
+            self._creatures = self._creatures[:n_survivors]
+            
+            for creature in self._creatures:
+                creature.energy = int(creature.energy*( 1 - self._survivor_energy_lost ))
+        
+        for obj in itertools.chain(old_creatures, self._resources):
             obj.destroy()
         
-        new_children_dna = tuple(self.newChildDNA() for i in range(randint(self._population_size_min, self._population_size_max)))
-        
-        self._creatures = []
         self._resources = []
+        
+        self._generation += 1
         
         for dna in new_children_dna:
             self.newCreature(self._generation, self._size[0]*(0.1 + 0.8*random.random()), 
                              self._size[1]*(0.1 + 0.8*random.random()), 500000, 500000, dna)
-            
-        self._generation += 1
+        
         self._save_generation_data()
         
         self._generate_resources()
@@ -846,13 +876,13 @@ class Simulation(object):
         
         self._screen.blit(textsurface, (start_point[0] + (150 - text_size)/2, screen_size[1] - 230))
         
-        labels = ('Generation', 'Weight', 'Radius', 'Speed', 'Vision Dist.', 'Vision Angle')
+        labels = ('Generation', 'Energy', 'Weight', 'Radius', 'Speed', 'Vision Dist.', 'Vision Angle')
         
         if creature is None:
             values = ('-' for i in range(len(labels)))
         else:
-            values = (creature.generation + 1, creature.body.mass, creature.shape.radius, creature.currentSpeed, 
-                      creature.currentVisionDistance, 180*creature.currentVisionAngle/pi)
+            values = (creature.generation, creature.energy, creature.body.mass, creature.shape.radius, 
+                      creature.currentSpeed, creature.currentVisionDistance, 180*creature.currentVisionAngle/pi)
             values = ('%d' % val if type(val) is int else '%0.2f' % val if val < 10000 else '%.2E' % val for val in values)
         
         to_write_list = zip(labels, values)
