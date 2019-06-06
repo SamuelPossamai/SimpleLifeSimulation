@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from simulation import Simulation
 
-def plotDNAInfo(generations, parameter):
+def plotDNAInfo(generations, parameter, save_to=None):
     
     for gen_number, generation_dnas in enumerate(generations):
         
@@ -16,17 +16,25 @@ def plotDNAInfo(generations, parameter):
     
     plt.xticks(range(1, gen_number + 2))
     
-    plt.show()
-
+    if save_to is None:
+        plt.show()
+    else:
+        plt.savefig(save_to)
 
 if __name__ == '__main__':
     
     import sys
     
-    if len(sys.argv) != 3:
-        
-        print('This program must receive exactly two arguments')
+    if len(sys.argv) != 3 and len(sys.argv) != 4:
+    
+        print(sys.argv)
+        print('This program must receive exactly two or three arguments')
         exit()
+    
+    if len(sys.argv) == 4:
+        save_to = sys.argv[3]
+    else:
+        save_to = None
     
     generations = []
     with open(sys.argv[1]) as f:
@@ -41,5 +49,5 @@ if __name__ == '__main__':
             else:
                 generations[-1].append(line[:-1])
 
-    plotDNAInfo(generations, sys.argv[2])
+    plotDNAInfo(generations, sys.argv[2], save_to=save_to)
     
