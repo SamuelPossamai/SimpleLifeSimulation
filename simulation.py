@@ -519,7 +519,8 @@ class Simulation(object):
                  out_file=None, in_file=None, screen_size=(600, 600),
                  use_graphic=True, quiet=False):
 
-        screen_size = (screen_size[0] + 150, screen_size[1])
+        self.__lat_column_size = 250
+        screen_size = (screen_size[0] + self.__lat_column_size, screen_size[1])
 
         if type(population_size) is int:
             self._population_size_min = population_size
@@ -592,7 +593,8 @@ class Simulation(object):
         self._running = True
         screen_size = screen_size
         mul = size/300
-        self._size = ((screen_size[0] - 150)*mul, screen_size[1]*mul)
+        self._size = ((screen_size[0] - self.__lat_column_size)*mul,
+                      screen_size[1]*mul)
 
         for _ in range(randint(self._population_size_min,
                                self._population_size_max)):
@@ -681,22 +683,22 @@ class Simulation(object):
     def _draw_side_info(self):
 
         screen_size = pygame.display.get_surface().get_size()
-        start_point = screen_size[0] - 150, 0
+        start_point = screen_size[0] - self.__lat_column_size, 0
         creature = self._show_creature
 
-        pygame.draw.rect(self._screen, (200, 200, 200), (start_point[0], start_point[1], 150, screen_size[1]))
+        pygame.draw.rect(self._screen, (200, 200, 200), (start_point[0], start_point[1], self.__lat_column_size, screen_size[1]))
 
         creature_number_text = '-' if self._show_creature is None else 'Creature %d' % self._show_creature.id_
 
         textsurface = self._medium_font.render(creature_number_text, False, (0, 0, 0))
         text_size, _ = textsurface.get_size()
 
-        self._screen.blit(textsurface, (start_point[0] + (150 - text_size)/2, start_point[1] + 20))
+        self._screen.blit(textsurface, (start_point[0] + (self.__lat_column_size - text_size)/2, start_point[1] + 20))
 
         textsurface = self._medium_font.render('Genes', False, (0, 0, 0))
         text_size, _ = textsurface.get_size()
 
-        self._screen.blit(textsurface, (start_point[0] + (150 - text_size)/2, screen_size[1] - 230))
+        self._screen.blit(textsurface, (start_point[0] + (self.__lat_column_size - text_size)/2, screen_size[1] - 230))
 
         labels = ('Energy', 'Weight', 'Radius', 'Speed', 'Vision Dist.', 'Vision Angle')
 
@@ -743,7 +745,8 @@ class Simulation(object):
 
             textsurface = self._small_font.render(val_str, False, (0, 0, 0))
             text_size, _ = textsurface.get_size()
-            self._screen.blit(textsurface, (start_point[0] + 140 - text_size, start_point[1] + start_y))
+            val_x = start_point[0] + self.__lat_column_size - 20 - text_size
+            self._screen.blit(textsurface, (val_x, start_point[1] + start_y))
 
             start_y += 20
 
