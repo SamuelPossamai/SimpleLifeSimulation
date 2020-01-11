@@ -629,8 +629,8 @@ class Simulation(object):
 
                 self._process_events()
                 self._clear_screen()
-                self._draw_side_info()
                 self._draw_objects()
+                self._draw_side_info()
                 pygame.display.flip()
 
                 self._clock.tick(self._ticks)
@@ -645,6 +645,16 @@ class Simulation(object):
                     self._running = False
                 elif event.key == K_SPACE or event.key == K_p:
                     self._paused = not self._paused
+                elif (event.key == K_EQUALS or event.key == K_KP_PLUS) and \
+                    (pygame.key.get_mods() == pygame.KMOD_LCTRL or
+                     pygame.key.get_mods() == pygame.KMOD_RCTRL):
+
+                    self._painter.multiplier *= 1.1
+                elif (event.key == K_MINUS or event.key == K_KP_MINUS) and \
+                    (pygame.key.get_mods() == pygame.KMOD_LCTRL or
+                     pygame.key.get_mods() == pygame.KMOD_RCTRL):
+
+                    self._painter.multiplier /= 1.1
             elif event.type == MOUSEBUTTONUP:
 
                 pos = self._painter.mapPointFromScreen(pygame.mouse.get_pos())
