@@ -250,12 +250,7 @@ class Simulation(object):
             def rotatePriority(self):
                 return self._creature._rotate_priority
 
-        def __init__(self, space, x, y, structure, energy, dna_hex):
-
-            if len(dna_hex) != 26:
-                raise ValueError('Hex DNA must have exactly 26 characters')
-
-            self.dna_hex = dna_hex
+        def __init__(self, space, x, y, structure, energy, parent=None):
 
             self._spent_resources = 0
             self._energy = int(energy)
@@ -274,10 +269,15 @@ class Simulation(object):
 
             self._is_eating = 0
 
-            self._speed, self._eating_speed, self._vision_angle, \
-            self._vision_distance, self._sound_distance, \
-            self._walk_priority, self._run_priority, \
-            self._fast_run_priority, self._idle_priority, self._rotate_priority = self.readDNA(dna_hex)
+            if parent is None:
+                self._speed, self._eating_speed, self._vision_angle, \
+                    self._vision_distance, self._sound_distance = \
+                        (random.random() for _ in range(5))
+
+                self._walk_priority, self._run_priority, \
+                    self._fast_run_priority, self._idle_priority, \
+                        self._rotate_priority = \
+                            (random.randint(0, 32) for _ in range(5))
 
             self._behaviours = [ BasicBehaviour(self._idle_priority + 1, self._walk_priority,
                                                 self._run_priority, self._fast_run_priority, self._rotate_priority) ]
@@ -289,39 +289,6 @@ class Simulation(object):
 
             self._properties = Simulation.Creature.Properties(self)
             self.selected = False
-
-        @staticmethod
-        def readDNA(dna_hex, to_dict=False):
-
-            speed, eating_speed, vision_ang, vision_dist, sound_dist = ( Simulation.Creature.readGene(dna_hex, 16*i, 16) for i in range(5) )
-            priorities = tuple( Simulation.Creature.readGene(dna_hex, 80 + 4*i, 4, is_integer=True) for i in range(5) )
-
-            if to_dict:
-                return {'speed' : speed, 'eating_speed' : eating_speed, 'vision_angle' : vision_ang,
-                        'vision_distance' : vision_dist, 'sound_distance' : sound_dist,
-                        'walk_priority' : priorities[0], 'run_priority' : priorities[1],
-                        'fast_run_priority' : priorities[2], 'idle_priority' : priorities[3],
-                        'rotate_priority' : priorities[4] }
-
-            return (speed, eating_speed, vision_ang, vision_dist, sound_dist, *priorities)
-
-        @staticmethod
-        def readGene(dna_hex, position, n_bits, is_integer = False):
-
-            hex_pos = position//4
-            start_after_n_bits = position%4
-
-            number = int(dna_hex[hex_pos : hex_pos + ceil((n_bits + start_after_n_bits)/4)], 16)
-
-            n_bits_mod4 = n_bits%4
-            exclude_n_bits_after = ((4 - n_bits_mod4 if n_bits_mod4 != 0 else 0) + (4 - start_after_n_bits if start_after_n_bits != 0 else 0))%4
-
-            number = ( (number >> exclude_n_bits_after) & (0xffffffff >> (32 - n_bits)))
-
-            if is_integer is False:
-                return number/((1 << n_bits) - 1)
-
-            return number
 
         @property
         def headPosition(self):
@@ -627,23 +594,11 @@ class Simulation(object):
         mul = size/300
         self._size = ((screen_size[0] - 150)*mul, screen_size[1]*mul)
 
-        if in_file is None:
-
-            dna_hex_list = (''.join(( '{:x}'.format(random.randint(0, 15)) for i in range(26)))
-                            for i in range(randint(self._population_size_min, self._population_size_max)))
-
-        else:
-
-            with open(in_file) as f:
-                content = f.read()
-                dna_hex_list = content.rsplit(']\n', 1)[-1].split('\n')
-                dna_hex_list.remove('')
-                self._population_size_min = self._population_size_max = len(dna_hex_list)
-
-        for dna_hex in dna_hex_list:
+        for _ in range(randint(self._population_size_min,
+                               self._population_size_max)):
             self.newCreature(self._size[0]*(0.1 + 0.8*random.random()),
                              self._size[1]*(0.1 + 0.8*random.random()),
-                             500000, 500000, dna_hex)
+                             500000, 500000)
 
         self._generate_resources()
 
@@ -703,9 +658,9 @@ class Simulation(object):
                     self._show_creature = clicked.shape.simulation_object
                     self._show_creature.selected = True
 
-    def newCreature(self, x, y, structure, energy, dna_hex):
+    def newCreature(self, x, y, structure, energy):
 
-        creature = self.Creature(self._space, x, y, structure, energy, dna_hex)
+        creature = self.Creature(self._space, x, y, structure, energy)
 
         self._creatures.append(creature)
 
