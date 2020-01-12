@@ -1,24 +1,21 @@
 
-from pathlib import Path
-
 import os
-
-from abc import ABC, abstractmethod
 
 import random
 from random import randint
 
-from math import cos, sin, sqrt, pi, ceil, floor
-
-import pygame
-from pygame.key import *
-from pygame.locals import *
-from pygame.color import *
-
+from math import cos, sin, sqrt, pi, floor
 import itertools
 
+import pygame
+# pylint: disable=no-name-in-module
+from pygame.constants import (
+    QUIT, KEYDOWN, K_ESCAPE, K_SPACE, K_p, MOUSEBUTTONUP, K_EQUALS, K_KP_PLUS,
+    K_KP_MINUS, K_MINUS, KMOD_LCTRL, KMOD_RCTRL
+)
+# pylint: enable=no-name-in-module
+
 import pymunk
-import pymunk.pygame_util
 
 from behaviours import BasicBehaviour
 
@@ -61,7 +58,8 @@ class Simulation(object):
 
     class CircleObject(Object):
 
-        def __init__(self, space, mass, radius, x, y, elasticity = 0.5, friction = 0.2):
+        def __init__(self, space, mass, radius, x, y,
+                     elasticity=0.5, friction=0.2):
 
             inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
 
@@ -93,13 +91,19 @@ class Simulation(object):
 
     class VisionSensor(object):
 
-        def __init__(self, creature, sensor_range, sensor_angle, offset_angle = 0):
+        def __init__(self, creature, sensor_range, sensor_angle,
+                     offset_angle=0):
 
             if sensor_angle > pi:
-                shapes = (self._create_shape(creature, sensor_range, sensor_angle/2, offset_angle + sensor_angle/4),
-                          self._create_shape(creature, sensor_range, sensor_angle/2, offset_angle - sensor_angle/4))
+                shapes = (self._create_shape(creature, sensor_range,
+                                             sensor_angle/2,
+                                             offset_angle + sensor_angle/4),
+                          self._create_shape(creature, sensor_range,
+                                             sensor_angle/2,
+                                             offset_angle - sensor_angle/4))
             else:
-                shapes = (self._create_shape(creature, sensor_range, sensor_angle, offset_angle),)
+                shapes = (self._create_shape(creature, sensor_range,
+                                             sensor_angle, offset_angle),)
 
             self._shapes = shapes
             self._angle = sensor_angle
@@ -107,13 +111,15 @@ class Simulation(object):
         @staticmethod
         def _create_shape(creature, sensor_range, sensor_angle, offset_angle):
 
-            points = Simulation.VisionSensor._get_arc_points(sensor_range, sensor_angle, offset_angle)
+            points = Simulation.VisionSensor._get_arc_points(
+                sensor_range, sensor_angle, offset_angle)
             points.append((0, 0))
 
             shape = pymunk.Poly(creature.body, points)
 
             shape.collision_type = Simulation.VISION_SENSOR_COLLISION_TYPE
-            shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.VISION_SENSOR_COLLISION_TYPE - 1)))
+            shape.filter = pymunk.ShapeFilter(
+                categories=(1 << (Simulation.VISION_SENSOR_COLLISION_TYPE - 1)))
             shape.sensor = True
 
             shape.creature = creature
@@ -131,7 +137,7 @@ class Simulation(object):
 
             cur_angle = sensor_angle/2 + angle_offset
             angle_diff = sensor_angle/(n-1)
-            for i in range(n):
+            for _ in range(n):
 
                 x = sensor_range*cos(cur_angle)
                 y = sensor_range*sin(cur_angle)
@@ -181,7 +187,7 @@ class Simulation(object):
             self.shape.collision_type = Simulation.RESOURCE_COLLISION_TYPE
             self.shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.RESOURCE_COLLISION_TYPE - 1)))
 
-        def consume(self, simulation, quantity):
+        def consume(self, _simulation, quantity):
 
             if quantity >= self._ext_rsc:
                 consumed = self._ext_rsc
@@ -201,8 +207,8 @@ class Simulation(object):
         def _get_radius(self):
             return sqrt((self._ext_rsc + self._int_rsc)/1000)
 
-        def draw(self, painter):
-            super().draw(painter, (0, 255, 0))
+        def draw(self, painter, color=(0, 255, 0)):
+            super().draw(painter, color)
 
     class Creature(CircleObject):
 
@@ -279,8 +285,10 @@ class Simulation(object):
                         self._rotate_priority = \
                             (random.randint(0, 32) for _ in range(5))
 
-            self._behaviours = [ BasicBehaviour(self._idle_priority + 1, self._walk_priority,
-                                                self._run_priority, self._fast_run_priority, self._rotate_priority) ]
+            self._behaviours = [BasicBehaviour(
+                self._idle_priority + 1, self._walk_priority,
+                self._run_priority, self._fast_run_priority,
+                self._rotate_priority)]
 
             self._action = None
 
@@ -356,7 +364,7 @@ class Simulation(object):
             if new_action is not None:
                 self._action = new_action
 
-        def _get_radius(self, mass = None):
+        def _get_radius(self, mass=None):
 
             if mass is None:
                 mass = self.body.mass
@@ -378,7 +386,7 @@ class Simulation(object):
         def eating(self):
             return self._is_eating > 0
 
-        def act(self, simulation):
+        def act(self, _simulation):
 
             energy_consume_vision = (0.1 + self._vision_distance)*(1 + self._vision_angle)
             energy_consume_speed = self._speed
@@ -434,7 +442,7 @@ class Simulation(object):
             if factor < 0:
                 speed /= 4
 
-            self.body.velocity += ( speed*cos(angle), speed*sin(angle) )
+            self.body.velocity += (speed*cos(angle), speed*sin(angle))
 
         def _do_angle_speed(self, factor):
 
@@ -450,9 +458,10 @@ class Simulation(object):
 
             self.body.angular_velocity += angular_speed
 
-        def draw(self, painter):
+        def draw(self, painter, color=None):
 
-            color = (230*self._eating_speed, 0, 230*self._speed)
+            if color is None:
+                color = (230*self._eating_speed, 0, 230*self._speed)
 
             pos = self.body.position
             radius = self.shape.radius
@@ -462,7 +471,9 @@ class Simulation(object):
                 painter.drawCircle((255, 80, 80), pos, radius + 8)
             super().draw(painter, color)
 
-            painter.drawArc((int(254*(1 - self._vision_distance)), 255, 50), pos, radius, angle, self._vision_sensor.angle, width=1)
+            painter.drawArc((int(254*(1 - self._vision_distance)), 255, 50),
+                            pos, radius, angle, self._vision_sensor.angle,
+                            width=1)
 
         def _consume_energy(self, qtd):
 
@@ -484,7 +495,7 @@ class Simulation(object):
 
         @property
         def species(self):
-            return self._name
+            return self._species
 
         @property
         def id_(self):
@@ -495,8 +506,8 @@ class Simulation(object):
             return self._energy
 
         @energy.setter
-        def energy(self, e):
-            self._energy = max(int(e), 0)
+        def energy(self, new_val):
+            self._energy = max(int(new_val), 0)
             self._update_self()
 
         @property
@@ -522,14 +533,14 @@ class Simulation(object):
         self.__lat_column_size = 250
         screen_size = (screen_size[0] + self.__lat_column_size, screen_size[1])
 
-        if type(population_size) is int:
+        if isinstance(population_size, int):
             self._population_size_min = population_size
             self._population_size_max = population_size
         else:
             self._population_size_min = population_size[0]
             self._population_size_max = population_size[1]
 
-        if type(starting_resources) is int:
+        if isinstance(starting_resources, int):
             self._resources_min = starting_resources
             self._resources_max = starting_resources
         else:
@@ -552,7 +563,7 @@ class Simulation(object):
         self._use_graphic = use_graphic
         if use_graphic is True:
 
-            pygame.init()
+            pygame.display.init()
             pygame.font.init()
             self._small_font = pygame.font.SysFont('Arial', 12, bold=True)
             self._medium_font = pygame.font.SysFont('Arial', 18, bold=True)
@@ -609,15 +620,17 @@ class Simulation(object):
     def _generate_resources(self):
 
         resources_qtd = randint(self._resources_min, self._resources_max)
-        for i in range(resources_qtd):
-            self.newResource(self._size[0]*(0.1 + 0.8*random.random()), self._size[1]*(0.1 + 0.8*random.random()), 500000, 0)
+        for _ in range(resources_qtd):
+            self.newResource(self._size[0]*(0.1 + 0.8*random.random()),
+                             self._size[1]*(0.1 + 0.8*random.random()),
+                             500000, 0)
 
     def run(self):
 
         while self._running:
 
             if self._paused is False:
-                for x in range(self._physics_steps_per_frame):
+                for _ in range(self._physics_steps_per_frame):
                     self._space.step(self._dt)
 
                 for creature in self._creatures:
@@ -643,23 +656,28 @@ class Simulation(object):
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     self._running = False
-                elif event.key == K_SPACE or event.key == K_p:
+                elif event.key == K_SPACE or \
+                    event.key == K_p:
+
                     self._paused = not self._paused
-                elif (event.key == K_EQUALS or event.key == K_KP_PLUS) and \
-                    (pygame.key.get_mods() == pygame.KMOD_LCTRL or
-                     pygame.key.get_mods() == pygame.KMOD_RCTRL):
+                elif (event.key == K_EQUALS or
+                      event.key == K_KP_PLUS) and \
+                    (pygame.key.get_mods() == KMOD_LCTRL or
+                     pygame.key.get_mods() == KMOD_RCTRL):
 
                     self._painter.multiplier *= 1.1
-                elif (event.key == K_MINUS or event.key == K_KP_MINUS) and \
-                    (pygame.key.get_mods() == pygame.KMOD_LCTRL or
-                     pygame.key.get_mods() == pygame.KMOD_RCTRL):
+                elif (event.key == K_MINUS or
+                      event.key == K_KP_MINUS) and \
+                    (pygame.key.get_mods() == KMOD_LCTRL or
+                     pygame.key.get_mods() == KMOD_RCTRL):
 
                     self._painter.multiplier /= 1.1
-            elif event.type == MOUSEBUTTONUP:
 
+            elif event.type == MOUSEBUTTONUP:
                 pos = self._painter.mapPointFromScreen(pygame.mouse.get_pos())
-                mask=( 1 << (Simulation.CREATURE_COLLISION_TYPE - 1) )
-                clicked = next(iter(self._space.point_query(pos, 0, pymunk.ShapeFilter(mask=mask))), None)
+                mask = (1 << (Simulation.CREATURE_COLLISION_TYPE - 1))
+                clicked = next(iter(self._space.point_query(
+                    pos, 0, pymunk.ShapeFilter(mask=mask))), None)
 
                 if self._show_creature is not None:
                     self._show_creature.selected = False
@@ -688,7 +706,7 @@ class Simulation(object):
 
     def _clear_screen(self):
 
-        self._screen.fill(THECOLORS["white"])
+        self._screen.fill((255, 255, 255))
 
     def _draw_side_info(self):
 
@@ -719,12 +737,12 @@ class Simulation(object):
                       creature.shape.radius, creature.currentSpeed,
                       creature.currentVisionDistance,
                       180*creature.currentVisionAngle/pi)
-            values = ('%d' % val if type(val) is int else '%0.2f' % val if val < 10000 else '%.2E' % val for val in values)
+            values = ('%d' % val if isinstance(val, int) else '%0.2f' % val if val < 10000 else '%.2E' % val for val in values)
 
         to_write_list = zip(labels, values)
 
         start_y = start_point[1] + 50
-        self._write_text(to_write_list, screen_size, start_point, start_y)
+        self._write_text(to_write_list, start_point, start_y)
 
         labels = ('Speed', 'Eating Speed', 'Vision Dist.', 'Vision Angle', 'Walk Priority', 'Run Priority', 'F. Run Priority',
                   'Idle Priority', 'Rotate Priority')
@@ -744,9 +762,9 @@ class Simulation(object):
         to_write_list = zip(labels, values)
 
         start_y = screen_size[1] - 200
-        self._write_text(to_write_list, screen_size, start_point, start_y)
+        self._write_text(to_write_list, start_point, start_y)
 
-    def _write_text(self, to_write_list, screen_size, start_point, start_y):
+    def _write_text(self, to_write_list, start_point, start_y):
 
         for prop, val_str in to_write_list:
 
@@ -767,28 +785,28 @@ class Simulation(object):
 
         #self._space.debug_draw(pymunk.pygame_util.DrawOptions(self._screen))
 
-    def _sensor_alert(self, arbiter, space, _):
+    def _sensor_alert(self, arbiter, _space, _):
 
         sound_pos = arbiter.shapes[0].body.position
         arbiter.shapes[1].creature.soundAlert(sound_pos.x, sound_pos.y)
 
         return False
 
-    def _vision_alert(self, arbiter, space, _):
+    def _vision_alert(self, arbiter, _space, _):
 
         vision_creature = arbiter.shapes[0].simulation_object
         arbiter.shapes[1].creature.visionAlert(vision_creature)
 
         return False
 
-    def _resource_alert(self, arbiter, space, _):
+    def _resource_alert(self, arbiter, _space, _):
 
         vision_resource = arbiter.shapes[0].simulation_object
         arbiter.shapes[1].creature.visionResourceAlert(vision_resource)
 
         return False
 
-    def _resource_creature_collision(self, arbiter, space, _):
+    def _resource_creature_collision(self, arbiter, _space, _):
 
         creature = arbiter.shapes[0].simulation_object
         resource = arbiter.shapes[1].simulation_object
@@ -801,7 +819,7 @@ class Simulation(object):
 
         return False
 
-    def _creature_wall_collision(self, arbiter, space, _):
+    def _creature_wall_collision(self, arbiter, _space, _):
 
         creature = arbiter.shapes[0].simulation_object
 
