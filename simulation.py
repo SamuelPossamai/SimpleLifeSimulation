@@ -22,7 +22,7 @@ from behaviours import BasicBehaviour
 
 from painter import Painter
 
-class Simulation(object):
+class Simulation:
 
     CREATURE_COLLISION_TYPE = 1
     SOUND_SENSOR_COLLISION_TYPE = 2
@@ -30,7 +30,7 @@ class Simulation(object):
     RESOURCE_COLLISION_TYPE = 4
     WALL_COLLISION_TYPE = 5
 
-    class Object(object):
+    class Object:
 
         def __init__(self, space, body, shape, x, y):
 
@@ -76,43 +76,44 @@ class Simulation(object):
 
             painter.drawCircle(color, self.body.position, self.shape.radius)
 
-    class SoundSensor(object):
+    class SoundSensor:
 
         def __init__(self, creature, sensor_range):
 
             self._shape = pymunk.Circle(creature.body, sensor_range, (0, 0))
 
             self._shape.collision_type = Simulation.SOUND_SENSOR_COLLISION_TYPE
-            self.shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.SOUND_SENSOR_COLLISION_TYPE - 1)))
+            self._shape.filter = pymunk.ShapeFilter(
+                categories=(1 << (Simulation.SOUND_SENSOR_COLLISION_TYPE - 1)))
             self._shape.sensor = True
 
             self._shape.creature = creature
 
             creature.body.space.add(self._shape)
 
-    class VisionSensor(object):
+    class VisionSensor:
 
         def __init__(self, creature, sensor_range, sensor_angle,
                      offset_angle=0):
 
             if sensor_angle > pi:
-                shapes = (self._create_shape(creature, sensor_range,
+                shapes = (self.__createShape(creature, sensor_range,
                                              sensor_angle/2,
                                              offset_angle + sensor_angle/4),
-                          self._create_shape(creature, sensor_range,
+                          self.__createShape(creature, sensor_range,
                                              sensor_angle/2,
                                              offset_angle - sensor_angle/4))
             else:
-                shapes = (self._create_shape(creature, sensor_range,
+                shapes = (self.__createShape(creature, sensor_range,
                                              sensor_angle, offset_angle),)
 
             self._shapes = shapes
             self._angle = sensor_angle
 
         @staticmethod
-        def _create_shape(creature, sensor_range, sensor_angle, offset_angle):
+        def __createShape(creature, sensor_range, sensor_angle, offset_angle):
 
-            points = Simulation.VisionSensor._get_arc_points(
+            points = Simulation.VisionSensor.__getArcPoints(
                 sensor_range, sensor_angle, offset_angle)
             points.append((0, 0))
 
@@ -130,7 +131,7 @@ class Simulation(object):
             return shape
 
         @staticmethod
-        def _get_arc_points(sensor_range, sensor_angle, angle_offset):
+        def __getArcPoints(sensor_range, sensor_angle, angle_offset):
 
             points = []
 
@@ -183,10 +184,11 @@ class Simulation(object):
             self._ext_rsc = external_rsc
             self._int_rsc = internal_rsc
 
-            super().__init__(space, 1, self._get_radius(), x, y)
+            super().__init__(space, 1, self.__getRadius(), x, y)
 
             self.shape.collision_type = Simulation.RESOURCE_COLLISION_TYPE
-            self.shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.RESOURCE_COLLISION_TYPE - 1)))
+            self.shape.filter = pymunk.ShapeFilter(
+                categories=(1 << (Simulation.RESOURCE_COLLISION_TYPE - 1)))
 
         def consume(self, _simulation, quantity):
 
@@ -194,18 +196,18 @@ class Simulation(object):
                 consumed = self._ext_rsc
                 self._ext_rsc = 0
 
-                new_radius = self._get_radius()
+                new_radius = self.__getRadius()
                 if new_radius != self.shape.radius:
                     self.shape.unsafe_set_radius(new_radius)
                 return consumed
 
             self._ext_rsc -= quantity
-            new_radius = self._get_radius()
+            new_radius = self.__getRadius()
             if new_radius != self.shape.radius:
                 self.shape.unsafe_set_radius(new_radius)
             return quantity
 
-        def _get_radius(self):
+        def __getRadius(self):
             return sqrt((self._ext_rsc + self._int_rsc)/1000)
 
         def draw(self, painter, color=(0, 255, 0)):
@@ -215,7 +217,7 @@ class Simulation(object):
 
         LAST_ID = -1
 
-        class Properties(object):
+        class Properties:
 
             def __init__(self, creature):
 
@@ -223,39 +225,39 @@ class Simulation(object):
 
             @property
             def speed(self):
-                return self._creature._speed
+                return self._creature._speed # pylint: disable=protected-access
 
             @property
-            def eatingSpeed(self):
-                return self._creature._eating_speed
+            def eatingspeed(self):
+                return self._creature._eating_speed # pylint: disable=protected-access
 
             @property
-            def visionDistance(self):
-                return self._creature._vision_distance
+            def visiondistance(self):
+                return self._creature._vision_distance # pylint: disable=protected-access
 
             @property
-            def visionAngle(self):
-                return self._creature._vision_angle
+            def visionangle(self):
+                return self._creature._vision_angle # pylint: disable=protected-access
 
             @property
-            def walkPriority(self):
-                return self._creature._walk_priority
+            def walkpriority(self):
+                return self._creature._walk_priority # pylint: disable=protected-access
 
             @property
-            def runPriority(self):
-                return self._creature._run_priority
+            def runpriority(self):
+                return self._creature._run_priority # pylint: disable=protected-access
 
             @property
-            def fastRunPriority(self):
-                return self._creature._fast_run_priority
+            def fastrunpriority(self):
+                return self._creature._fast_run_priority # pylint: disable=protected-access
 
             @property
-            def idlePriority(self):
-                return self._creature._idle_priority
+            def idlepriority(self):
+                return self._creature._idle_priority # pylint: disable=protected-access
 
             @property
-            def rotatePriority(self):
-                return self._creature._rotate_priority
+            def rotatepriority(self):
+                return self._creature._rotate_priority # pylint: disable=protected-access
 
         def __init__(self, space, x, y, structure, energy, parent=None):
 
@@ -263,16 +265,17 @@ class Simulation(object):
             self._energy = int(energy)
             self._structure = int(structure)
 
-            mass = self._get_mass()
-            radius = self._get_radius(mass)
+            mass = self.__getMass()
+            radius = self.__getRadius(mass)
 
             super().__init__(space, mass, radius, x, y)
 
             self.shape.collision_type = Simulation.CREATURE_COLLISION_TYPE
-            self.shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.CREATURE_COLLISION_TYPE - 1)))
+            self.shape.filter = pymunk.ShapeFilter(
+                categories=(1 << (Simulation.CREATURE_COLLISION_TYPE - 1)))
 
             self._species = 'nameless'
-            self._id = self._new_id()
+            self._id = self.__newId()
 
             self._is_eating = 0
 
@@ -294,13 +297,16 @@ class Simulation(object):
             self._action = None
 
             #self._sound_sensor = Simulation.SoundSensor(self, 200)
-            self._vision_sensor = Simulation.VisionSensor(self, 10*radius*self._vision_distance, pi*(10 + 210*self._vision_angle)/180)
+            self._vision_sensor = \
+                Simulation.VisionSensor(self,
+                                        10*radius*self._vision_distance,
+                                        pi*(10 + 210*self._vision_angle)/180)
 
             self._properties = Simulation.Creature.Properties(self)
             self.selected = False
 
         @property
-        def headPosition(self):
+        def headposition(self):
 
             radius = self.shape.radius
             pos = self.body.position
@@ -314,10 +320,11 @@ class Simulation(object):
         def eat(self, simulation, resource):
 
             eat_speed = (0.3 + self._eating_speed)/3
-            energy_gained = int(resource.consume(simulation, self.body.mass*eat_speed))
+            energy_gained = int(resource.consume(simulation,
+                                                 self.body.mass*eat_speed))
 
             if energy_gained == 0:
-                return None
+                return
 
             spent_to_eat = int((eat_speed/2)*energy_gained)
 
@@ -327,7 +334,7 @@ class Simulation(object):
 
             self._is_eating = 5
 
-            self._update_self()
+            self.__updateSelf()
 
         def pushBehaviour(self, new_behaviour):
 
@@ -353,35 +360,41 @@ class Simulation(object):
 
         def visionAlert(self, creature):
 
+            # pylint: disable=assignment-from-none
             new_action = self._behaviours[-1].visionAlert(self, creature)
+            # pylint: enable=assignment-from-none
 
             if new_action is not None:
                 self._action = new_action
 
         def visionResourceAlert(self, resource):
 
-            new_action = self._behaviours[-1].visionResourceAlert(self, resource)
+            # pylint: disable=assignment-from-none
+            new_action = self._behaviours[-1].visionResourceAlert(
+                self, resource)
+            # pylint: enable=assignment-from-none
 
             if new_action is not None:
                 self._action = new_action
 
-        def _get_radius(self, mass=None):
+        def __getRadius(self, mass=None):
 
             if mass is None:
                 mass = self.body.mass
             return sqrt(mass)
 
-        def _get_mass(self):
+        def __getMass(self):
             return (self._spent_resources + self._structure + self._energy)/1000
 
-        def _update_self(self):
+        def __updateSelf(self):
 
-            self.body.mass = self._get_mass()
+            self.body.mass = self.__getMass()
 
-            new_radius = self._get_radius()
+            new_radius = self.__getRadius()
             if new_radius != self.shape.radius:
                 self.shape.unsafe_set_radius(new_radius)
-                self._vision_sensor.distance = 10*new_radius*self._vision_distance
+                self._vision_sensor.distance = \
+                    10*new_radius*self._vision_distance
 
         @property
         def eating(self):
@@ -389,12 +402,14 @@ class Simulation(object):
 
         def act(self, _simulation):
 
-            energy_consume_vision = (0.1 + self._vision_distance)*(1 + self._vision_angle)
+            energy_consume_vision = \
+                (0.1 + self._vision_distance)*(1 + self._vision_angle)
             energy_consume_speed = self._speed
             energy_consume_eat_speed = 0.2*self._eating_speed
-            base_energy_consume = int(self.body.mass*(energy_consume_vision + energy_consume_speed + energy_consume_eat_speed)//100) + 1
+            base_energy_consume = int(self.body.mass*(energy_consume_vision + \
+                energy_consume_speed + energy_consume_eat_speed)//100) + 1
 
-            self._consume_energy(base_energy_consume)
+            self.__consumeEnergy(base_energy_consume)
 
             if self._is_eating > 0:
                 self._is_eating -= 1
@@ -406,7 +421,7 @@ class Simulation(object):
 
             if action_result is None:
                 self._action = None
-                return None
+                return
 
             speed_factor, angle_factor = action_result
 
@@ -420,22 +435,23 @@ class Simulation(object):
             elif angle_factor < -1:
                 angle_factor = -1
 
-            self._do_speed(speed_factor)
-            self._do_angle_speed(angle_factor)
+            self.__doSpeed(speed_factor)
+            self.__doAngleSpeed(angle_factor)
 
             if self._spent_resources > 0.05*(self._energy + self._structure):
                 self._spent_resources = 0
-                self._update_self()
+                self.__updateSelf()
 
-        def _do_speed(self, factor):
+        def __doSpeed(self, factor):
 
             speed = 50*(factor**2)*(self._speed + 0.01)
             if factor < 0:
                 speed = -speed
 
-            energy_consume = int(abs(speed*self.body.mass*factor*(1 + 2*abs(factor - 0.5))*sqrt(self._speed + 0.01))//100)
+            energy_consume = int(abs(speed*self.body.mass*factor* \
+                (1 + 2*abs(factor - 0.5))*sqrt(self._speed + 0.01))//100)
 
-            if not self._consume_energy(energy_consume):
+            if not self.__consumeEnergy(energy_consume):
                 speed = 0
 
             angle = self.body.angle
@@ -445,16 +461,18 @@ class Simulation(object):
 
             self.body.velocity += (speed*cos(angle), speed*sin(angle))
 
-        def _do_angle_speed(self, factor):
+        def __doAngleSpeed(self, factor):
 
             velocity = self.body.velocity
             current_speed = sqrt(velocity.x**2 + velocity.y**2)
 
-            angular_speed = (-1 if factor < 0 else 1)*(factor**2)*(current_speed + 40*sqrt(self._speed) + 40)/100
+            angular_speed = (-1 if factor < 0 else 1)*(factor**2)* \
+                (current_speed + 40*sqrt(self._speed) + 40)/100
 
-            energy_consume = abs(floor(angular_speed*self.body.mass*factor*sqrt(self._speed + 0.2)))//50
+            energy_consume = abs(floor(angular_speed*self.body.mass*factor* \
+                sqrt(self._speed + 0.2)))//50
 
-            if not self._consume_energy(energy_consume):
+            if not self.__consumeEnergy(energy_consume):
                 angular_speed = 0
 
             self.body.angular_velocity += angular_speed
@@ -476,7 +494,7 @@ class Simulation(object):
                             pos, radius, angle, self._vision_sensor.angle,
                             width=1)
 
-        def _consume_energy(self, qtd):
+        def __consumeEnergy(self, qtd):
 
             if qtd < 0 or qtd > self._energy:
                 return False
@@ -489,8 +507,11 @@ class Simulation(object):
         def __repr__(self):
             return "Creature<{}>".format(self._id)
 
+        def stopAction(self):
+            self._action = None
+
         @staticmethod
-        def _new_id():
+        def __newId():
             Simulation.Creature.LAST_ID += 1
             return Simulation.Creature.LAST_ID
 
@@ -509,22 +530,22 @@ class Simulation(object):
         @energy.setter
         def energy(self, new_val):
             self._energy = max(int(new_val), 0)
-            self._update_self()
+            self.__updateSelf()
 
         @property
         def properties(self):
             return self._properties
 
         @property
-        def currentSpeed(self):
+        def currentspeed(self):
             return self.body.velocity.length
 
         @property
-        def currentVisionDistance(self):
+        def currentvisiondistance(self):
             return self._vision_sensor.distance
 
         @property
-        def currentVisionAngle(self):
+        def currentvisionangle(self):
             return self._vision_sensor.angle
 
     def __init__(self, population_size=16, starting_resources=20, size=1000,
@@ -586,29 +607,28 @@ class Simulation(object):
 
         handler = self._space.add_collision_handler(
             self.CREATURE_COLLISION_TYPE, self.SOUND_SENSOR_COLLISION_TYPE)
-        handler.begin = self._sensor_alert
+        handler.begin = self.__sensorAlert
 
         handler = self._space.add_collision_handler(
             self.CREATURE_COLLISION_TYPE, self.VISION_SENSOR_COLLISION_TYPE)
-        handler.begin = self._vision_alert
+        handler.begin = self.__visionAlert
 
         handler = self._space.add_collision_handler(
             self.RESOURCE_COLLISION_TYPE, self.VISION_SENSOR_COLLISION_TYPE)
-        handler.begin = self._resource_alert
+        handler.begin = self.__resourceAlert
 
         handler = self._space.add_collision_handler(
             self.CREATURE_COLLISION_TYPE, self.RESOURCE_COLLISION_TYPE)
-        handler.pre_solve = self._resource_creature_collision
+        handler.pre_solve = self.__resourceCreatureCollision
 
         handler = self._space.add_collision_handler(
             self.CREATURE_COLLISION_TYPE, self.WALL_COLLISION_TYPE)
-        handler.pre_solve = self._creature_wall_collision
+        handler.pre_solve = self.__creatureWallCollision
 
         self._creatures = []
         self._resources = []
 
         self._running = True
-        screen_size = screen_size
         mul = size/300
         self._size = ((screen_size[0] - self.__lat_column_size)*mul,
                       screen_size[1]*mul)
@@ -619,11 +639,11 @@ class Simulation(object):
                              self._size[1]*(0.1 + 0.8*random.random()),
                              500000, 500000)
 
-        self._generate_resources()
+        self.__generateResources()
 
-        self._add_walls()
+        self.__addWalls()
 
-    def _generate_resources(self):
+    def __generateResources(self):
 
         resources_qtd = randint(self._resources_min, self._resources_max)
         for _ in range(resources_qtd):
@@ -646,15 +666,15 @@ class Simulation(object):
 
                 pygame.display.set_caption('Simulation')
 
-                self._process_events()
-                self._clear_screen()
-                self._draw_objects()
-                self._draw_side_info()
+                self.__processEvents()
+                self.__clearScreen()
+                self.__drawObjects()
+                self.__drawSideInfo()
                 pygame.display.flip()
 
                 self._clock.tick(self._ticks)
 
-    def _process_events(self):
+    def __processEvents(self):
 
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -663,25 +683,22 @@ class Simulation(object):
                 key = event.key
                 if key == K_ESCAPE:
                     self._running = False
-                elif key == K_SPACE or key == K_p:
+                elif key in (K_SPACE, K_p):
                     self._paused = not self._paused
-                elif key == K_a or key == K_LEFT:
+                elif key in (K_a, K_LEFT):
                     self._painter.xoffset -= 50
-                elif key == K_s or key == K_DOWN:
+                elif key in (K_s, K_DOWN):
                     self._painter.yoffset += 50
-                elif key == K_d or key == K_RIGHT:
+                elif key in (K_d, K_RIGHT):
                     self._painter.xoffset += 50
-                elif key == K_w or key == K_UP:
+                elif key in (K_w, K_UP):
                     self._painter.yoffset -= 50
-                elif (key == K_EQUALS or key == K_KP_PLUS) and \
-                    (pygame.key.get_mods() == KMOD_LCTRL or
-                     pygame.key.get_mods() == KMOD_RCTRL):
+                elif (key in (K_EQUALS, K_KP_PLUS)) and \
+                    (pygame.key.get_mods() in (KMOD_LCTRL, KMOD_RCTRL)):
 
                     self._painter.multiplier *= 1.1
-                elif (key == K_MINUS or
-                      key == K_KP_MINUS) and \
-                    (pygame.key.get_mods() == KMOD_LCTRL or
-                     pygame.key.get_mods() == KMOD_RCTRL):
+                elif (key in (K_MINUS, K_KP_MINUS)) and \
+                    (pygame.key.get_mods() in (KMOD_LCTRL, KMOD_RCTRL)):
 
                     self._painter.multiplier /= 1.1
 
@@ -716,72 +733,96 @@ class Simulation(object):
 
         return resource
 
-    def _clear_screen(self):
+    def __clearScreen(self):
 
         self._screen.fill((255, 255, 255))
 
-    def _draw_side_info(self):
+    def __drawSideInfo(self):
 
         screen_size = pygame.display.get_surface().get_size()
         start_point = screen_size[0] - self.__lat_column_size, 0
         creature = self._show_creature
 
-        pygame.draw.rect(self._screen, (200, 200, 200), (start_point[0], start_point[1], self.__lat_column_size, screen_size[1]))
+        pygame.draw.rect(self._screen, (200, 200, 200),
+                         (start_point[0], start_point[1],
+                          self.__lat_column_size, screen_size[1]))
 
-        creature_number_text = '-' if self._show_creature is None else 'Creature %d' % self._show_creature.id_
+        if self._show_creature is None:
+            creature_number_text = '-'
+        else:
+            creature_number_text = 'Creature %d' % self._show_creature.id_
 
-        textsurface = self._medium_font.render(creature_number_text, False, (0, 0, 0))
+        textsurface = self._medium_font.render(creature_number_text, False,
+                                               (0, 0, 0))
         text_size, _ = textsurface.get_size()
 
-        self._screen.blit(textsurface, (start_point[0] + (self.__lat_column_size - text_size)/2, start_point[1] + 20))
+        self._screen.blit(
+            textsurface,
+            (start_point[0] + (self.__lat_column_size - text_size)/2,
+             start_point[1] + 20))
 
         textsurface = self._medium_font.render('Genes', False, (0, 0, 0))
         text_size, _ = textsurface.get_size()
 
-        self._screen.blit(textsurface, (start_point[0] + (self.__lat_column_size - text_size)/2, screen_size[1] - 230))
+        self._screen.blit(
+            textsurface,
+            (start_point[0] + (self.__lat_column_size - text_size)/2,
+             screen_size[1] - 230))
 
-        labels = ('Energy', 'Weight', 'Radius', 'Speed', 'Vision Dist.', 'Vision Angle')
+        labels = ('Energy', 'Weight', 'Radius', 'Speed', 'Vision Dist.',
+                  'Vision Angle')
 
         if creature is None:
             values = ('-' for i in range(len(labels)))
         else:
             values = (creature.energy, creature.body.mass,
-                      creature.shape.radius, creature.currentSpeed,
-                      creature.currentVisionDistance,
-                      180*creature.currentVisionAngle/pi)
-            values = ('%d' % val if isinstance(val, int) else '%0.2f' % val if val < 10000 else '%.2E' % val for val in values)
+                      creature.shape.radius, creature.currentspeed,
+                      creature.currentvisiondistance,
+                      180*creature.currentvisionangle/pi)
+            values = ('%d' % val if isinstance(val, int) else
+                      '%0.2f' % val if val < 10000 else '%.2E' % val
+                      for val in values)
 
         to_write_list = zip(labels, values)
 
         start_y = start_point[1] + 50
-        self._write_text(to_write_list, start_point, start_y)
+        self.__writeText(to_write_list, start_point, start_y)
 
-        labels = ('Speed', 'Eating Speed', 'Vision Dist.', 'Vision Angle', 'Walk Priority', 'Run Priority', 'F. Run Priority',
+        labels = ('Speed', 'Eating Speed', 'Vision Dist.', 'Vision Angle',
+                  'Walk Priority', 'Run Priority', 'F. Run Priority',
                   'Idle Priority', 'Rotate Priority')
 
         if creature is None:
             values = ('-' for i in range(len(labels)))
         else:
-            pvalues = (creature.properties.speed, creature.properties.eatingSpeed, creature.properties.visionDistance, creature.properties.visionAngle)
+            pvalues = (creature.properties.speed,
+                       creature.properties.eatingspeed,
+                       creature.properties.visiondistance,
+                       creature.properties.visionangle)
 
-            priority_values = (creature.properties.walkPriority, creature.properties.runPriority, creature.properties.fastRunPriority,
-                               creature.properties.idlePriority + 1, creature.properties.rotatePriority)
+            priority_values = (creature.properties.walkpriority,
+                               creature.properties.runpriority,
+                               creature.properties.fastrunpriority,
+                               creature.properties.idlepriority + 1,
+                               creature.properties.rotatepriority)
             pr_val_sum = sum(priority_values)
             priority_values = (val/pr_val_sum for val in priority_values)
 
-            values = ('%.1f%%' % (100*val) for val in itertools.chain(pvalues, priority_values))
+            values = ('%.1f%%' % (100*val) for val in itertools.chain(
+                pvalues, priority_values))
 
         to_write_list = zip(labels, values)
 
         start_y = screen_size[1] - 200
-        self._write_text(to_write_list, start_point, start_y)
+        self.__writeText(to_write_list, start_point, start_y)
 
-    def _write_text(self, to_write_list, start_point, start_y):
+    def __writeText(self, to_write_list, start_point, start_y):
 
         for prop, val_str in to_write_list:
 
             textsurface = self._small_font.render(prop + ':', False, (0, 0, 0))
-            self._screen.blit(textsurface, (start_point[0] + 10, start_point[1] + start_y))
+            self._screen.blit(textsurface,
+                              (start_point[0] + 10, start_point[1] + start_y))
 
             textsurface = self._small_font.render(val_str, False, (0, 0, 0))
             text_size, _ = textsurface.get_size()
@@ -790,68 +831,76 @@ class Simulation(object):
 
             start_y += 20
 
-    def _draw_objects(self):
+    def __drawObjects(self):
 
         for obj in itertools.chain(self._resources, self._creatures):
             obj.draw(self._painter)
 
         #self._space.debug_draw(pymunk.pygame_util.DrawOptions(self._screen))
 
-    def _sensor_alert(self, arbiter, _space, _):
+    @staticmethod
+    def __sensorAlert(arbiter, _space, _):
 
         sound_pos = arbiter.shapes[0].body.position
         arbiter.shapes[1].creature.soundAlert(sound_pos.x, sound_pos.y)
 
         return False
 
-    def _vision_alert(self, arbiter, _space, _):
+    @staticmethod
+    def __visionAlert(arbiter, _space, _):
 
         vision_creature = arbiter.shapes[0].simulation_object
         arbiter.shapes[1].creature.visionAlert(vision_creature)
 
         return False
 
-    def _resource_alert(self, arbiter, _space, _):
+    @staticmethod
+    def __resourceAlert(arbiter, _space, _):
 
         vision_resource = arbiter.shapes[0].simulation_object
         arbiter.shapes[1].creature.visionResourceAlert(vision_resource)
 
         return False
 
-    def _resource_creature_collision(self, arbiter, _space, _):
+    def __resourceCreatureCollision(self, arbiter, _space, _):
 
         creature = arbiter.shapes[0].simulation_object
         resource = arbiter.shapes[1].simulation_object
 
-        creature_head_pos = creature.headPosition
+        creature_head_pos = creature.headposition
         resource_pos = resource.body.position
 
-        if 3*creature_head_pos.get_distance(resource_pos) < creature.shape.radius:
+        res_dist = creature_head_pos.get_distance(resource_pos)
+        if 3*res_dist < creature.shape.radius:
             creature.eat(self, resource)
 
         return False
 
-    def _creature_wall_collision(self, arbiter, _space, _):
+    @staticmethod
+    def __creatureWallCollision(arbiter, _space, _):
 
         creature = arbiter.shapes[0].simulation_object
 
-        creature._action = None
+        creature.stopAction()
 
         return True
 
-    def _add_walls(self):
+    def __addWalls(self):
 
         size = self._size
 
         static_body = self._space.static_body
         static_lines = [pymunk.Segment(static_body, (0, 0), (size[0], 0), 0.0),
-                        pymunk.Segment(static_body, (size[0], 0), (size[0], size[1]), 0.0),
-                        pymunk.Segment(static_body, (size[0], size[1]), (0, size[1]), 0.0),
+                        pymunk.Segment(static_body, (size[0], 0),
+                                       (size[0], size[1]), 0.0),
+                        pymunk.Segment(static_body, (size[0], size[1]),
+                                       (0, size[1]), 0.0),
                         pymunk.Segment(static_body, (0, size[1]), (0, 0), 0.0)]
 
         for shape in static_lines:
             shape.collision_type = Simulation.WALL_COLLISION_TYPE
-            shape.filter = pymunk.ShapeFilter(categories=(1 << (Simulation.WALL_COLLISION_TYPE - 1)))
+            shape.filter = pymunk.ShapeFilter(
+                categories=(1 << (Simulation.WALL_COLLISION_TYPE - 1)))
 
         for line in static_lines:
             line.elasticity = 0.3

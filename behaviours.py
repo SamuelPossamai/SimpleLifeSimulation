@@ -103,7 +103,7 @@ class EatingBehaviour(DefaultVisionSoundReactionBehaviour):
 
         if creature.eating is False:
 
-            if 3*creature.headPosition.get_distance(self._resource.body.position) < creature.shape.radius:
+            if 3*creature.headposition.get_distance(self._resource.body.position) < creature.shape.radius:
                 creature.popBehaviour()
 
         pos = self._resource.body.position
