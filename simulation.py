@@ -11,7 +11,8 @@ import pygame
 # pylint: disable=no-name-in-module
 from pygame.constants import (
     QUIT, KEYDOWN, K_ESCAPE, K_SPACE, K_p, MOUSEBUTTONUP, K_EQUALS, K_KP_PLUS,
-    K_KP_MINUS, K_MINUS, KMOD_LCTRL, KMOD_RCTRL
+    K_KP_MINUS, K_MINUS, KMOD_LCTRL, KMOD_RCTRL, K_a, K_s, K_d, K_w, K_LEFT,
+    K_DOWN, K_RIGHT, K_UP
 )
 # pylint: enable=no-name-in-module
 
@@ -583,19 +584,24 @@ class Simulation(object):
         self._dt = 1/15
         self._ticks = 50
 
-        handler = self._space.add_collision_handler(self.CREATURE_COLLISION_TYPE, self.SOUND_SENSOR_COLLISION_TYPE)
+        handler = self._space.add_collision_handler(
+            self.CREATURE_COLLISION_TYPE, self.SOUND_SENSOR_COLLISION_TYPE)
         handler.begin = self._sensor_alert
 
-        handler = self._space.add_collision_handler(self.CREATURE_COLLISION_TYPE, self.VISION_SENSOR_COLLISION_TYPE)
+        handler = self._space.add_collision_handler(
+            self.CREATURE_COLLISION_TYPE, self.VISION_SENSOR_COLLISION_TYPE)
         handler.begin = self._vision_alert
 
-        handler = self._space.add_collision_handler(self.RESOURCE_COLLISION_TYPE, self.VISION_SENSOR_COLLISION_TYPE)
+        handler = self._space.add_collision_handler(
+            self.RESOURCE_COLLISION_TYPE, self.VISION_SENSOR_COLLISION_TYPE)
         handler.begin = self._resource_alert
 
-        handler = self._space.add_collision_handler(self.CREATURE_COLLISION_TYPE, self.RESOURCE_COLLISION_TYPE)
+        handler = self._space.add_collision_handler(
+            self.CREATURE_COLLISION_TYPE, self.RESOURCE_COLLISION_TYPE)
         handler.pre_solve = self._resource_creature_collision
 
-        handler = self._space.add_collision_handler(self.CREATURE_COLLISION_TYPE, self.WALL_COLLISION_TYPE)
+        handler = self._space.add_collision_handler(
+            self.CREATURE_COLLISION_TYPE, self.WALL_COLLISION_TYPE)
         handler.pre_solve = self._creature_wall_collision
 
         self._creatures = []
@@ -654,20 +660,26 @@ class Simulation(object):
             if event.type == QUIT:
                 self._running = False
             elif event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
+                key = event.key
+                if key == K_ESCAPE:
                     self._running = False
-                elif event.key == K_SPACE or \
-                    event.key == K_p:
-
+                elif key == K_SPACE or key == K_p:
                     self._paused = not self._paused
-                elif (event.key == K_EQUALS or
-                      event.key == K_KP_PLUS) and \
+                elif key == K_a or key == K_LEFT:
+                    self._painter.xoffset -= 50
+                elif key == K_s or key == K_DOWN:
+                    self._painter.yoffset += 50
+                elif key == K_d or key == K_RIGHT:
+                    self._painter.xoffset += 50
+                elif key == K_w or key == K_UP:
+                    self._painter.yoffset -= 50
+                elif (key == K_EQUALS or key == K_KP_PLUS) and \
                     (pygame.key.get_mods() == KMOD_LCTRL or
                      pygame.key.get_mods() == KMOD_RCTRL):
 
                     self._painter.multiplier *= 1.1
-                elif (event.key == K_MINUS or
-                      event.key == K_KP_MINUS) and \
+                elif (key == K_MINUS or
+                      key == K_KP_MINUS) and \
                     (pygame.key.get_mods() == KMOD_LCTRL or
                      pygame.key.get_mods() == KMOD_RCTRL):
 

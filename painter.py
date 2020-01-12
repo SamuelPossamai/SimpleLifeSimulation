@@ -7,27 +7,30 @@ class Painter:
 
     def __init__(self, screen, multiplier):
 
-        self._screen = screen
-        self._mul = multiplier
+        self.__screen = screen
+        self.__mul = multiplier
+        self.__xoff = 0
+        self.__yoff = 0
 
     def drawCircle(self, color, center, radius, width=0):
-        pygame.draw.circle(self._screen, color,
-                           (int(center[0]*self._mul), int(center[1]*self._mul)),
-                           int(radius*self._mul), width)
+        pygame.draw.circle(self.__screen, color,
+                           self.mapPointToScreen(center),
+                           int(radius*self.__mul), width)
 
     def drawLine(self, color, start, end, width=1):
-        pygame.draw.line(self._screen, color,
-                         (int(start[0]*self._mul), int(start[1]*self._mul)),
-                         (int(end[0]*self._mul), int(end[1]*self._mul)), width)
+        pygame.draw.line(self.__screen, color,
+                         self.mapPointToScreen(start),
+                         self.mapPointToScreen(end),
+                         width)
 
     # TODO: implement width
     def drawArc(self, color, center, radius, angle, open_angle, width=None):
         del width
 
-        radius *= self._mul
+        radius *= self.__mul
         radius = int(radius)
 
-        center = (int(center[0]*self._mul), int(center[1]*self._mul))
+        center = self.mapPointToScreen(center)
 
         points = [center]
 
@@ -42,18 +45,44 @@ class Painter:
             points.append(pos)
             cur_angle -= angle_diff
 
-        pygame.draw.polygon(self._screen, color, points)
+        pygame.draw.polygon(self.__screen, color, points)
 
     def mapPointToScreen(self, point):
-        return (int(point[0]*self._mul), int(point[1]*self._mul))
+        return (int((point[0] + self.__xoff)*self.__mul),
+                int((point[1] + self.__yoff)*self.__mul))
 
     def mapPointFromScreen(self, point):
-        return (point[0]/self._mul, point[1]/self._mul)
+        return (point[0]/self.__mul - self.__xoff,
+                point[1]/self.__mul - self.__yoff)
 
     @property
     def multiplier(self):
-        return self._mul
+        return self.__mul
 
     @multiplier.setter
     def multiplier(self, mul):
-        self._mul = mul
+        self.__mul = mul
+
+    @property
+    def xoffset(self):
+        return self.__xoff
+
+    @xoffset.setter
+    def xoffset(self, new_val):
+        self.__xoff = new_val
+
+    @property
+    def yoffset(self):
+        return self.__yoff
+
+    @yoffset.setter
+    def yoffset(self, new_val):
+        self.__yoff = new_val
+
+    @property
+    def offset(self):
+        return (self.__xoff, self.__yoff)
+
+    @offset.setter
+    def offset(self, offset_val):
+        self.__xoff, self.__yoff = offset_val
