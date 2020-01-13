@@ -190,6 +190,26 @@ class Simulation:
             self.shape.filter = pymunk.ShapeFilter(
                 categories=(1 << (Simulation.RESOURCE_COLLISION_TYPE - 1)))
 
+            self.__convert_interval = 1000
+            self.__steps_to_convert = self.__convert_interval
+            self.__convert_rsc_qtd = 10
+
+        def step(self):
+
+            if self.__steps_to_convert > 0:
+                self.__steps_to_convert -= 1
+            else:
+                if self._int_rsc > 0:
+                    if self._int_rsc < self.__convert_rsc_qtd:
+                        cvt_qtd = self._int_rsc
+                    else:
+                        cvt_qtd = self.__convert_rsc_qtd
+                    self._int_rsc -= cvt_qtd
+                    self._ext_rsc += cvt_qtd
+                    self.shape.unsafe_set_radius(self.__getRadius())
+
+                self.__steps_to_convert = self.__convert_interval
+
         def consume(self, _simulation, quantity):
 
             if quantity >= self._ext_rsc:
@@ -400,7 +420,7 @@ class Simulation:
         def eating(self):
             return self._is_eating > 0
 
-        def act(self, _simulation):
+        def act(self, simulation):
 
             energy_consume_vision = \
                 (0.1 + self._vision_distance)*(1 + self._vision_angle)
@@ -439,6 +459,8 @@ class Simulation:
             self.__doAngleSpeed(angle_factor)
 
             if self._spent_resources > 0.05*(self._energy + self._structure):
+                simulation.newResource(*self.body.position, 0,
+                                       self._spent_resources)
                 self._spent_resources = 0
                 self.__updateSelf()
 
@@ -661,6 +683,9 @@ class Simulation:
 
                 for creature in self._creatures:
                     creature.act(self)
+
+                for resource in self._resources:
+                    resource.step()
 
             if self._use_graphic is True:
 
