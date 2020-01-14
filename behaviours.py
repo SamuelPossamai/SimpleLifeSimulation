@@ -6,12 +6,11 @@ from random import randint
 
 from math import pi
 
-from actions import IdleAction, WalkAction, RunAction, FastRunAction, RotateAction
+from actions import (
+    IdleAction, WalkAction, RunAction, FastRunAction, RotateAction
+)
 
 class AbstractBehaviour(ABC):
-
-    def __init__(self):
-        super().__init__()
 
     @abstractmethod
     def selectAction(self, creature):
@@ -26,36 +25,36 @@ class AbstractBehaviour(ABC):
         pass
 
     @abstractmethod
-    def soundAlert(self, creature, x, y):
+    def soundAlert(self, creature, x_pos, y_pos):
         pass
 
-class DefaultVisionSoundReactionBehaviour(AbstractBehaviour):
-
-    def __init__(self):
-        super().__init__()
+class DefaultVisionSoundReactionBehaviour(AbstractBehaviour): # pylint: disable=abstract-method
 
     def visionAlert(self, creature, other):
         return None
 
-    def visionResourceAlert(self, creature, resource):
+    def visionResourceAlert(self, creature, resource): # pylint: disable=useless-return
 
         if creature.shape.radius < 4*resource.shape.radius:
             creature.pushBehaviour(EatingBehaviour(resource))
 
         return None
 
-    def soundAlert(self, creature, x, y):
+    def soundAlert(self, creature, x_pos, y_pos):
         return None
-        pos = creature.body.position
 
-        return RotateAction(atan2(y - pos.y, x - pos.x))
+        #pos = creature.body.position
+
+        #return RotateAction(atan2(y - pos.y, x - pos.x))
 
 class BasicBehaviour(DefaultVisionSoundReactionBehaviour):
 
-    def __init__(self, idle_priority, walk_priority, run_priority, fast_run_priority, rotate_priority):
+    def __init__(self, idle_priority, walk_priority, run_priority,
+                 fast_run_priority, rotate_priority):
         super().__init__()
 
-        self._select_priorities = (walk_priority, run_priority, idle_priority, rotate_priority, fast_run_priority)
+        self._select_priorities = (walk_priority, run_priority, idle_priority,
+                                   rotate_priority, fast_run_priority)
         self._priority_sum = sum(self._select_priorities)
 
     def selectAction(self, creature):
@@ -63,31 +62,35 @@ class BasicBehaviour(DefaultVisionSoundReactionBehaviour):
         value = randint(0, self._priority_sum - 1)
 
         select = 0
-        for p in self._select_priorities:
-            if value < p:
+        for priority in self._select_priorities:
+            if value < priority:
                 break
 
-            value -= p
+            value -= priority
             select += 1
 
-        if select == 0 or select == 1 or select == 4:
+        if select in (0, 1, 4):
             pos = creature.body.position
             radius = creature.shape.radius
 
             dist = 20
-            target_x = randint(int(pos.x - dist*radius), int(pos.x + dist*radius))
-            target_y = randint(int(pos.y - dist*radius), int(pos.y + dist*radius))
+            target_x = randint(int(pos.x - dist*radius),
+                               int(pos.x + dist*radius))
+            target_y = randint(int(pos.y - dist*radius),
+                               int(pos.y + dist*radius))
 
             if select == 0:
                 return WalkAction(target_x, target_y)
-            elif select == 1:
+
+            if select == 1:
                 return RunAction(target_x, target_y)
 
             return FastRunAction(target_x, target_y)
 
-        elif select == 2:
+        if select == 2:
             return IdleAction(randint(20, 80))
-        elif select == 3:
+
+        if select == 3:
             return RotateAction(2*pi*random.random())
 
         return None
@@ -103,23 +106,27 @@ class EatingBehaviour(DefaultVisionSoundReactionBehaviour):
 
         if creature.eating is False:
 
-            if 3*creature.headposition.get_distance(self._resource.body.position) < creature.shape.radius:
+            resource_distance = creature.headposition.get_distance(
+                self._resource.body.position)
+            if 3*resource_distance < creature.shape.radius:
                 creature.popBehaviour()
 
         pos = self._resource.body.position
         return RunAction(pos.x, pos.y, RunAction.BODY_PART.head)
 
     @staticmethod
-    def _resource_squared_distance(creature, resource):
+    def _resourceSquaredDistance(creature, resource):
 
         c_pos = creature.body.position
         r_pos = resource.body.position
 
         return (c_pos.x - r_pos.x)**2 + (c_pos.y - r_pos.y)**2
 
-    def visionResourceAlert(self, creature, resource):
+    def visionResourceAlert(self, creature, resource): # pylint: disable=useless-return
 
-        if self._resource_squared_distance(creature, resource) < self._resource_squared_distance(creature, self._resource):
+        if self._resourceSquaredDistance(creature, resource) < \
+            self._resourceSquaredDistance(creature, self._resource):
+
             creature.swapBehaviour(EatingBehaviour(resource))
 
         return None
