@@ -714,21 +714,21 @@ class Simulation:
                 elif key in (K_SPACE, K_p):
                     self._paused = not self._paused
                 elif key in (K_a, K_LEFT):
-                    self._painter.xoffset -= 50
+                    self.__until_event[self.moveLeft] = 10
                 elif key in (K_s, K_DOWN):
-                    self._painter.yoffset += 50
+                    self.__until_event[self.moveDown] = 10
                 elif key in (K_d, K_RIGHT):
-                    self._painter.xoffset += 50
+                    self.__until_event[self.moveRight] = 10
                 elif key in (K_w, K_UP):
-                    self._painter.yoffset -= 50
+                    self.__until_event[self.moveUp] = 10
                 elif (key in (K_EQUALS, K_KP_PLUS)) and \
                     (pygame.key.get_mods() in (KMOD_LCTRL, KMOD_RCTRL)):
 
-                    self.__until_event['zi'] = 10
+                    self.__until_event[self.zoomIn] = 10
                 elif (key in (K_MINUS, K_KP_MINUS)) and \
                     (pygame.key.get_mods() in (KMOD_LCTRL, KMOD_RCTRL)):
 
-                    self.__until_event['zo'] = 10
+                    self.__until_event[self.zoomOut] = 10
             elif event.type == MOUSEBUTTONUP:
                 pos = self._painter.mapPointFromScreen(pygame.mouse.get_pos())
                 mask = (1 << (Simulation.CREATURE_COLLISION_TYPE - 1))
@@ -746,9 +746,17 @@ class Simulation:
             elif event.type == KEYUP:
                 key = event.key
                 if key in (K_EQUALS, K_KP_PLUS):
-                    self.__removeEvent('zi', apply_at_least_once=True)
+                    self.__removeEvent(self.zoomIn, apply_at_least_once=True)
                 elif key in (K_MINUS, K_KP_MINUS):
-                    self.__removeEvent('zo', apply_at_least_once=True)
+                    self.__removeEvent(self.zoomOut, apply_at_least_once=True)
+                elif key in (K_a, K_LEFT):
+                    self.__removeEvent(self.moveLeft, apply_at_least_once=True)
+                elif key in (K_s, K_DOWN):
+                    self.__removeEvent(self.moveDown, apply_at_least_once=True)
+                elif key in (K_d, K_RIGHT):
+                    self.__removeEvent(self.moveRight, apply_at_least_once=True)
+                elif key in (K_w, K_UP):
+                    self.__removeEvent(self.moveUp, apply_at_least_once=True)
 
         events_to_remove = []
         for event, turns_until_event in self.__until_event.items():
@@ -762,7 +770,7 @@ class Simulation:
             del self.__until_event[event]
 
         for event in self.__events_happening:
-            Simulation.__EVENT_FUNCTIONS[event](self)
+            event()
 
     def __removeEvent(self, event, apply_at_least_once=False):
 
@@ -771,7 +779,7 @@ class Simulation:
         except KeyError:
             self.__until_event.pop(event, None)
             if apply_at_least_once:
-                Simulation.__EVENT_FUNCTIONS[event](self)
+                event()
 
     def newCreature(self, x, y, structure, energy):
 
@@ -970,8 +978,14 @@ class Simulation:
     def zoomOut(self):
         self._painter.multiplier /= 1.05
 
-    __EVENT_FUNCTIONS = {
+    def moveUp(self):
+        self._painter.yoffset += 20
 
-        'zi': zoomIn,
-        'zo': zoomOut
-    }
+    def moveDown(self):
+        self._painter.yoffset -= 20
+
+    def moveRight(self):
+        self._painter.xoffset -= 20
+
+    def moveLeft(self):
+        self._painter.xoffset += 20
