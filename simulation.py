@@ -12,7 +12,7 @@ import pygame
 from pygame.constants import (
     QUIT, KEYDOWN, K_ESCAPE, K_SPACE, K_p, MOUSEBUTTONUP, K_EQUALS, K_KP_PLUS,
     K_KP_MINUS, K_MINUS, KMOD_LCTRL, KMOD_RCTRL, K_a, K_s, K_d, K_w, K_LEFT,
-    K_DOWN, K_RIGHT, K_UP
+    K_DOWN, K_RIGHT, K_UP, KEYUP
 )
 # pylint: enable=no-name-in-module
 
@@ -604,6 +604,9 @@ class Simulation:
 
         self._out_file = out_file
 
+        self.__until_event = {}
+        self.__events_happening = set()
+
         self._use_graphic = use_graphic
         if use_graphic is True:
 
@@ -721,12 +724,11 @@ class Simulation:
                 elif (key in (K_EQUALS, K_KP_PLUS)) and \
                     (pygame.key.get_mods() in (KMOD_LCTRL, KMOD_RCTRL)):
 
-                    self._painter.multiplier *= 1.1
+                    self.__until_event['zi'] = 10
                 elif (key in (K_MINUS, K_KP_MINUS)) and \
                     (pygame.key.get_mods() in (KMOD_LCTRL, KMOD_RCTRL)):
 
-                    self._painter.multiplier /= 1.1
-
+                    self.__until_event['zo'] = 10
             elif event.type == MOUSEBUTTONUP:
                 pos = self._painter.mapPointFromScreen(pygame.mouse.get_pos())
                 mask = (1 << (Simulation.CREATURE_COLLISION_TYPE - 1))
@@ -741,6 +743,35 @@ class Simulation:
                 else:
                     self._show_creature = clicked.shape.simulation_object
                     self._show_creature.selected = True
+            elif event.type == KEYUP:
+                key = event.key
+                if key in (K_EQUALS, K_KP_PLUS):
+                    self.__removeEvent('zi', apply_at_least_once=True)
+                elif key in (K_MINUS, K_KP_MINUS):
+                    self.__removeEvent('zo', apply_at_least_once=True)
+
+        events_to_remove = []
+        for event, turns_until_event in self.__until_event.items():
+            if turns_until_event <= 0:
+                self.__events_happening.add(event)
+                events_to_remove.append(event)
+            else:
+                self.__until_event[event] = turns_until_event - 1
+
+        for event in events_to_remove:
+            del self.__until_event[event]
+
+        for event in self.__events_happening:
+            Simulation.__EVENT_FUNCTIONS[event](self)
+
+    def __removeEvent(self, event, apply_at_least_once=False):
+
+        try:
+            self.__events_happening.remove(event)
+        except KeyError:
+            self.__until_event.pop(event, None)
+            if apply_at_least_once:
+                Simulation.__EVENT_FUNCTIONS[event](self)
 
     def newCreature(self, x, y, structure, energy):
 
@@ -932,3 +963,15 @@ class Simulation:
             line.friction = 0.1
 
         self._space.add(static_lines)
+
+    def zoomIn(self):
+        self._painter.multiplier *= 1.05
+
+    def zoomOut(self):
+        self._painter.multiplier /= 1.05
+
+    __EVENT_FUNCTIONS = {
+
+        'zi': zoomIn,
+        'zo': zoomOut
+    }
