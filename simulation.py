@@ -979,14 +979,17 @@ class Simulation:
     def zoomOut(self):
         self._painter.multiplier /= 1.05
 
+    def __moveOffset(self):
+        return 5/self._painter.multiplier
+
     def moveUp(self):
-        self._painter.yoffset += 20
+        self._painter.yoffset += self.__moveOffset()
 
     def moveDown(self):
-        self._painter.yoffset -= 20
+        self._painter.yoffset -= self.__moveOffset()
 
     def moveRight(self):
-        self._painter.xoffset -= 20
+        self._painter.xoffset -= self.__moveOffset()
 
     def moveLeft(self):
-        self._painter.xoffset += 20
+        self._painter.xoffset += self.__moveOffset()
