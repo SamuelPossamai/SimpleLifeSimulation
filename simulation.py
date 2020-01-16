@@ -619,7 +619,8 @@ class Simulation:
             self._screen = pygame.display.set_mode(screen_size)
             self._clock = pygame.time.Clock()
 
-            self._painter = Painter(self._screen, 300/size)
+            self.__start_painter_mult = 300/size
+            self._painter = Painter(self._screen, self.__start_painter_mult)
 
         self._time = 0
 
@@ -710,7 +711,8 @@ class Simulation:
             elif event.type == KEYDOWN:
                 key = event.key
                 if key == K_ESCAPE:
-                    self._running = False
+                    self._painter.offset = (0, 0)
+                    self._painter.multiplier = self.__start_painter_mult
                 elif key in (K_SPACE, K_p):
                     self._paused = not self._paused
                 elif key in (K_a, K_LEFT):
