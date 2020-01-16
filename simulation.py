@@ -695,7 +695,7 @@ class Simulation:
                 pygame.display.set_caption('Simulation')
 
                 self.__processEvents()
-                self.__clearScreen()
+                self._screen.fill((100, 100, 100))
                 self.__drawObjects()
                 self.__drawSideInfo()
                 pygame.display.flip()
@@ -797,10 +797,6 @@ class Simulation:
 
         return resource
 
-    def __clearScreen(self):
-
-        self._screen.fill((255, 255, 255))
-
     def __drawSideInfo(self):
 
         screen_size = pygame.display.get_surface().get_size()
@@ -896,6 +892,9 @@ class Simulation:
             start_y += 20
 
     def __drawObjects(self):
+
+        self._painter.drawRect((255, 255, 255), (0, 0),
+                               self._size)
 
         for obj in itertools.chain(self._resources, self._creatures):
             obj.draw(self._painter)

@@ -23,6 +23,13 @@ class Painter:
                          self.mapPointToScreen(end),
                          width)
 
+    def drawRect(self, color, start, end, width=0):
+        x_start, y_start = self.mapPointToScreen(start)
+        x_end, y_end = self.mapPointToScreen(end)
+        pygame.draw.rect(self.__screen, color,
+                         (x_start, y_start, x_end - x_start, y_end - y_start),
+                         width)
+
     # TODO: implement width
     def drawArc(self, color, center, radius, angle, open_angle, width=None):
         del width
