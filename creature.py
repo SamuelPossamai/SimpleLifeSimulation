@@ -118,13 +118,14 @@ class VisionSensor:
 class CreatureTrait:
 
     def __init__(self, name, min_val, max_val, integer_only=False,
-                 mutation_rate=0.1):
+                 mutation_rate=0.1, proportional_mutation=False):
 
         self.__name = name
         self.__min = min_val
         self.__max = max_val
         self.__int_only = integer_only
         self.__mut = mutation_rate
+        self.__prop_mut = proportional_mutation
 
     @property
     def name(self):
@@ -138,7 +139,12 @@ class CreatureTrait:
 
     def mutate(self, val):
 
-        rand_n = 2*(0.5 - random.random())*(self.__max - self.__min)
+        if self.__prop_mut:
+            mut_base = val
+        else:
+            mut_base = self.__max - self.__min
+
+        rand_n = 2*(0.5 - random.random())*mut_base
         val += rand_n*self.__mut
 
         if self.__int_only:
@@ -152,11 +158,15 @@ class CreatureTrait:
 
         return val
 
-def addcreaturetraitproperties(traits):
+def addcreaturetraitproperties(traits, property_name_modifier=None):
 
     def decorator(baseclass):
         for trait in traits:
-            setattr(baseclass, trait.name,
+            if property_name_modifier is None:
+                property_name = trait.name
+            else:
+                property_name = property_name_modifier(trait.name)
+            setattr(baseclass, property_name,
                     property(lambda self, name=trait.name: self.getTrait(name)))
         return baseclass
 
@@ -168,14 +178,16 @@ CREATURE_TRAITS = [
     CreatureTrait('eatingspeed', 0, 1),
     CreatureTrait('visiondistance', 0, 1),
     CreatureTrait('visionangle', 0, 1),
+    CreatureTrait('childsize', 0, 0.5),
+    CreatureTrait('reproductionsize', 1000, 1.e10, integer_only=True),
     CreatureTrait('walkpriority', 0, 16, integer_only=True),
     CreatureTrait('runpriority', 0, 16, integer_only=True),
     CreatureTrait('fastrunpriority', 0, 16, integer_only=True),
     CreatureTrait('idlepriority', 0, 16, integer_only=True),
-    CreatureTrait('rotatepriority', 0, 16, integer_only=True),
+    CreatureTrait('rotatepriority', 0, 16, integer_only=True)
 ]
 
-@addcreaturetraitproperties(CREATURE_TRAITS)
+@addcreaturetraitproperties(CREATURE_TRAITS, lambda prop: prop + '_trait')
 class Creature(CircleSimulationObject):
 
     LAST_ID = -1
@@ -218,16 +230,16 @@ class Creature(CircleSimulationObject):
             raise Exception('Not yet implemented')
 
         self._behaviours = [BasicBehaviour(
-            self.idlepriority + 1, self.walkpriority,
-            self.runpriority, self.fastrunpriority,
-            self.rotatepriority)]
+            self.idlepriority_trait + 1, self.walkpriority_trait,
+            self.runpriority_trait, self.fastrunpriority_trait,
+            self.rotatepriority_trait)]
 
         self._action = None
 
         #self._sound_sensor = SoundSensor(self, 200)
         self._vision_sensor = \
-            VisionSensor(self, 10*radius*self.visiondistance,
-                         pi*(10 + 210*self.visionangle)/180)
+            VisionSensor(self, 10*radius*self.visiondistance_trait,
+                         pi*(10 + 210*self.visionangle_trait)/180)
 
         self._properties = Creature.Properties(self)
         self.selected = False
@@ -249,7 +261,7 @@ class Creature(CircleSimulationObject):
 
     def eat(self, simulation, resource):
 
-        eat_speed = (0.3 + self.eatingspeed)/3
+        eat_speed = (0.3 + self.eatingspeed_trait)/3
         energy_gained = int(resource.consume(simulation,
                                              self.body.mass*eat_speed))
 
@@ -324,7 +336,7 @@ class Creature(CircleSimulationObject):
         if new_radius != self.shape.radius:
             self.shape.unsafe_set_radius(new_radius)
             self._vision_sensor.distance = \
-                10*new_radius*self.visiondistance
+                10*new_radius*self.visiondistance_trait
 
     @property
     def eating(self):
@@ -333,9 +345,9 @@ class Creature(CircleSimulationObject):
     def act(self, simulation):
 
         energy_consume_vision = \
-            (0.1 + self.visiondistance)*(1 + self.visionangle)
-        energy_consume_speed = self.speed
-        energy_consume_eat_speed = 0.2*self.eatingspeed
+            (0.1 + self.visiondistance_trait)*(1 + self.visionangle_trait)
+        energy_consume_speed = self.speed_trait
+        energy_consume_eat_speed = 0.2*self.eatingspeed_trait
         base_energy_consume = int(self.body.mass*(energy_consume_vision + \
             energy_consume_speed + energy_consume_eat_speed)//100) + 1
 
@@ -376,7 +388,7 @@ class Creature(CircleSimulationObject):
 
     def __doSpeed(self, factor):
 
-        speed_trait = self.speed
+        speed_trait = self.speed_trait
         speed = 50*(factor**2)*(speed_trait + 0.01)
         if factor < 0:
             speed = -speed
@@ -396,7 +408,7 @@ class Creature(CircleSimulationObject):
 
     def __doAngleSpeed(self, factor):
 
-        speed_trait = self.speed
+        speed_trait = self.speed_trait
         velocity = self.body.velocity
         current_speed = sqrt(velocity.x**2 + velocity.y**2)
 
@@ -414,7 +426,7 @@ class Creature(CircleSimulationObject):
     def draw(self, painter, color=None):
 
         if color is None:
-            color = (230*self.eatingspeed, 0, 230*self.speed)
+            color = (230*self.eatingspeed_trait, 0, 230*self.speed_trait)
 
         pos = self.body.position
         radius = self.shape.radius
@@ -424,7 +436,7 @@ class Creature(CircleSimulationObject):
             painter.drawCircle((255, 80, 80), pos, radius + 8)
         super().draw(painter, color)
 
-        painter.drawArc((int(254*(1 - self.visiondistance)), 255, 50),
+        painter.drawArc((int(254*(1 - self.visiondistance_trait)), 255, 50),
                         pos, radius, angle, self._vision_sensor.angle,
                         width=1)
 
