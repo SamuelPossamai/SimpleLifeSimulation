@@ -402,8 +402,10 @@ class Creature(CircleSimulationObject):
 
     def __doSpeed(self, factor):
 
+        struct_factor = self._structure/self.__getTotalResources()
+
         speed_trait = self.speed_trait
-        speed = 50*(factor**2)*(speed_trait + 0.01)
+        speed = 50*(factor**2)*(speed_trait*struct_factor + 0.01)
         if factor < 0:
             speed = -speed
 
@@ -422,15 +424,16 @@ class Creature(CircleSimulationObject):
 
     def __doAngleSpeed(self, factor):
 
-        speed_trait = self.speed_trait
+        struct_factor = self._structure/self.__getTotalResources()
+        speed_trait_factor = self.speed_trait/struct_factor
         velocity = self.body.velocity
         current_speed = sqrt(velocity.x**2 + velocity.y**2)
 
         angular_speed = (-1 if factor < 0 else 1)*(factor**2)* \
-            (current_speed + 40*sqrt(speed_trait) + 40)/100
+            (current_speed + 40*sqrt(speed_trait_factor) + 40)/100
 
         energy_consume = abs(floor(angular_speed*self.body.mass*factor* \
-            sqrt(speed_trait + 0.2)))//50
+            sqrt(speed_trait_factor + 0.2)))//50
 
         if not self.__consumeEnergy(energy_consume):
             angular_speed = 0
