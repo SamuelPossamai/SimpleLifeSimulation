@@ -290,15 +290,15 @@ class Simulation:
         self._screen.blit(
             textsurface,
             (start_point[0] + (self.__lat_column_size - text_size)/2,
-             screen_size[1] - 230))
+             screen_size[1] - 250))
 
-        labels = ('Energy', 'Weight', 'Radius', 'Speed', 'Vision Dist.',
-                  'Vision Angle')
+        labels = ('Structure', 'Energy', 'Weight', 'Radius', 'Speed',
+                  'Vision Dist.', 'Vision Angle')
 
         if creature is None:
             values = ('-' for i in range(len(labels)))
         else:
-            values = (creature.energy, creature.body.mass,
+            values = (creature.structure, creature.energy, creature.body.mass,
                       creature.shape.radius, creature.currentspeed,
                       creature.currentvisiondistance,
                       180*creature.currentvisionangle/pi)
@@ -312,8 +312,8 @@ class Simulation:
         self.__writeText(to_write_list, start_point, start_y)
 
         labels = ('Speed', 'Eating Speed', 'Vision Dist.', 'Vision Angle',
-                  'Walk Priority', 'Run Priority', 'F. Run Priority',
-                  'Idle Priority', 'Rotate Priority')
+                  'Structure Percentage',  'Walk Priority', 'Run Priority',
+                  'F. Run Priority', 'Idle Priority', 'Rotate Priority')
 
         if creature is None:
             values = ('-' for i in range(len(labels)))
@@ -321,7 +321,8 @@ class Simulation:
             pvalues = (creature.properties.speed,
                        creature.properties.eatingspeed,
                        creature.properties.visiondistance,
-                       creature.properties.visionangle)
+                       creature.properties.visionangle,
+                       creature.properties.structpercentage)
 
             priority_values = (creature.properties.walkpriority,
                                creature.properties.runpriority,
@@ -336,7 +337,7 @@ class Simulation:
 
         to_write_list = zip(labels, values)
 
-        start_y = screen_size[1] - 200
+        start_y = screen_size[1] - 220
         self.__writeText(to_write_list, start_point, start_y)
 
     def __writeText(self, to_write_list, start_point, start_y):

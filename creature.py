@@ -496,6 +496,10 @@ class Creature(CircleSimulationObject):
         self.__updateSelf()
 
     @property
+    def structure(self):
+        return self._structure
+
+    @property
     def properties(self):
         return self._properties
 
