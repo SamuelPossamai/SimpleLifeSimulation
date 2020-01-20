@@ -1,7 +1,7 @@
 
 import random
 
-from math import sqrt, floor, pi, cos, sin
+from math import sqrt, floor, pi, cos, sin, ceil
 
 import pymunk
 
@@ -179,6 +179,8 @@ CREATURE_TRAITS = [
     CreatureTrait('visiondistance', 0, 1),
     CreatureTrait('visionangle', 0, 1),
     CreatureTrait('childsize', 0, 0.5),
+    CreatureTrait('structpercentage', 0.2, 0.8),
+    CreatureTrait('structmax', 1000, 1.e10, integer_only=True),
     CreatureTrait('reproductionsize', 1000, 1.e10, integer_only=True),
     CreatureTrait('walkpriority', 0, 16, integer_only=True),
     CreatureTrait('runpriority', 0, 16, integer_only=True),
@@ -326,7 +328,10 @@ class Creature(CircleSimulationObject):
         return sqrt(mass)
 
     def __getMass(self):
-        return (self._spent_resources + self._structure + self._energy)/1000
+        return self.__getTotalResources()/1000
+
+    def __getTotalResources(self):
+        return self._spent_resources + self._structure + self._energy
 
     def __updateSelf(self):
 
@@ -343,6 +348,15 @@ class Creature(CircleSimulationObject):
         return self._is_eating > 0
 
     def act(self, simulation):
+
+        total_rsc = self.__getTotalResources()
+        if self._structure < self.structmax_trait and \
+            self._structure < total_rsc*self.structpercentage_trait:
+
+            energy_tranform = int(ceil(0.001*total_rsc))
+            if self._energy > energy_tranform:
+                self._energy -= energy_tranform
+                self._structure += energy_tranform
 
         energy_consume_vision = \
             (0.1 + self.visiondistance_trait)*(1 + self.visionangle_trait)
