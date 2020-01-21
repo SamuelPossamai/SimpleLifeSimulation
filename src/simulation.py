@@ -19,12 +19,12 @@ from pygame.constants import (
 
 import pymunk
 
-from painter import Painter
+from .painter import Painter
 
-from resource_ import Resource
-from creature import Creature
+from .resource_ import Resource
+from .creature import Creature
 
-from collisiontypes import (
+from .collisiontypes import (
     CREATURE_COLLISION_TYPE, SOUND_SENSOR_COLLISION_TYPE,
     VISION_SENSOR_COLLISION_TYPE, RESOURCE_COLLISION_TYPE, WALL_COLLISION_TYPE
 )

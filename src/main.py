@@ -2,7 +2,7 @@
 
 import argparse
 
-from simulation import Simulation
+from .simulation import Simulation
 
 def interval_integer_min_limit(arg_name, min_, arg):
 
@@ -42,7 +42,7 @@ def interval_integer(arg_name, min_, max_, x):
 
     return x
 
-if __name__ == '__main__':
+def main():
 
     parser = argparse.ArgumentParser()
 
@@ -71,3 +71,6 @@ if __name__ == '__main__':
                       in_file=args.in_file, use_graphic=args.use_graphic,
                       quiet=args.quiet)
     game.run()
+
+if __name__ == '__main__':
+    main()

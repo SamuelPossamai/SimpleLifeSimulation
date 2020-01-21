@@ -5,11 +5,11 @@ from math import sqrt, floor, pi, cos, sin, ceil
 
 import pymunk
 
-from behaviours import BasicBehaviour
+from .behaviours import BasicBehaviour
 
-from simulationobject import CircleSimulationObject
+from .simulationobject import CircleSimulationObject
 
-from collisiontypes import (
+from .collisiontypes import (
     SOUND_SENSOR_COLLISION_TYPE, VISION_SENSOR_COLLISION_TYPE,
     CREATURE_COLLISION_TYPE
 )

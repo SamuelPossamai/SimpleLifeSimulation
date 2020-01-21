@@ -6,7 +6,7 @@ from random import randint
 
 from math import pi
 
-from actions import (
+from .actions import (
     IdleAction, WalkAction, RunAction, FastRunAction, RotateAction
 )
 
