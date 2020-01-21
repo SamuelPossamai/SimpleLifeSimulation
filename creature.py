@@ -353,7 +353,7 @@ class Creature(CircleSimulationObject):
         if self._structure < self.structmax_trait and \
             self._structure < total_rsc*self.structpercentage_trait:
 
-            energy_tranform = int(ceil(0.001*total_rsc))
+            energy_tranform = int(ceil(0.0001*total_rsc))
             if self._energy > energy_tranform:
                 self._energy -= energy_tranform
                 self._structure += energy_tranform
@@ -365,7 +365,10 @@ class Creature(CircleSimulationObject):
         base_energy_consume = int(self.body.mass*(energy_consume_vision + \
             energy_consume_speed + energy_consume_eat_speed)//100) + 1
 
-        self.__consumeEnergy(base_energy_consume)
+        if not self.__consumeEnergy(base_energy_consume):
+            simulation.delCreature(self)
+            simulation.newResource(*self.body.position, total_rsc, 0)
+            return
 
         if self._is_eating > 0:
             self._is_eating -= 1

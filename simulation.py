@@ -124,7 +124,7 @@ class Simulation:
                                self._population_size_max)):
             self.newCreature(self._size[0]*(0.1 + 0.8*random.random()),
                              self._size[1]*(0.1 + 0.8*random.random()),
-                             500000, 500000)
+                             200000, 800000)
 
         self.__generateResources()
 
@@ -251,6 +251,16 @@ class Simulation:
         self._creatures.append(creature)
 
         return creature
+
+    def delCreature(self, creature):
+
+        try:
+            self._creatures.remove(creature)
+        except ValueError:
+            return False
+
+        creature.destroy()
+        return True
 
     def newResource(self, x, y, ext_rsc, int_rsc):
 
