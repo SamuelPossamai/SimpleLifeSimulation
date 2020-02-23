@@ -58,7 +58,7 @@ class Resource(CircleSimulationObject):
         return quantity
 
     def __getRadius(self):
-        return sqrt((self._ext_rsc + self._int_rsc)/1000)
+        return sqrt((self._ext_rsc + self._int_rsc)/10000)
 
     def draw(self, painter, color=(0, 255, 0)):
         super().draw(painter, color)

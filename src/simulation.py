@@ -124,7 +124,7 @@ class Simulation:
                                self._population_size_max)):
             self.newCreature(self._size[0]*(0.1 + 0.8*random.random()),
                              self._size[1]*(0.1 + 0.8*random.random()),
-                             200000, 800000)
+                             2000000, 8000000)
 
         self.__generateResources()
 
@@ -136,7 +136,7 @@ class Simulation:
         for _ in range(resources_qtd):
             self.newResource(self._size[0]*(0.1 + 0.8*random.random()),
                              self._size[1]*(0.1 + 0.8*random.random()),
-                             500000, 0)
+                             5000000, 0)
 
     def run(self):
 
@@ -244,9 +244,9 @@ class Simulation:
             if apply_at_least_once:
                 event()
 
-    def newCreature(self, x, y, structure, energy):
+    def newCreature(self, x, y, structure, energy, parent=None):
 
-        creature = Creature(self._space, x, y, structure, energy)
+        creature = Creature(self._space, x, y, structure, energy, parent=parent)
 
         self._creatures.append(creature)
 

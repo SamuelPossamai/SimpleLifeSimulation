@@ -3,6 +3,7 @@ import random
 
 from math import sqrt, floor, pi, cos, sin, ceil
 
+import numpy
 import pymunk
 
 from .behaviours import BasicBehaviour
@@ -118,7 +119,8 @@ class VisionSensor:
 class CreatureTrait:
 
     def __init__(self, name, min_val, max_val, integer_only=False,
-                 mutation_rate=0.1, proportional_mutation=False):
+                 mutation_rate=0.1, proportional_mutation=False,
+                 exponential_random=False):
 
         self.__name = name
         self.__min = min_val
@@ -126,16 +128,30 @@ class CreatureTrait:
         self.__int_only = integer_only
         self.__mut = mutation_rate
         self.__prop_mut = proportional_mutation
+        self.__exp_rnd = exponential_random
 
     @property
     def name(self):
         return self.__name
 
     def random(self):
+
+        diff = self.__max - self.__min
+
+        if self.__exp_rnd:
+
+            value = self.__min + min(numpy.random.exponential(diff)/1000,
+                                     diff)
+
+            if self.__int_only:
+                return int(value)
+
+            return value
+
         if self.__int_only:
             return random.randint(self.__min, self.__max)
 
-        return random.random()*(self.__max - self.__min) + self.__min
+        return random.random()*(diff) + self.__min
 
     def mutate(self, val):
 
@@ -180,8 +196,9 @@ CREATURE_TRAITS = [
     CreatureTrait('visionangle', 0, 1),
     CreatureTrait('childsize', 0, 0.5),
     CreatureTrait('structpercentage', 0.2, 0.8),
-    CreatureTrait('structmax', 1000, 1.e10, integer_only=True),
-    CreatureTrait('reproductionsize', 1000, 1.e10, integer_only=True),
+    CreatureTrait('childsizepercentage', 0.05, 0.5),
+    CreatureTrait('structmax', 1000, 1.e10, integer_only=True,
+                  exponential_random=True),
     CreatureTrait('walkpriority', 0, 16, integer_only=True),
     CreatureTrait('runpriority', 0, 16, integer_only=True),
     CreatureTrait('fastrunpriority', 0, 16, integer_only=True),
@@ -229,7 +246,9 @@ class Creature(CircleSimulationObject):
             self.__traits = {trait.name: trait.random()
                              for trait in Creature.TRAITS}
         else:
-            raise Exception('Not yet implemented')
+            self.__traits = {trait.name:
+                                 trait.mutate(parent.__traits[trait.name])
+                             for trait in Creature.TRAITS}
 
         self._behaviours = [BasicBehaviour(
             self.idlepriority_trait + 1, self.walkpriority_trait,
@@ -245,6 +264,21 @@ class Creature(CircleSimulationObject):
 
         self._properties = Creature.Properties(self)
         self.selected = False
+
+    def reproduce(self, simulation):
+
+        child_percentage = self.childsizepercentage_trait
+        child_structure = int(self._structure*child_percentage)
+        child_energy = int(self._energy*child_percentage)
+
+        if child_structure > 0 and child_energy > 0:
+
+            self._structure -= child_structure
+            self._energy = child_energy
+
+            pos = self.body.position
+            simulation.newCreature(pos.x, pos.y, child_structure, child_energy,
+                                   parent=self)
 
     def getTrait(self, trait):
         return self.__traits[trait]
@@ -328,7 +362,7 @@ class Creature(CircleSimulationObject):
         return sqrt(mass)
 
     def __getMass(self):
-        return self.__getTotalResources()/1000
+        return self.__getTotalResources()/10000
 
     def __getTotalResources(self):
         return self._spent_resources + self._structure + self._energy
@@ -369,6 +403,9 @@ class Creature(CircleSimulationObject):
             simulation.delCreature(self)
             simulation.newResource(*self.body.position, total_rsc, 0)
             return
+
+        if self._structure >= self.structmax_trait:
+            self.reproduce(simulation)
 
         if self._is_eating > 0:
             self._is_eating -= 1
