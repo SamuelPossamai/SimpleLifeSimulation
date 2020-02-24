@@ -489,7 +489,8 @@ class Creature(CircleSimulationObject):
         angle = self.body.angle
 
         if self.selected is True:
-            painter.drawCircle((255, 80, 80), pos, radius + 8)
+            painter.drawCircle((255, 80, 80), pos,
+                               radius + 2/painter.multiplier)
         super().draw(painter, color)
 
         painter.drawArc((int(254*(1 - self.visiondistance_trait)), 255, 50),
