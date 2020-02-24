@@ -198,7 +198,7 @@ CREATURE_TRAITS = [
     CreatureTrait('structpercentage', 0.2, 0.8),
     CreatureTrait('childsizepercentage', 0.05, 0.5),
     CreatureTrait('structmax', 1000, 1.e10, integer_only=True,
-                  exponential_random=True),
+                  exponential_random=True, proportional_mutation=True),
     CreatureTrait('walkpriority', 0, 16, integer_only=True),
     CreatureTrait('runpriority', 0, 16, integer_only=True),
     CreatureTrait('fastrunpriority', 0, 16, integer_only=True),
