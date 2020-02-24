@@ -274,7 +274,7 @@ class Creature(CircleSimulationObject):
         if child_structure > 0 and child_energy > 0:
 
             self._structure -= child_structure
-            self._energy = child_energy
+            self._energy -= child_energy
 
             pos = self.body.position
             simulation.newCreature(pos.x, pos.y, child_structure, child_energy,
@@ -298,10 +298,9 @@ class Creature(CircleSimulationObject):
     def eat(self, simulation, resource):
 
         eat_speed = (0.3 + self.eatingspeed_trait)/3
-        energy_gained = int(resource.consume(simulation,
-                                             self.body.mass*eat_speed))
+        energy_gained = resource.consume(simulation, self.body.mass*eat_speed)
 
-        if energy_gained == 0:
+        if energy_gained <= 0:
             return
 
         spent_to_eat = int((eat_speed/2)*energy_gained)

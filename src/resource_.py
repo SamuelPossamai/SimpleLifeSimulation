@@ -42,6 +42,8 @@ class Resource(CircleSimulationObject):
 
     def consume(self, _simulation, quantity):
 
+        quantity = int(quantity)
+
         if quantity >= self._ext_rsc:
             consumed = self._ext_rsc
             self._ext_rsc = 0
