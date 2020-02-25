@@ -206,6 +206,41 @@ CREATURE_TRAITS = [
     CreatureTrait('rotatepriority', 0, 16, integer_only=True)
 ]
 
+class Species:
+
+    __all_species = []
+
+    def __init__(self):
+
+        self.__name = Species.__getName()
+
+        Species.__all_species.append(self)
+
+    @property
+    def name(self):
+        return self.__name
+
+    @staticmethod
+    def __getName():
+
+        name = ''
+        i = len(Species.__all_species)
+
+        first_letter_val = ord('A')
+        interval_size = ord('Z') - first_letter_val + 1
+        while i >= interval_size:
+
+            name = chr(first_letter_val + i%interval_size) + name
+
+            i //= interval_size
+            i -= 1
+
+        return chr(first_letter_val + i) + name
+
+    @staticmethod
+    def getAllSpecies():
+        return iter(Species.__all_species)
+
 @addcreaturetraitproperties(CREATURE_TRAITS, lambda prop: prop + '_trait')
 class Creature(CircleSimulationObject):
 
@@ -237,15 +272,16 @@ class Creature(CircleSimulationObject):
         self.shape.filter = pymunk.ShapeFilter(
             categories=(1 << (CREATURE_COLLISION_TYPE - 1)))
 
-        self._species = 'nameless'
         self._id = self.__newId()
 
         self._is_eating = 0
 
         if parent is None:
+            self.__species = Species()
             self.__traits = {trait.name: trait.random()
                              for trait in Creature.TRAITS}
         else:
+            self.__species = parent.species
             self.__traits = {trait.name:
                                  trait.mutate(parent.__traits[trait.name])
                              for trait in Creature.TRAITS}
@@ -520,7 +556,7 @@ class Creature(CircleSimulationObject):
 
     @property
     def species(self):
-        return self._species
+        return self.__species
 
     @property
     def id_(self):
