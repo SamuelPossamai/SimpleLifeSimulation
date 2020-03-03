@@ -197,8 +197,9 @@ CREATURE_TRAITS = [
     CreatureTrait('childsize', 0, 0.5),
     CreatureTrait('structpercentage', 0.2, 0.8),
     CreatureTrait('childsizepercentage', 0.05, 0.5),
-    CreatureTrait('structmax', 1000, 1.e10, integer_only=True,
+    CreatureTrait('structmax', 10000, 1.e10, integer_only=True,
                   exponential_random=True, proportional_mutation=True),
+    CreatureTrait('density', 0.3, 3),
     CreatureTrait('walkpriority', 0, 16, integer_only=True),
     CreatureTrait('runpriority', 0, 16, integer_only=True),
     CreatureTrait('fastrunpriority', 0, 16, integer_only=True),
@@ -261,6 +262,17 @@ class Creature(CircleSimulationObject):
 
         self._spent_resources = 0
         self._energy = int(energy)
+
+        if parent is None:
+            self.__species = Species()
+            self.__traits = {trait.name: trait.random()
+                             for trait in Creature.TRAITS}
+        else:
+            self.__species = parent.species
+            self.__traits = {trait.name:
+                                 trait.mutate(parent.__traits[trait.name])
+                             for trait in Creature.TRAITS}
+
         self._structure = int(structure)
 
         mass = self.__getMass()
@@ -275,17 +287,6 @@ class Creature(CircleSimulationObject):
         self._id = self.__newId()
 
         self._is_eating = 0
-
-        if parent is None:
-            self.__species = Species()
-            self.__traits = {trait.name: trait.random()
-                             for trait in Creature.TRAITS}
-        else:
-            self.__species = parent.species
-            self.__traits = {trait.name:
-                                 trait.mutate(parent.__traits[trait.name])
-                             for trait in Creature.TRAITS}
-
         self._behaviours = [BasicBehaviour(
             self.idlepriority_trait + 1, self.walkpriority_trait,
             self.runpriority_trait, self.fastrunpriority_trait,
@@ -394,7 +395,7 @@ class Creature(CircleSimulationObject):
 
         if mass is None:
             mass = self.body.mass
-        return sqrt(mass)
+        return sqrt(mass/self.density_trait)
 
     def __getMass(self):
         return self.__getTotalResources()/10000
