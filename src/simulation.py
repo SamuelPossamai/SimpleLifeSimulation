@@ -124,7 +124,7 @@ class Simulation:
                                self._population_size_max)):
             self.newCreature(self._size[0]*(0.1 + 0.8*random.random()),
                              self._size[1]*(0.1 + 0.8*random.random()),
-                             2000000, 8000000)
+                             1000000, 9000000)
 
         self.__generateResources()
 

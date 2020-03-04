@@ -196,6 +196,7 @@ CREATURE_TRAITS = [
     CreatureTrait('visionangle', 0, 1),
     CreatureTrait('childsize', 0, 0.5),
     CreatureTrait('structpercentage', 0.2, 0.8),
+    CreatureTrait('excessenergytoreproduce', 0, 2),
     CreatureTrait('childsizepercentage', 0.05, 0.5),
     CreatureTrait('structmax', 10000, 1.e10, integer_only=True,
                   exponential_random=True, proportional_mutation=True),
@@ -441,7 +442,10 @@ class Creature(CircleSimulationObject):
             return
 
         if self._structure >= self.structmax_trait:
-            self.reproduce(simulation)
+            excess_energy_percentage = \
+                self._energy/total_rsc - 1 + self.structpercentage_trait
+            if excess_energy_percentage > self.excessenergytoreproduce_trait:
+                self.reproduce(simulation)
 
         if self._is_eating > 0:
             self._is_eating -= 1
