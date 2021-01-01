@@ -410,10 +410,9 @@ class Simulation:
         resource_pos = resource.body.position
 
         res_dist = creature_head_pos.get_distance(resource_pos)
-        if 3*res_dist < creature.shape.radius:
-            creature.eat(self, resource)
+        creature.eat(self, resource)
 
-        return False
+        return True
 
     @staticmethod
     def __creatureWallCollision(arbiter, _space, _):

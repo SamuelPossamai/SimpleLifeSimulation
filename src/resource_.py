@@ -14,7 +14,7 @@ class Resource(CircleSimulationObject):
         self._ext_rsc = external_rsc
         self._int_rsc = internal_rsc
 
-        super().__init__(space, 1, self.__getRadius(), x, y)
+        super().__init__(space, 1e8, self.__getRadius(), x, y)
 
         self.shape.collision_type = RESOURCE_COLLISION_TYPE
         self.shape.filter = pymunk.ShapeFilter(
