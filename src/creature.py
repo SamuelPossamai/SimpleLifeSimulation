@@ -448,7 +448,7 @@ class Creature(CircleSimulationObject):
             energy_consume_speed + energy_consume_eat_speed)//100
 
         base_energy_consume = int(
-            200*base_energy_consume*self.__config.energy_consume_multiplier) + 1
+            40*base_energy_consume*self.__config.energy_consume_multiplier) + 1
 
         if not self.__consumeEnergy(base_energy_consume):
             simulation.delCreature(self)

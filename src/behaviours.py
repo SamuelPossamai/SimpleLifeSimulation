@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import random
 from random import randint
 
-from math import pi
+from math import pi, inf
 
 from .actions import (
     IdleAction, WalkAction, RunAction, FastRunAction, RotateAction
@@ -127,6 +127,9 @@ class EatingBehaviour(DefaultVisionSoundReactionBehaviour):
 
     @staticmethod
     def _resourceSquaredDistance(creature, resource):
+
+        if resource is None:
+            return inf
 
         c_pos = creature.body.position
         r_pos = resource.body.position
