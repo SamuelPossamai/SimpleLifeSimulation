@@ -1,4 +1,5 @@
 
+from collections import namedtuple
 import random
 
 from math import sqrt, floor, pi, cos, sin, ceil
@@ -194,11 +195,10 @@ CREATURE_TRAITS = [
     CreatureTrait('eatingspeed', 0, 1),
     CreatureTrait('visiondistance', 0, 1),
     CreatureTrait('visionangle', 0, 1),
-    CreatureTrait('childsize', 0, 0.5),
     CreatureTrait('structpercentage', 0.2, 0.8),
     CreatureTrait('excessenergytoreproduce', 0, 2),
     CreatureTrait('childsizepercentage', 0.05, 0.5),
-    CreatureTrait('structmax', 10000, 1.e10, integer_only=True,
+    CreatureTrait('structmax', 1.e6, 1.e11, integer_only=True,
                   exponential_random=True, proportional_mutation=True),
     CreatureTrait('density', 0.3, 3),
     CreatureTrait('walkpriority', 0, 16, integer_only=True),
@@ -250,6 +250,10 @@ class Creature(CircleSimulationObject):
 
     TRAITS = CREATURE_TRAITS
 
+    Config = namedtuple(
+        'CreatureConfig', ('energy_consume_multiplier', 'eating_multiplier'))
+    Config.__new__.__defaults__ = (1, 1)
+
     @addcreaturetraitproperties(TRAITS)
     class Properties:
 
@@ -259,7 +263,13 @@ class Creature(CircleSimulationObject):
         def getTrait(self, trait):
             return self.__creature.getTrait(trait)
 
-    def __init__(self, space, x, y, structure, energy, parent=None):
+    def __init__(self, space, x, y, structure, energy, parent=None,
+                 config=None):
+
+        if config is None:
+            self.__config = Creature.Config()
+        else:
+            self.__config = config
 
         self._spent_resources = 0
         self._energy = int(energy)
@@ -335,13 +345,14 @@ class Creature(CircleSimulationObject):
 
     def eat(self, simulation, resource):
 
-        eat_speed = (0.3 + self.eatingspeed_trait)/3
+        eat_speed_base = (0.3 + self.eatingspeed_trait)/3
+        eat_speed = 50*self.__config.eating_multiplier*eat_speed_base
         energy_gained = resource.consume(simulation, self.body.mass*eat_speed)
 
         if energy_gained <= 0:
             return
 
-        spent_to_eat = int((eat_speed/2)*energy_gained)
+        spent_to_eat = int((eat_speed_base/2)*energy_gained)
 
         self._spent_resources += spent_to_eat
         energy_gained -= spent_to_eat
@@ -433,8 +444,11 @@ class Creature(CircleSimulationObject):
             (0.1 + self.visiondistance_trait)*(1 + self.visionangle_trait)
         energy_consume_speed = self.speed_trait
         energy_consume_eat_speed = 0.2*self.eatingspeed_trait
-        base_energy_consume = int(self.body.mass*(energy_consume_vision + \
-            energy_consume_speed + energy_consume_eat_speed)//100) + 1
+        base_energy_consume = self.body.mass*(energy_consume_vision + \
+            energy_consume_speed + energy_consume_eat_speed)//100
+
+        base_energy_consume = int(
+            200*base_energy_consume*self.__config.energy_consume_multiplier) + 1
 
         if not self.__consumeEnergy(base_energy_consume):
             simulation.delCreature(self)
@@ -474,7 +488,7 @@ class Creature(CircleSimulationObject):
         self.__doSpeed(speed_factor)
         self.__doAngleSpeed(angle_factor)
 
-        if self._spent_resources > 0.05*(self._energy + self._structure):
+        if self._spent_resources > 0.1*(self._energy + self._structure):
             simulation.newResource(*self.body.position, 0,
                                    self._spent_resources)
             self._spent_resources = 0

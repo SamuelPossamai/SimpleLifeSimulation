@@ -136,7 +136,7 @@ class Simulation:
         for _ in range(resources_qtd):
             self.newResource(self._size[0]*(0.1 + 0.8*random.random()),
                              self._size[1]*(0.1 + 0.8*random.random()),
-                             5000000, 0)
+                             20000000, 0)
 
     def run(self):
 
@@ -403,14 +403,15 @@ class Simulation:
 
     def __resourceCreatureCollision(self, arbiter, _space, _):
 
-        creature = arbiter.shapes[0].simulation_object
-        resource = arbiter.shapes[1].simulation_object
+        creature_shape = arbiter.shapes[0]
+        creature = creature_shape.simulation_object
+        resource_shape = arbiter.shapes[1]
+        resource = resource_shape.simulation_object
 
-        creature_head_pos = creature.headposition
-        resource_pos = resource.body.position
-
-        res_dist = creature_head_pos.get_distance(resource_pos)
         creature.eat(self, resource)
+
+        if creature_shape.radius > 2*resource_shape.radius:
+            return False
 
         return True
 
