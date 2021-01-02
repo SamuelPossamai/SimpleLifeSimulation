@@ -9,7 +9,8 @@ from .collisiontypes import RESOURCE_COLLISION_TYPE
 
 class Resource(CircleSimulationObject):
 
-    def __init__(self, space, x, y, external_rsc, internal_rsc):
+    def __init__(self, space, x, y, external_rsc, internal_rsc,
+                 rsc_density=10):
 
         self._ext_rsc = external_rsc
         self._int_rsc = internal_rsc
@@ -20,9 +21,9 @@ class Resource(CircleSimulationObject):
         self.shape.filter = pymunk.ShapeFilter(
             categories=(1 << (RESOURCE_COLLISION_TYPE - 1)))
 
-        self.__convert_interval = 1000
+        self.__convert_interval = 100000
         self.__steps_to_convert = self.__convert_interval
-        self.__convert_rsc_qtd = 10
+        self.__convert_rsc_qtd = 100
 
     def step(self):
 
@@ -31,11 +32,11 @@ class Resource(CircleSimulationObject):
         else:
             if self._int_rsc > 0:
                 if self._int_rsc < self.__convert_rsc_qtd:
-                    cvt_qtd = self._int_rsc
+                    self._int_rsc = 0
+                    self._ext_rsc += self._int_rsc
                 else:
-                    cvt_qtd = self.__convert_rsc_qtd
-                self._int_rsc -= cvt_qtd
-                self._ext_rsc += cvt_qtd
+                    self._int_rsc -= self.__convert_rsc_qtd
+                    self._ext_rsc += self.__convert_rsc_qtd
                 self.shape.unsafe_set_radius(self.__getRadius())
 
             self.__steps_to_convert = self.__convert_interval

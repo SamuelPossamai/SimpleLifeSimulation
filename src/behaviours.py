@@ -59,6 +59,10 @@ class BasicBehaviour(DefaultVisionSoundReactionBehaviour):
 
     def selectAction(self, creature):
 
+        if creature.eating:
+            creature.pushBehaviour(EatingBehaviour())
+            return None
+
         value = randint(0, self._priority_sum - 1)
 
         select = 0
@@ -97,7 +101,7 @@ class BasicBehaviour(DefaultVisionSoundReactionBehaviour):
 
 class EatingBehaviour(DefaultVisionSoundReactionBehaviour):
 
-    def __init__(self, resource):
+    def __init__(self, resource=None):
         super().__init__()
 
         self._resource = resource
@@ -106,13 +110,20 @@ class EatingBehaviour(DefaultVisionSoundReactionBehaviour):
 
         if creature.eating is False:
 
+            if self._resource is None:
+                creature.popBehaviour()
+                return None
+
             resource_distance = creature.headposition.get_distance(
                 self._resource.body.position)
             if 3*resource_distance < creature.shape.radius:
                 creature.popBehaviour()
+                return None
 
-        pos = self._resource.body.position
-        return RunAction(pos.x, pos.y, RunAction.BODY_PART.head)
+            pos = self._resource.body.position
+            return RunAction(pos.x, pos.y, RunAction.BODY_PART.head)
+
+        return IdleAction(10)
 
     @staticmethod
     def _resourceSquaredDistance(creature, resource):

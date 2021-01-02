@@ -317,7 +317,7 @@ class Creature(CircleSimulationObject):
 
         child_percentage = self.childsizepercentage_trait
         child_structure = int(self._structure*child_percentage)
-        child_energy = int(self._energy*child_percentage)
+        child_energy = int(self._energy*child_percentage) + 1
 
         if child_structure > 0 and child_energy > 0:
 
@@ -464,7 +464,7 @@ class Creature(CircleSimulationObject):
         if self._is_eating > 0:
             self._is_eating -= 1
 
-        if self._action is None:
+        while self._action is None:
             self._action = self._behaviours[-1].selectAction(self)
 
         action_result = self._action.doAction(self)
