@@ -12,9 +12,13 @@ class SimulationObject:
         space.add(body, shape)
         self._shape = shape
         self._space = space
+        self.__destroyed = False
 
     def destroy(self):
-        self._space.remove(self.shape, self.body)
+        if self.__destroyed is False:
+            del self.shape.simulation_object
+            self._space.remove(self.shape, self.body)
+            self.__destroyed = True
 
     @staticmethod
     def newBody(mass, inertia):
@@ -27,6 +31,23 @@ class SimulationObject:
     @property
     def body(self):
         return self._shape.body
+
+    def toDict(self):
+
+        body = self.body
+
+        return {
+            'type': self.__class__.__name__,
+            'body': {
+                'mass': body.mass,
+                'moment': body.moment,
+                'position': list(body.position),
+                'angle': body.angle,
+                'velocity': list(body.velocity),
+                'angular_velocity': body.angular_velocity,
+                'body_type': body.body_type
+            }
+        }
 
 class CircleSimulationObject(SimulationObject):
 
@@ -45,3 +66,15 @@ class CircleSimulationObject(SimulationObject):
     def draw(self, painter, color=(0, 0, 0)):
 
         painter.drawCircle(color, self.body.position, self.shape.radius)
+
+    def toJSON(self):
+
+        base_dict = super().toDict()
+
+        base_dict['circle'] = {
+            'radius': self.shape.radius,
+            'elasticity': self.shape.elasticity,
+            'friction': self.shape.friction
+        }
+
+        return base_dict

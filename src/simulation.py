@@ -1,11 +1,10 @@
 
 import os
-
 import random
 from random import randint
-
 from math import pi
 import itertools
+import json
 
 import pygame
 
@@ -51,6 +50,8 @@ class Simulation:
         else:
             self._resources_min = starting_resources[0]
             self._resources_max = starting_resources[1]
+
+        self.__ticks_to_save = 0
 
         self._quiet = quiet
 
@@ -143,6 +144,7 @@ class Simulation:
         while self._running:
 
             if self._paused is False:
+
                 for _ in range(self._physics_steps_per_frame):
                     self._space.step(self._dt)
 
@@ -151,6 +153,11 @@ class Simulation:
 
                 for resource in self._resources:
                     resource.step()
+
+                self.__ticks_to_save -= 1
+                if self.__ticks_to_save <= 0:
+                    self.__ticks_to_save = 1000
+                    self.save()
 
             if self._use_graphic is True:
 
@@ -163,6 +170,18 @@ class Simulation:
                 pygame.display.flip()
 
                 self._clock.tick(self._ticks)
+
+    def save(self):
+
+        if self._out_file is None:
+            return
+
+        with open(self._out_file, 'w') as file:
+            json.dump({
+                'size': self._size,
+                'resources': [rsc.toDict() for rsc in self._resources],
+                'creatures': [creature.toDict() for creature in self._creatures]
+            }, file)
 
     def __processEvents(self):
 
