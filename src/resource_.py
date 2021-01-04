@@ -65,3 +65,15 @@ class Resource(CircleSimulationObject):
 
     def draw(self, painter, color=(0, 255, 0)):
         super().draw(painter, color)
+
+    def toJSON(self):
+
+        base_dict = super().toDict()
+
+        base_dict['resource'] = {
+            'internal': self._ext_rsc,
+            'external': self._int_rsc,
+            'ticks-to-convert': self.__convert_interval
+        }
+
+        return base_dict
