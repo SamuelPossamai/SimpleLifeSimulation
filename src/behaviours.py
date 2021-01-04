@@ -128,7 +128,7 @@ class EatingBehaviour(DefaultVisionSoundReactionBehaviour):
     @staticmethod
     def _resourceSquaredDistance(creature, resource):
 
-        if resource is None:
+        if resource is None or resource.shape.radius == 0:
             return inf
 
         c_pos = creature.body.position

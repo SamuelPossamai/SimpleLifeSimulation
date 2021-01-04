@@ -319,7 +319,7 @@ class Creature(CircleSimulationObject):
         child_structure = int(self._structure*child_percentage)
         child_energy = int(self._energy*child_percentage) + 1
 
-        if child_structure > 0 and child_energy > 0:
+        if child_structure > 100 and child_energy > 100:
 
             self._structure -= child_structure
             self._energy -= child_energy

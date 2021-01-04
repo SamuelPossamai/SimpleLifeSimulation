@@ -61,10 +61,11 @@ class Resource(CircleSimulationObject):
         return quantity
 
     def __getRadius(self):
-        return sqrt((self._ext_rsc + self._int_rsc)/30000)
+        return sqrt(self._ext_rsc/20000)
 
     def draw(self, painter, color=(0, 255, 0)):
-        super().draw(painter, color)
+        if self.shape.radius > 0:
+            super().draw(painter, color)
 
     def toJSON(self):
 
