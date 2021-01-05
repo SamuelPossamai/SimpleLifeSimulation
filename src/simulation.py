@@ -32,7 +32,7 @@ class Simulation:
 
     def __init__(self, population_size=16, starting_resources=20, size=1000,
                  out_file=None, in_file=None, screen_size=(600, 600),
-                 use_graphic=True, quiet=False):
+                 ticks_per_second=50, use_graphic=True, quiet=False):
 
         self.__lat_column_size = 250
         screen_size = (screen_size[0] + self.__lat_column_size, screen_size[1])
@@ -91,7 +91,7 @@ class Simulation:
         self._physics_steps_per_frame = 1
 
         self._dt = 1/15
-        self._ticks = 50
+        self._ticks = ticks_per_second
 
         handler = self._space.add_collision_handler(
             CREATURE_COLLISION_TYPE, SOUND_SENSOR_COLLISION_TYPE)

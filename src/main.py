@@ -50,6 +50,8 @@ def main():
                         default=32, help='Number of starting creatures at the begin of each generation, can be an interval min-max')
     parser.add_argument('-r', '--resources-qtd', type=lambda x : interval_integer_min_limit('Resources starting quantity', 0, x),
                         default=20, help='Number of starting resources at the begin of each generation, can be an inteval min-max')
+    parser.add_argument('-S', '--simulation-speed', type=lambda x : integer_min_limit('Simulation speed', 1, x),
+                        default=50, help='Speed of the simulation when running with graphics')
     parser.add_argument('-s', '--size', type=lambda x : integer_min_limit('Environment size', 100, x),
                         default=1000, help='Size of the environment')
     parser.add_argument('-W', '--screen-width', type=lambda x : integer_min_limit('Width', 100, x),
@@ -65,6 +67,7 @@ def main():
     args = parser.parse_args()
 
     game = Simulation(population_size=args.pop_size,
+                      ticks_per_second=args.simulation_speed,
                       starting_resources=args.resources_qtd,
                       size=args.size, out_file=args.out_file,
                       screen_size=(args.screen_width, args.screen_height),
