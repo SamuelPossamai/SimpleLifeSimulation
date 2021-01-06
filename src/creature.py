@@ -198,7 +198,7 @@ CREATURE_TRAITS = [
     CreatureTrait('structpercentage', 0.2, 0.8),
     CreatureTrait('excessenergytoreproduce', 0, 2),
     CreatureTrait('childsizepercentage', 0.05, 0.5),
-    CreatureTrait('structmax', 1.e6, 1.e11, integer_only=True,
+    CreatureTrait('structmax', 1.e6, 1.e9, integer_only=True,
                   exponential_random=True, proportional_mutation=True),
     CreatureTrait('density', 0.3, 3),
     CreatureTrait('walkpriority', 0, 16, integer_only=True),
@@ -212,9 +212,11 @@ class Species:
 
     __all_species = []
 
-    def __init__(self):
+    def __init__(self, traits, ancestor=None):
 
         self.__name = Species.__getName()
+        self.__traits = traits
+        self.__ancestor = ancestor
 
         Species.__all_species.append(self)
 
@@ -238,6 +240,9 @@ class Species:
             i -= 1
 
         return chr(first_letter_val + i) + name
+
+    def getChildSpecies(self, traits):
+        return self
 
     @staticmethod
     def getAllSpecies():
@@ -275,14 +280,14 @@ class Creature(CircleSimulationObject):
         self._energy = int(energy)
 
         if parent is None:
-            self.__species = Species()
             self.__traits = {trait.name: trait.random()
                              for trait in Creature.TRAITS}
+            self.__species = Species(self.__traits)
         else:
-            self.__species = parent.species
             self.__traits = {trait.name:
                                  trait.mutate(parent.__traits[trait.name])
                              for trait in Creature.TRAITS}
+            self.__species = getChildSpecies(self.__traits)
 
         self._structure = int(structure)
 
@@ -319,7 +324,7 @@ class Creature(CircleSimulationObject):
         child_structure = int(self._structure*child_percentage)
         child_energy = int(self._energy*child_percentage) + 1
 
-        if child_structure > 100 and child_energy > 100:
+        if child_structure > 1000 and child_energy > 1000:
 
             self._structure -= child_structure
             self._energy -= child_energy

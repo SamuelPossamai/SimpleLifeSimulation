@@ -46,7 +46,7 @@ def main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-p', '--pop-size', type=lambda x : interval_integer_min_limit('Population size', 2, x),
+    parser.add_argument('-p', '--pop-size', type=lambda x : interval_integer_min_limit('Population size', 1, x),
                         default=32, help='Number of starting creatures at the begin of each generation, can be an interval min-max')
     parser.add_argument('-r', '--resources-qtd', type=lambda x : interval_integer_min_limit('Resources starting quantity', 0, x),
                         default=20, help='Number of starting resources at the begin of each generation, can be an inteval min-max')
