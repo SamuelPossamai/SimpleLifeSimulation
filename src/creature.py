@@ -614,3 +614,18 @@ class Creature(CircleSimulationObject):
     @property
     def currentvisionangle(self):
         return self._vision_sensor.angle
+
+    def toDict(self):
+
+        base_dict = super().toDict()
+
+        base_dict['creature'] = {
+            'id': self._id,
+            'species': self.__species.name,
+            'traits': self.__traits,
+            'spent_resources': self._spent_resources,
+            'energy': self._energy,
+            'structure': self._structure
+        }
+
+        return base_dict

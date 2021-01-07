@@ -67,7 +67,7 @@ class CircleSimulationObject(SimulationObject):
 
         painter.drawCircle(color, self.body.position, self.shape.radius)
 
-    def toJSON(self):
+    def toDict(self):
 
         base_dict = super().toDict()
 

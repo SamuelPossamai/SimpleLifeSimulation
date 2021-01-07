@@ -67,7 +67,7 @@ class Resource(CircleSimulationObject):
         if self.shape.radius > 0:
             super().draw(painter, color)
 
-    def toJSON(self):
+    def toDict(self):
 
         base_dict = super().toDict()
 
