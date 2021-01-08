@@ -244,6 +244,13 @@ class Species:
     def getChildSpecies(self, traits):
         return self
 
+    def toDict(self):
+        return {
+            'name': self.__name,
+            'traits': self.__traits,
+            'ancestor': self.__ancestor.name
+        }
+
     @staticmethod
     def getAllSpecies():
         return iter(Species.__all_species)
@@ -287,7 +294,7 @@ class Creature(CircleSimulationObject):
             self.__traits = {trait.name:
                                  trait.mutate(parent.__traits[trait.name])
                              for trait in Creature.TRAITS}
-            self.__species = getChildSpecies(self.__traits)
+            self.__species = parent.species.getChildSpecies(self.__traits)
 
         self._structure = int(structure)
 

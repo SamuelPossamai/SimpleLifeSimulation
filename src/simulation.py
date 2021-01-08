@@ -179,6 +179,8 @@ class Simulation:
         with open(self._out_file, 'w') as file:
             json.dump({
                 'size': self._size,
+                'species': [species.toDict() for species in
+                            Species.getAllSpecies()],
                 'resources': [rsc.toDict() for rsc in self._resources],
                 'creatures': [creature.toDict() for creature in self._creatures]
             }, file)
