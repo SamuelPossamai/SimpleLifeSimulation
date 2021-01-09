@@ -248,7 +248,8 @@ class Species:
         return {
             'name': self.__name,
             'traits': self.__traits,
-            'ancestor': self.__ancestor.name
+            'ancestor': (None if self.__ancestor is None
+                         else self.__ancestor.name)
         }
 
     @staticmethod

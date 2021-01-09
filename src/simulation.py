@@ -21,7 +21,7 @@ import pymunk
 from .painter import Painter
 
 from .resource_ import Resource
-from .creature import Creature
+from .creature import Creature, Species
 
 from .collisiontypes import (
     CREATURE_COLLISION_TYPE, SOUND_SENSOR_COLLISION_TYPE,
