@@ -24,6 +24,20 @@ class SimulationObject:
     def newBody(mass, inertia):
         return pymunk.Body(mass, inertia)
 
+    @staticmethod
+    def newBodyFromDict(self, info):
+
+        body_info = info.get('body', {})
+
+        body = pymunk.Body(
+            body_info.get('mass', 1), body_info.get('inertia', 1))
+
+        body.position = body_info.get('position', (0, 0))
+        body.angle = body_info.get('angle', 0)
+        body.velocity = body_info.get('velocity', (0, 0))
+        body.angular_velocity = body_info.get('angular_velocity', 0)
+        body.body_type = body_info.get('body_type', pymunk.Body.Dynamic)
+
     @property
     def shape(self):
         return self._shape
