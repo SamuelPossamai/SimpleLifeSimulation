@@ -38,6 +38,8 @@ class SimulationObject:
         body.angular_velocity = body_info.get('angular_velocity', 0)
         body.body_type = body_info.get('body_type', pymunk.Body.Dynamic)
 
+        return body
+
     @property
     def shape(self):
         return self._shape
@@ -65,7 +67,25 @@ class SimulationObject:
 
 class CircleSimulationObject(SimulationObject):
 
-    def __init__(self, space, mass, radius, x, y, elasticity=0.5, friction=0.2):
+    def __init__(self, space, *args, **kwargs):
+
+        if len(args) == 1 and not kwargs:
+            info = args[0]
+
+            body = SimulationObject.newBodyFromDict(info)
+
+            circle_info = info.get('circle-shape', {})
+
+
+            shape = pymunk.Circle(body, circle_info.get('radius', 1), (0, 0))
+            shape.elasticity = circle_info.get('elasticity', 0.5)
+            shape.friction = circle_info.get('friction', 0.2)
+
+            super().__init__(space, body, shape, body.x, body.y)
+
+        self.__construct(space, *args, **kwargs)
+
+    def __construct(space, mass, radius, x, y, elasticity=0.5, friction=0.2):
 
         inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
 
@@ -85,7 +105,7 @@ class CircleSimulationObject(SimulationObject):
 
         base_dict = super().toDict()
 
-        base_dict['circle'] = {
+        base_dict['circle-shape'] = {
             'radius': self.shape.radius,
             'elasticity': self.shape.elasticity,
             'friction': self.shape.friction
