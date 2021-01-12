@@ -3,6 +3,12 @@ import pymunk
 
 class SimulationObject:
 
+    _fromDictClasses = {}
+
+    @classmethod
+    def initclass(cls):
+        cls._fromDictFunctions[cls.__name__] = cls
+
     def __init__(self, space, body, shape, x, y):
 
         shape.simulation_object = self
@@ -19,6 +25,10 @@ class SimulationObject:
             del self.shape.simulation_object
             self._space.remove(self.shape, self.body)
             self.__destroyed = True
+
+    @staticmethod
+    def newBody(mass, inertia):
+        return pymunk.Body(mass, inertia)
 
     @staticmethod
     def newBody(mass, inertia):
@@ -47,6 +57,15 @@ class SimulationObject:
     @property
     def body(self):
         return self._shape.body
+
+    @staticmethod
+    def fromDict(info):
+        obj_cls = SimulationObject._fromDictClasses.get(info.get('type'))
+
+        if obj_cls is None:
+            return None
+
+        return obj_cls(info)
 
     def toDict(self):
 
@@ -85,7 +104,8 @@ class CircleSimulationObject(SimulationObject):
 
         self.__construct(space, *args, **kwargs)
 
-    def __construct(space, mass, radius, x, y, elasticity=0.5, friction=0.2):
+    def __construct(self, space, mass, radius, x, y, elasticity=0.5,
+                    friction=0.2):
 
         inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
 
