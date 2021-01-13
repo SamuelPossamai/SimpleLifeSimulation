@@ -9,8 +9,24 @@ from .collisiontypes import RESOURCE_COLLISION_TYPE
 
 class Resource(CircleSimulationObject):
 
-    def __init__(self, space, x, y, external_rsc, internal_rsc,
-                 rsc_density=10):
+    def __init__(self, space, *args, **kwargs):
+
+        if len(args) == 1 and not kwargs:
+
+            info = args[0]
+
+            resource_info = info.get('resource', {})
+
+            self._ext_rsc = resource_info.get('internal', 0)
+            self._int_rsc = resource_info.get('external', 0)
+            self.__convert_interval = resource_info.get('ticks-to-convert', 0)
+
+            super().__init__(space, info)
+        else:
+            self.__construct(space, *args, **kwargs)
+
+    def __construct(self, space, x, y, external_rsc, internal_rsc,
+                    rsc_density=10):
 
         self._ext_rsc = external_rsc
         self._int_rsc = internal_rsc
@@ -78,3 +94,5 @@ class Resource(CircleSimulationObject):
         }
 
         return base_dict
+
+Resource.initclass()

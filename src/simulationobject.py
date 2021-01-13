@@ -7,7 +7,7 @@ class SimulationObject:
 
     @classmethod
     def initclass(cls):
-        cls._fromDictFunctions[cls.__name__] = cls
+        SimulationObject._fromDictClasses[cls.__name__] = cls
 
     def __init__(self, space, body, shape, x, y):
 
@@ -59,13 +59,13 @@ class SimulationObject:
         return self._shape.body
 
     @staticmethod
-    def fromDict(info):
+    def fromDict(space, info):
         obj_cls = SimulationObject._fromDictClasses.get(info.get('type'))
 
         if obj_cls is None:
             return None
 
-        return obj_cls(info)
+        return obj_cls(space, info)
 
     def toDict(self):
 
@@ -101,8 +101,8 @@ class CircleSimulationObject(SimulationObject):
             shape.friction = circle_info.get('friction', 0.2)
 
             super().__init__(space, body, shape, body.x, body.y)
-
-        self.__construct(space, *args, **kwargs)
+        else:
+            self.__construct(space, *args, **kwargs)
 
     def __construct(self, space, mass, radius, x, y, elasticity=0.5,
                     friction=0.2):
