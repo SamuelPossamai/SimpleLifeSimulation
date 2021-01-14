@@ -276,8 +276,35 @@ class Creature(CircleSimulationObject):
         def getTrait(self, trait):
             return self.__creature.getTrait(trait)
 
-    def __init__(self, space, x, y, structure, energy, parent=None,
-                 config=None):
+    def __init__(self, space, *args, **kwargs):
+
+        if len(args) == 1 and not kwargs:
+
+            info = args[0]
+
+            creature_info = info.get('creature', {})
+
+            self._id = creature_info.get('id', -1)
+
+            species_name = creature_info.get('species')
+            for species in Species.getAllSpecies():
+                if species == species_name:
+                    self.__species = species
+                    break
+            else:
+                self.__species = None
+
+            self.__traits = creature_info.get('traits')
+            self.__spent_resources = creature_info.get('spent_resources', 0)
+            self.__energy = creature_info.get('energy', 0)
+            self.__structure = creature_info.get('structure')
+
+            super().__init__(space, info)
+        else:
+            self.__construct(space, *args, **kwargs)
+
+    def __construct(self, space, x, y, structure, energy, parent=None,
+                     config=None):
 
         if config is None:
             self.__config = Creature.Config()
