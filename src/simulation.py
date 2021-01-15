@@ -20,6 +20,7 @@ import pymunk
 
 from .painter import Painter
 
+from .simulationobject import SimulationObject
 from .resource_ import Resource
 from .creature import Creature, Species
 
@@ -121,13 +122,30 @@ class Simulation:
         self._size = ((screen_size[0] - self.__lat_column_size)*mul,
                       screen_size[1]*mul)
 
-        for _ in range(randint(self._population_size_min,
-                               self._population_size_max)):
-            self.newCreature(self._size[0]*(0.1 + 0.8*random.random()),
-                             self._size[1]*(0.1 + 0.8*random.random()),
-                             1000000, 9000000)
+        if in_file is None:
 
-        self.__generateResources()
+            for _ in range(randint(self._population_size_min,
+                                self._population_size_max)):
+                self.newCreature(self._size[0]*(0.1 + 0.8*random.random()),
+                                self._size[1]*(0.1 + 0.8*random.random()),
+                                1000000, 9000000)
+
+            self.__generateResources()
+        else:
+            with open(in_file) as file:
+                content = json.load(file)
+                self._creatures = [
+                    creature for creature in
+                    (SimulationObject.fromDict(self._space, creature)
+                    for creature in content.get('creatures', ()))
+                    if creature is not None
+                ]
+                self._resources = [
+                    resource for resource in
+                    (SimulationObject.fromDict(self._space, resource)
+                    for resource in content.get('resources', ()))
+                    if resource is not None
+                ]
 
         self.__addWalls()
 

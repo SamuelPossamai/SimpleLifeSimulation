@@ -35,7 +35,7 @@ class SimulationObject:
         return pymunk.Body(mass, inertia)
 
     @staticmethod
-    def newBodyFromDict(self, info):
+    def newBodyFromDict(info):
 
         body_info = info.get('body', {})
 
@@ -46,7 +46,7 @@ class SimulationObject:
         body.angle = body_info.get('angle', 0)
         body.velocity = body_info.get('velocity', (0, 0))
         body.angular_velocity = body_info.get('angular_velocity', 0)
-        body.body_type = body_info.get('body_type', pymunk.Body.Dynamic)
+        body.body_type = body_info.get('body_type', pymunk.Body.DYNAMIC)
 
         return body
 
@@ -100,7 +100,9 @@ class CircleSimulationObject(SimulationObject):
             shape.elasticity = circle_info.get('elasticity', 0.5)
             shape.friction = circle_info.get('friction', 0.2)
 
-            super().__init__(space, body, shape, body.x, body.y)
+            x, y = body.position
+
+            super().__init__(space, body, shape, x, y)
         else:
             self.__construct(space, *args, **kwargs)
 
