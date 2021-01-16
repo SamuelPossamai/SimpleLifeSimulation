@@ -295,11 +295,27 @@ class Creature(CircleSimulationObject):
                 self.__species = None
 
             self.__traits = creature_info.get('traits')
-            self.__spent_resources = creature_info.get('spent_resources', 0)
-            self.__energy = creature_info.get('energy', 0)
-            self.__structure = creature_info.get('structure')
+            self._spent_resources = creature_info.get('spent_resources', 0)
+            self._energy = creature_info.get('energy', 0)
+            self._structure = creature_info.get('structure')
+            self.__config = self.Config()
+            self._is_eating = False
+            self._action = None
+            self._properties = Creature.Properties(self)
+            self.selected = False
 
             super().__init__(space, info)
+
+
+            self._behaviours = [BasicBehaviour(
+                self.idlepriority_trait + 1, self.walkpriority_trait,
+                self.runpriority_trait, self.fastrunpriority_trait,
+                self.rotatepriority_trait)]
+
+            self._vision_sensor = VisionSensor(
+                self, 10*self.shape.radius*self.visiondistance_trait,
+                pi*(10 + 210*self.visionangle_trait)/180)
+
         else:
             self.__construct(space, *args, **kwargs)
 
@@ -664,3 +680,5 @@ class Creature(CircleSimulationObject):
         }
 
         return base_dict
+
+Creature.initclass()
