@@ -134,15 +134,19 @@ class Simulation:
         else:
             with open(in_file) as file:
                 content = json.load(file)
+
+                for species in content.get('species', ()):
+                    Species.loadFromDict(species)
+
                 self._creatures = [
                     creature for creature in
-                    (SimulationObject.fromDict(self._space, creature)
+                    (Creature.fromDict(self._space, creature)
                     for creature in content.get('creatures', ()))
                     if creature is not None
                 ]
                 self._resources = [
                     resource for resource in
-                    (SimulationObject.fromDict(self._space, resource)
+                    (Resource.fromDict(self._space, resource)
                     for resource in content.get('resources', ()))
                     if resource is not None
                 ]

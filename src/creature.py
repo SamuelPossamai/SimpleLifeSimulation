@@ -244,6 +244,23 @@ class Species:
     def getChildSpecies(self, traits):
         return self
 
+    @staticmethod
+    def searchByName(name):
+        for species in Species.__all_species:
+            if species.name == name:
+                return species
+
+        return None
+
+    def loadFromDict(info):
+
+        species = Species(info.get('traits'),
+                          Species.searchByName(info.get('ancestor')))
+
+        species.__name = info.get('name', 'UNKNOWN')
+
+        return species
+
     def toDict(self):
         return {
             'name': self.__name,
@@ -303,6 +320,7 @@ class Creature(CircleSimulationObject):
             self._action = None
             self._properties = Creature.Properties(self)
             self.selected = False
+            self.__species = Species.searchByName(creature_info.get('species'))
 
             super().__init__(space, info)
 
