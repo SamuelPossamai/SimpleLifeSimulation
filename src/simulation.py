@@ -35,6 +35,19 @@ class Simulation:
                  out_file=None, in_file=None, screen_size=(600, 600),
                  ticks_per_second=50, use_graphic=True, quiet=False):
 
+        mul = size/300
+
+        if in_file is not None:
+            with open(in_file) as file:
+                in_file_content = json.load(file)
+
+            old_screen_size = in_file_content.get('size')
+            if old_screen_size is not None:
+                screen_size = (int(old_screen_size[0]/mul),
+                               int(old_screen_size[1]/mul))
+        else:
+            in_file_content = None
+
         self.__lat_column_size = 250
         screen_size = (screen_size[0] + self.__lat_column_size, screen_size[1])
 
@@ -118,7 +131,6 @@ class Simulation:
         self._resources = []
 
         self._running = True
-        mul = size/300
         self._size = ((screen_size[0] - self.__lat_column_size)*mul,
                       screen_size[1]*mul)
 
@@ -132,24 +144,21 @@ class Simulation:
 
             self.__generateResources()
         else:
-            with open(in_file) as file:
-                content = json.load(file)
+            for species in in_file_content.get('species', ()):
+                Species.loadFromDict(species)
 
-                for species in content.get('species', ()):
-                    Species.loadFromDict(species)
-
-                self._creatures = [
-                    creature for creature in
-                    (Creature.fromDict(self._space, creature)
-                    for creature in content.get('creatures', ()))
-                    if creature is not None
-                ]
-                self._resources = [
-                    resource for resource in
-                    (Resource.fromDict(self._space, resource)
-                    for resource in content.get('resources', ()))
-                    if resource is not None
-                ]
+            self._creatures = [
+                creature for creature in
+                (Creature.fromDict(self._space, creature)
+                for creature in in_file_content.get('creatures', ()))
+                if creature is not None
+            ]
+            self._resources = [
+                resource for resource in
+                (Resource.fromDict(self._space, resource)
+                for resource in in_file_content.get('resources', ()))
+                if resource is not None
+            ]
 
         self.__addWalls()
 
