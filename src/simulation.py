@@ -32,7 +32,7 @@ from .collisiontypes import (
 class Simulation:
 
     def __init__(self, population_size=16, starting_resources=20, size=1000,
-                 out_file=None, in_file=None, screen_size=(600, 600),
+                 out_file=None, in_file=None, screen_size=None,
                  ticks_per_second=50, use_graphic=True, quiet=False):
 
         mul = size/300
@@ -41,12 +41,16 @@ class Simulation:
             with open(in_file) as file:
                 in_file_content = json.load(file)
 
-            old_screen_size = in_file_content.get('size')
-            if old_screen_size is not None:
-                screen_size = (int(old_screen_size[0]/mul),
-                               int(old_screen_size[1]/mul))
+            if screen_size is None:
+                old_screen_size = in_file_content.get('size')
+                if old_screen_size is not None:
+                    screen_size = (int(old_screen_size[0]/mul),
+                                   int(old_screen_size[1]/mul))
         else:
             in_file_content = None
+
+        if screen_size is None:
+            screen_size = (600, 600)
 
         self.__lat_column_size = 250
         screen_size = (screen_size[0] + self.__lat_column_size, screen_size[1])

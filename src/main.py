@@ -55,9 +55,9 @@ def main():
     parser.add_argument('-s', '--size', type=lambda x : integer_min_limit('Environment size', 100, x),
                         default=1000, help='Size of the environment')
     parser.add_argument('-W', '--screen-width', type=lambda x : integer_min_limit('Width', 100, x),
-                        default=600, help='Window width')
+                        default=None, help='Window width')
     parser.add_argument('-H', '--screen-height', type=lambda x : integer_min_limit('Height', 100, x),
-                        default=600, help='Window height')
+                        default=None, help='Window height')
     parser.add_argument('-o', '--out-file', default=None, help='Name of the output file')
     parser.add_argument('-i', '--in-file', default=None,
                         help='Name of the input file, if -p flag is specified it is ignored, the population size will be determined by the file')
@@ -66,11 +66,16 @@ def main():
 
     args = parser.parse_args()
 
+    if args.screen_width is not None or args.screen_height is not None:
+        screen_size = (args.screen_width or 600, args.screen_height or 600)
+    else:
+        screen_size = None
+
     game = Simulation(population_size=args.pop_size,
                       ticks_per_second=args.simulation_speed,
                       starting_resources=args.resources_qtd,
                       size=args.size, out_file=args.out_file,
-                      screen_size=(args.screen_width, args.screen_height),
+                      screen_size=screen_size,
                       in_file=args.in_file, use_graphic=args.use_graphic,
                       quiet=args.quiet)
     game.run()
