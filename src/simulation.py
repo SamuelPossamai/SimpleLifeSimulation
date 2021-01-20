@@ -464,7 +464,9 @@ class Simulation:
         resource_shape = arbiter.shapes[1]
         resource = resource_shape.simulation_object
 
-        creature.eat(self, resource)
+        dis = creature.headposition.get_distance(resource.body.position)
+        if dis < 1.2*resource_shape.radius:
+            creature.eat(self, resource)
 
         if creature_shape.radius > 2*resource_shape.radius:
             return False
