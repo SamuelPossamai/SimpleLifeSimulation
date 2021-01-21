@@ -359,15 +359,16 @@ class Simulation:
              screen_size[1] - 250))
 
         labels = ('Species', 'Structure', 'Energy', 'Weight', 'Radius',
-                  'Speed', 'Vision Dist.', 'Vision Angle')
+                  'Position', 'Speed', 'Vision Dist.', 'Vision Angle')
 
         if creature is None:
             values = ('-' for i in range(len(labels)))
         else:
             values = (creature.species.name, creature.structure,
                       creature.energy, creature.body.mass,
-                      creature.shape.radius, creature.currentspeed,
-                      creature.currentvisiondistance,
+                      creature.shape.radius,
+                      ', '.join('%i' % i for i in creature.body.position),
+                      creature.currentspeed, creature.currentvisiondistance,
                       180*creature.currentvisionangle/pi)
             values = (val if isinstance(val, str) else
                       '%d' % val if isinstance(val, int) else
