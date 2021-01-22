@@ -251,8 +251,14 @@ class Simulation:
             elif event.type == MOUSEBUTTONUP:
                 pos = self._painter.mapPointFromScreen(pygame.mouse.get_pos())
                 mask = (1 << (CREATURE_COLLISION_TYPE - 1))
-                clicked = next(iter(self._space.point_query(
-                    pos, 0, pymunk.ShapeFilter(mask=mask))), None)
+
+                for creature in self._creatures:
+                    dist = creature.body.position.get_distance(pos)
+                    if dist < creature.shape.radius:
+                        clicked = creature
+                        break
+                else:
+                    clicked = None
 
                 if self._show_creature is not None:
                     self._show_creature.selected = False
