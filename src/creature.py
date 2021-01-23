@@ -135,6 +135,22 @@ class CreatureTrait:
     def name(self):
         return self.__name
 
+    def valuesSimilarity(self, val1, val2):
+
+        if val1 == val2:
+            return 1
+
+        similarity = 0
+        if self.__prop_mut:
+
+            if val1 > val2:
+                return val2/val1
+
+            return val1/val2
+
+        return 1 - abs(val1 - val2)/(self.__max - self.__min)
+
+
     def random(self):
 
         diff = self.__max - self.__min
@@ -242,7 +258,20 @@ class Species:
         return chr(first_letter_val + i) + name
 
     def getChildSpecies(self, traits):
-        return self
+
+        similarity = 0
+
+        for trait in CREATURE_TRAITS:
+            parent_val = self.__traits.get(trait.name)
+            child_val = traits.get(trait.name)
+
+            similarity += trait.valuesSimilarity(
+                parent_val, child_val)/len(CREATURE_TRAITS)
+
+            if similarity > 0.8:
+                return self
+
+        return Species(traits, ancestor=self)
 
     @staticmethod
     def searchByName(name):
