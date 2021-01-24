@@ -121,7 +121,9 @@ class CircleSimulationObject(SimulationObject):
 
     def draw(self, painter, color=(0, 0, 0)):
 
-        painter.drawCircle(color, self.body.position, self.shape.radius)
+        position = self.body.position
+        if position[0] == position[0] and position[1] == position[1]:
+            painter.drawCircle(color, self.body.position, self.shape.radius)
 
     def toDict(self):
 
