@@ -362,7 +362,7 @@ class Simulation:
         self._screen.blit(
             textsurface,
             (start_point[0] + (self.__lat_column_size - text_size)/2,
-             screen_size[1] - 250))
+             screen_size[1] - 260))
 
         labels = ('Species', 'Structure', 'Energy', 'Weight', 'Radius',
                   'Position', 'Speed', 'Vision Dist.', 'Vision Angle')
@@ -386,18 +386,20 @@ class Simulation:
         start_y = start_point[1] + 50
         self.__writeText(to_write_list, start_point, start_y)
 
-        labels = ('Speed', 'Eating Speed', 'Vision Dist.', 'Vision Angle',
-                  'Structure Percentage',  'Walk Priority', 'Run Priority',
-                  'F. Run Priority', 'Idle Priority', 'Rotate Priority')
+        labels = ('Structure Max', 'Structure Percentage', 'Speed',
+                  'Eating Speed', 'Vision Dist.', 'Vision Angle',
+                  'Walk Priority', 'Run Priority', 'F. Run Priority',
+                  'Idle Priority', 'Rotate Priority')
 
         if creature is None:
             values = ('-' for i in range(len(labels)))
         else:
-            pvalues = (creature.properties.speed,
+            pvalues = (str(creature.properties.structmax),
+                       creature.properties.structpercentage,
+                       creature.properties.speed,
                        creature.properties.eatingspeed,
                        creature.properties.visiondistance,
-                       creature.properties.visionangle,
-                       creature.properties.structpercentage)
+                       creature.properties.visionangle)
 
             priority_values = (creature.properties.walkpriority,
                                creature.properties.runpriority,
@@ -407,12 +409,12 @@ class Simulation:
             pr_val_sum = sum(priority_values)
             priority_values = (val/pr_val_sum for val in priority_values)
 
-            values = ('%.1f%%' % (100*val) for val in itertools.chain(
-                pvalues, priority_values))
+            values = (val if isinstance(val, str) else '%.1f%%' % (100*val)
+                      for val in itertools.chain(pvalues, priority_values))
 
         to_write_list = zip(labels, values)
 
-        start_y = screen_size[1] - 220
+        start_y = screen_size[1] - 230
         self.__writeText(to_write_list, start_point, start_y)
 
     def __writeText(self, to_write_list, start_point, start_y):
