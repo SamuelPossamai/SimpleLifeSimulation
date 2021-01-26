@@ -57,6 +57,13 @@ class BasicBehaviour(DefaultVisionSoundReactionBehaviour):
                                    rotate_priority, fast_run_priority)
         self._priority_sum = sum(self._select_priorities)
 
+    def visionAlert(self, creature1, creature2): # pylint: disable=useless-return
+
+        if creature1.shape.radius > 3*creature2.shape.radius:
+            creature1.pushBehaviour(PursueBehaviour(creature2))
+
+        return None
+
     def selectAction(self, creature):
 
         if creature.eating:
@@ -144,3 +151,15 @@ class EatingBehaviour(DefaultVisionSoundReactionBehaviour):
             creature.swapBehaviour(EatingBehaviour(resource))
 
         return None
+
+
+class PursueBehaviour(DefaultVisionSoundReactionBehaviour):
+
+    def __init__(self, creature=None):
+        super().__init__()
+
+        self._creature = creature
+
+    def selectAction(self, creature):
+        pos = self._creature.body.position
+        return RunAction(pos.x, pos.y, RunAction.BODY_PART.head)
