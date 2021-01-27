@@ -212,6 +212,7 @@ CREATURE_TRAITS = [
     CreatureTrait('visiondistance', 0, 1),
     CreatureTrait('visionangle', 0, 1),
     CreatureTrait('structpercentage', 0.2, 0.8),
+    CreatureTrait('storagepercentage', 0, 0.8),
     CreatureTrait('excessenergytoreproduce', 0, 2),
     CreatureTrait('childsizepercentage', 0.05, 0.5),
     CreatureTrait('structmax', 1.e6, 1.e9, integer_only=True,
@@ -302,6 +303,13 @@ class Species:
     def getAllSpecies():
         return iter(Species.__all_species)
 
+# Material transformation rules:
+# 3 energy -> 2 structure + 1 waste
+# 4 structure -> 3 storage + 1 waste
+# 2 storage + 1 waste -> 3 energy
+#
+# indirect: 6 energy -> 3 storage + 3 waste
+
 @addcreaturetraitproperties(CREATURE_TRAITS, lambda prop: prop + '_trait')
 class Creature(CircleSimulationObject):
 
@@ -342,6 +350,7 @@ class Creature(CircleSimulationObject):
 
             self.__traits = creature_info.get('traits')
             self._spent_resources = creature_info.get('spent_resources', 0)
+            self._storage = creature_info.get('storage', 0)
             self._energy = creature_info.get('energy', 0)
             self._structure = creature_info.get('structure')
             self.__config = self.Config()
@@ -376,6 +385,7 @@ class Creature(CircleSimulationObject):
 
         self._spent_resources = 0
         self._energy = int(energy)
+        self._storage = 0
 
         if parent is None:
             self.__traits = {trait.name: trait.random()
@@ -516,7 +526,8 @@ class Creature(CircleSimulationObject):
         return self.__getTotalResources()/10000
 
     def __getTotalResources(self):
-        return self._spent_resources + self._structure + self._energy
+        return self._spent_resources + self._structure + self._energy + \
+            self._storage
 
     def __updateSelf(self):
 
@@ -723,6 +734,7 @@ class Creature(CircleSimulationObject):
             'traits': self.__traits,
             'spent_resources': self._spent_resources,
             'energy': self._energy,
+            'storage': self._storage,
             'structure': self._structure
         }
 
