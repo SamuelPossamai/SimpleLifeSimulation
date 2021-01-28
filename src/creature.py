@@ -117,6 +117,87 @@ class VisionSensor:
     def angle(self):
         return self._angle
 
+class CreatureMaterial:
+
+    def __init__(self, name, description=None, mass=1, density=1,
+                 structure_efficiency=0, energy_efficience=0,
+                 is_waste=False):
+
+        self.__name = name
+        self.__desc = description
+        self.__mass = mass
+        self.__density = density
+        self.__struct_ef = structure_efficiency
+        self.__en_ef = energy_efficience
+        self.__is_waste = is_waste
+        self.__related_rules = {}
+
+    def addRule(self, rule):
+        self.__related_rules.add(rule)
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def description(self):
+        return self.__desc
+
+    @property
+    def mass(self):
+        return self.__mass
+
+    @property
+    def density(self):
+        return self.__density
+
+    @property
+    def is_structure(self):
+        return self.__struct_ef > 0
+
+    @property
+    def structure_efficiency(self):
+        return self.__struct_ef
+
+    @property
+    def is_energy_source(self):
+        return self.__en_ef > 0
+
+    @property
+    def energy_efficience(self):
+        return self.__en_ef
+
+    @property
+    def is_waste(self):
+        return self.__is_waste
+
+class CreatureMaterialConvertionRule:
+
+    class MaterialInfo:
+
+        def __init__(self, material, quantity):
+            self.__material = material
+            self.__quantity = quantity
+
+        @property
+        def material(self):
+            return self.__material
+
+        @property
+        def quantity(self):
+            return self.__quantity
+
+    def __init__(self, input_list, output_list):
+
+        for material_info in input_list:
+            material_info.material.add(self)
+
+        for material_info in output_list:
+            material_info.material.add(self)
+
+        self.__input_list = tuple(input_list)
+        self.__output_list = tuple(output_list)
+
 class CreatureTrait:
 
     def __init__(self, name, min_val, max_val, integer_only=False,
@@ -204,6 +285,14 @@ def addcreaturetraitproperties(traits, property_name_modifier=None):
         return baseclass
 
     return decorator
+
+CREATURE_MATERIALS = [
+
+    CreatureMaterial('energy', energy_efficience=1),
+    CreatureMaterial('structure', structure_efficiency=1),
+    CreatureMaterial('storage'),
+    CreatureMaterial('waste', is_waste=True)
+]
 
 CREATURE_TRAITS = [
 
