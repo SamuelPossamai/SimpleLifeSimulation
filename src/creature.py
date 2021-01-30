@@ -130,7 +130,7 @@ class CreatureMaterial:
         self.__struct_ef = structure_efficiency
         self.__en_ef = energy_efficience
         self.__is_waste = is_waste
-        self.__related_rules = {}
+        self.__related_rules = set()
 
     def addRule(self, rule):
         self.__related_rules.add(rule)
@@ -190,10 +190,10 @@ class CreatureMaterialConvertionRule:
     def __init__(self, input_list, output_list):
 
         for material_info in input_list:
-            material_info.material.add(self)
+            material_info.material.addRule(self)
 
         for material_info in output_list:
-            material_info.material.add(self)
+            material_info.material.addRule(self)
 
         self.__input_list = tuple(input_list)
         self.__output_list = tuple(output_list)
@@ -286,13 +286,63 @@ def addcreaturetraitproperties(traits, property_name_modifier=None):
 
     return decorator
 
-CREATURE_MATERIALS = [
+CREATURE_MATERIALS = {
+    material.name: material for material in (
+        CreatureMaterial('energy', energy_efficience=1),
+        CreatureMaterial('structure', structure_efficiency=1),
+        CreatureMaterial('storage'),
+        CreatureMaterial('waste', is_waste=True)
+    )
+}
 
-    CreatureMaterial('energy', energy_efficience=1),
-    CreatureMaterial('structure', structure_efficiency=1),
-    CreatureMaterial('storage'),
-    CreatureMaterial('waste', is_waste=True)
+energy = CREATURE_MATERIALS['energy']
+structure = CREATURE_MATERIALS['structure']
+storage = CREATURE_MATERIALS['storage']
+waste = CREATURE_MATERIALS['waste']
+
+CREATURE_MATERIAL_RULES = [
+    CreatureMaterialConvertionRule(
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(
+                CREATURE_MATERIALS['energy'], 3)
+        ],
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(
+                CREATURE_MATERIALS['structure'], 2),
+            CreatureMaterialConvertionRule.MaterialInfo(
+                CREATURE_MATERIALS['waste'], 1)
+        ]
+    ),
+    CreatureMaterialConvertionRule(
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(
+                CREATURE_MATERIALS['structure'], 4)
+        ],
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(
+                CREATURE_MATERIALS['storage'], 3),
+            CreatureMaterialConvertionRule.MaterialInfo(
+                CREATURE_MATERIALS['waste'], 1)
+        ]
+    ),
+    CreatureMaterialConvertionRule(
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(
+                CREATURE_MATERIALS['storage'], 2),
+            CreatureMaterialConvertionRule.MaterialInfo(
+                CREATURE_MATERIALS['waste'], 1)
+        ],
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(
+                CREATURE_MATERIALS['energy'], 3)
+        ]
+    )
 ]
+
+del energy
+del structure
+del storage
+del waste
 
 CREATURE_TRAITS = [
 
@@ -391,13 +441,6 @@ class Species:
     @staticmethod
     def getAllSpecies():
         return iter(Species.__all_species)
-
-# Material transformation rules:
-# 3 energy -> 2 structure + 1 waste
-# 4 structure -> 3 storage + 1 waste
-# 2 storage + 1 waste -> 3 energy
-#
-# indirect: 6 energy -> 3 storage + 3 waste
 
 @addcreaturetraitproperties(CREATURE_TRAITS, lambda prop: prop + '_trait')
 class Creature(CircleSimulationObject):
