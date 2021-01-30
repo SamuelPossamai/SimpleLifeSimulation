@@ -171,6 +171,12 @@ class CreatureMaterial:
     def is_waste(self):
         return self.__is_waste
 
+    def __str__(self):
+        return self.__name
+
+    def __repr__(self):
+        return f'CreatureMaterial({self.__name})'
+
 class CreatureMaterialConvertionRule:
 
     class MaterialInfo:
@@ -187,6 +193,13 @@ class CreatureMaterialConvertionRule:
         def quantity(self):
             return self.__quantity
 
+        def __str__(self):
+            return f'{self.__quantity}*{self.__material}'
+
+        def __repr__(self):
+            return (f'MaterialInfo(material={repr(self.__material)}, '
+                    f'quantity={self.__quantity})')
+
     def __init__(self, input_list, output_list):
 
         for material_info in input_list:
@@ -197,6 +210,15 @@ class CreatureMaterialConvertionRule:
 
         self.__input_list = tuple(input_list)
         self.__output_list = tuple(output_list)
+
+    def __str__(self):
+        eq_l = ' + '.join(str(mat_info) for mat_info in self.__input_list)
+        eq_r = ' + '.join(str(mat_info) for mat_info in self.__output_list)
+
+        return f'{eq_l} -> {eq_r}'
+
+    def __repr__(self):
+        return f'CreatureMaterialConvertionRule({str(self)})'
 
 class CreatureTrait:
 
@@ -300,7 +322,7 @@ structure = CREATURE_MATERIALS['structure']
 storage = CREATURE_MATERIALS['storage']
 waste = CREATURE_MATERIALS['waste']
 
-CREATURE_MATERIAL_RULES = [
+CREATURE_MATERIAL_RULES = (
     CreatureMaterialConvertionRule(
         [
             CreatureMaterialConvertionRule.MaterialInfo(
@@ -337,12 +359,24 @@ CREATURE_MATERIAL_RULES = [
                 CREATURE_MATERIALS['energy'], 3)
         ]
     )
-]
+)
 
 del energy
 del structure
 del storage
 del waste
+
+ENERGY_RESOURCES = tuple(material for material in
+                         CREATURE_MATERIALS.values()
+                         if material.is_energy_source)
+STRUCTURE_RESOURCES = tuple(material for material in
+                            CREATURE_MATERIALS.values()
+                            if material.is_structure)
+WASTE_RESOURCES = tuple(material for material in
+                        CREATURE_MATERIALS.values()
+                        if material.is_waste)
+
+print(ENERGY_RESOURCES, STRUCTURE_RESOURCES, WASTE_RESOURCES, CREATURE_MATERIAL_RULES)
 
 CREATURE_TRAITS = [
 
@@ -491,6 +525,9 @@ class Creature(CircleSimulationObject):
             self._properties = Creature.Properties(self)
             self.selected = False
             self.__species = Species.searchByName(creature_info.get('species'))
+            self.__materials = {CREATURE_MATERIALS.get(material): quantity
+                                for material, quantity in
+                                creature_info.get('materials', {}).items()}
 
             super().__init__(space, info)
 
@@ -518,6 +555,7 @@ class Creature(CircleSimulationObject):
         self._spent_resources = 0
         self._energy = int(energy)
         self._storage = 0
+        self.__materials = {material: 0 for material in CREATURE_MATERIALS}
 
         if parent is None:
             self.__traits = {trait.name: trait.random()
@@ -867,7 +905,9 @@ class Creature(CircleSimulationObject):
             'spent_resources': self._spent_resources,
             'energy': self._energy,
             'storage': self._storage,
-            'structure': self._structure
+            'structure': self._structure,
+            'materials': {material.name: quantity for material, quantity in
+                          self.__materials.items()}
         }
 
         return base_dict
