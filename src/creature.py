@@ -200,7 +200,7 @@ class CreatureMaterialConvertionRule:
             return (f'MaterialInfo(material={repr(self.__material)}, '
                     f'quantity={self.__quantity})')
 
-    def __init__(self, input_list, output_list):
+    def __init__(self, name, input_list, output_list):
 
         for material_info in input_list:
             material_info.material.addRule(self)
@@ -208,8 +208,13 @@ class CreatureMaterialConvertionRule:
         for material_info in output_list:
             material_info.material.addRule(self)
 
+        self.__name = name
         self.__input_list = tuple(input_list)
         self.__output_list = tuple(output_list)
+
+    @property
+    def name(self):
+        return self.__name
 
     def __str__(self):
         eq_l = ' + '.join(str(mat_info) for mat_info in self.__input_list)
@@ -324,6 +329,7 @@ waste = CREATURE_MATERIALS['waste']
 
 CREATURE_MATERIAL_RULES = (
     CreatureMaterialConvertionRule(
+        'create_structure',
         [
             CreatureMaterialConvertionRule.MaterialInfo(
                 CREATURE_MATERIALS['energy'], 3)
@@ -336,6 +342,7 @@ CREATURE_MATERIAL_RULES = (
         ]
     ),
     CreatureMaterialConvertionRule(
+        'create_storage',
         [
             CreatureMaterialConvertionRule.MaterialInfo(
                 CREATURE_MATERIALS['structure'], 4)
@@ -348,6 +355,7 @@ CREATURE_MATERIAL_RULES = (
         ]
     ),
     CreatureMaterialConvertionRule(
+        'revert_to_energy',
         [
             CreatureMaterialConvertionRule.MaterialInfo(
                 CREATURE_MATERIALS['storage'], 2),
@@ -366,17 +374,15 @@ del structure
 del storage
 del waste
 
-ENERGY_RESOURCES = tuple(material for material in
+ENERGY_MATERIALS = tuple(material for material in
                          CREATURE_MATERIALS.values()
                          if material.is_energy_source)
-STRUCTURE_RESOURCES = tuple(material for material in
+STRUCTURE_MATERIALS = tuple(material for material in
                             CREATURE_MATERIALS.values()
                             if material.is_structure)
-WASTE_RESOURCES = tuple(material for material in
+WASTE_MATERIALS = tuple(material for material in
                         CREATURE_MATERIALS.values()
                         if material.is_waste)
-
-print(ENERGY_RESOURCES, STRUCTURE_RESOURCES, WASTE_RESOURCES, CREATURE_MATERIAL_RULES)
 
 CREATURE_TRAITS = [
 
@@ -397,6 +403,20 @@ CREATURE_TRAITS = [
     CreatureTrait('idlepriority', 0, 16, integer_only=True),
     CreatureTrait('rotatepriority', 0, 16, integer_only=True)
 ]
+
+if len(ENERGY_MATERIALS) > 1:
+    for material in ENERGY_MATERIALS:
+        CREATURE_TRAITS.append(CreatureTrait(
+            f'{material.name}_energypriority', 0, 32, integer_only=True))
+
+if len(STRUCTURE_MATERIALS) > 1:
+    for material in STRUCTURE_MATERIALS:
+        CREATURE_TRAITS.append(CreatureTrait(
+            f'{material.name}_structurepriority', 0, 32, integer_only=True))
+
+for rule in CREATURE_MATERIAL_RULES:
+    CREATURE_TRAITS.append(CreatureTrait(
+        f'{rule.name}_convertionrate', 0, 32, integer_only=True))
 
 class Species:
 
