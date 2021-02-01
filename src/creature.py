@@ -120,7 +120,7 @@ class VisionSensor:
 class CreatureMaterial:
 
     def __init__(self, name, description=None, mass=1, density=1,
-                 structure_efficiency=0, energy_efficience=0,
+                 structure_efficiency=0, energy_efficiency=0,
                  is_waste=False):
 
         self.__name = name
@@ -128,7 +128,7 @@ class CreatureMaterial:
         self.__mass = mass
         self.__density = density
         self.__struct_ef = structure_efficiency
-        self.__en_ef = energy_efficience
+        self.__en_ef = energy_efficiency
         self.__is_waste = is_waste
         self.__related_rules = set()
 
@@ -164,7 +164,7 @@ class CreatureMaterial:
         return self.__en_ef > 0
 
     @property
-    def energy_efficience(self):
+    def energy_efficiency(self):
         return self.__en_ef
 
     @property
@@ -315,7 +315,7 @@ def addcreaturetraitproperties(traits, property_name_modifier=None):
 
 CREATURE_MATERIALS = {
     material.name: material for material in (
-        CreatureMaterial('energy', energy_efficience=1),
+        CreatureMaterial('energy', energy_efficiency=1),
         CreatureMaterial('structure', structure_efficiency=1),
         CreatureMaterial('storage'),
         CreatureMaterial('waste', is_waste=True)
@@ -507,6 +507,9 @@ class Creature(CircleSimulationObject):
         'CreatureConfig', ('energy_consume_multiplier', 'eating_multiplier'))
     Config.__new__.__defaults__ = (1, 1)
 
+    EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))
+    StructureMaterialInfo = namedtuple('StructureMaterialInfo', ('priority',))
+
     @addcreaturetraitproperties(TRAITS)
     class Properties:
 
@@ -551,7 +554,6 @@ class Creature(CircleSimulationObject):
 
             super().__init__(space, info)
 
-
             self._behaviours = [BasicBehaviour(
                 self.idlepriority_trait + 1, self.walkpriority_trait,
                 self.runpriority_trait, self.fastrunpriority_trait,
@@ -563,6 +565,35 @@ class Creature(CircleSimulationObject):
 
         else:
             self.__construct(space, *args, **kwargs)
+
+        self.__energy_materials = self.__getMaterialInfo(
+            '{}_energypriority', ENERGY_MATERIALS, Creature.EnergyMaterialInfo,
+            lambda material, priority: priority/material.energy_efficiency)
+        self.__structure_materials = self.__getMaterialInfo(
+            '{}_structurepriority', STRUCTURE_MATERIALS,
+            Creature.StructureMaterialInfo,
+            lambda material, priority: priority/material.structure_efficiency)
+
+    def __getMaterialInfo(self, priority_trait_formula, materials, info_class,
+                          priority_function):
+        if len(materials) == 1:
+            material = next(iter(materials))
+            return {
+                material: info_class(priority_function(material, 1))
+            }
+
+        material_priorities = tuple(
+            (material,
+             self.getTrait(priority_trait_formula.format(material.name)))
+            for material in materials
+        )
+        total_priority = sum(
+            priority for _, priority in material_priorities)
+        return {
+            material: info_class(
+                priority_function(material, priority/total_priority))
+            for material, priority in material_priorities
+        }
 
     def __construct(self, space, x, y, structure, energy, parent=None,
                      config=None):
