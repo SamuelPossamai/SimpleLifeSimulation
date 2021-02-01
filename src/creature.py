@@ -409,11 +409,6 @@ if len(ENERGY_MATERIALS) > 1:
         CREATURE_TRAITS.append(CreatureTrait(
             f'{material.name}_energypriority', 0, 32, integer_only=True))
 
-if len(STRUCTURE_MATERIALS) > 1:
-    for material in STRUCTURE_MATERIALS:
-        CREATURE_TRAITS.append(CreatureTrait(
-            f'{material.name}_structurepriority', 0, 32, integer_only=True))
-
 for rule in CREATURE_MATERIAL_RULES:
     CREATURE_TRAITS.append(CreatureTrait(
         f'{rule.name}_convertionrate', 0, 32, integer_only=True))
@@ -569,10 +564,6 @@ class Creature(CircleSimulationObject):
         self.__energy_materials = self.__getMaterialInfo(
             '{}_energypriority', ENERGY_MATERIALS, Creature.EnergyMaterialInfo,
             lambda material, priority: priority/material.energy_efficiency)
-        self.__structure_materials = self.__getMaterialInfo(
-            '{}_structurepriority', STRUCTURE_MATERIALS,
-            Creature.StructureMaterialInfo,
-            lambda material, priority: priority/material.structure_efficiency)
 
     def __getMaterialInfo(self, priority_trait_formula, materials, info_class,
                           priority_function):
