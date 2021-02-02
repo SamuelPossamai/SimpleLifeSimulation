@@ -313,12 +313,15 @@ def addcreaturetraitproperties(traits, property_name_modifier=None):
 
     return decorator
 
+PLANT_MATERIAL = CreatureMaterial('plant_matter')
+
 CREATURE_MATERIALS = {
     material.name: material for material in (
         CreatureMaterial('energy', energy_efficiency=1),
         CreatureMaterial('structure', structure_efficiency=1),
         CreatureMaterial('storage'),
-        CreatureMaterial('waste', is_waste=True)
+        CreatureMaterial('waste', is_waste=True),
+        PLANT_MATERIAL
     )
 }
 
@@ -328,6 +331,16 @@ storage = CREATURE_MATERIALS['storage']
 waste = CREATURE_MATERIALS['waste']
 
 CREATURE_MATERIAL_RULES = (
+    CreatureMaterialConvertionRule(
+        'digest',
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(PLANT_MATERIAL, 1)
+        ],
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(
+                CREATURE_MATERIALS['energy'], 1)
+        ]
+    ),
     CreatureMaterialConvertionRule(
         'create_structure',
         [
@@ -503,7 +516,6 @@ class Creature(CircleSimulationObject):
     Config.__new__.__defaults__ = (1, 1)
 
     EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))
-    StructureMaterialInfo = namedtuple('StructureMaterialInfo', ('priority',))
 
     @addcreaturetraitproperties(TRAITS)
     class Properties:
@@ -598,6 +610,9 @@ class Creature(CircleSimulationObject):
         self._energy = int(energy)
         self._storage = 0
         self.__materials = {material: 0 for material in CREATURE_MATERIALS}
+
+        self.__materials[ENERGY_MATERIALS[0]] = energy
+        self.__materials[STRUCTURE_MATERIALS[0]] = structure
 
         if parent is None:
             self.__traits = {trait.name: trait.random()
@@ -885,6 +900,17 @@ class Creature(CircleSimulationObject):
 
         self._energy -= qtd
         self._spent_resources += qtd
+
+        for material, material_info in self.__energy_materials.items():
+            material_qtd = self.__materials[material]
+            material_consume = material_info.priority*qtd
+            if material_consume > material_qtd:
+                material_qtd = 0
+                #TODO: distribute remaining to other materials
+            else:
+                material_qtd -= material_consume
+
+            self.__materials[material] = material_qtd
 
         return True
 
