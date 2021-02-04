@@ -121,7 +121,7 @@ class CreatureMaterial:
 
     def __init__(self, name, description=None, mass=1, density=1,
                  structure_efficiency=0, energy_efficiency=0,
-                 is_waste=False):
+                 waste_material=None, is_waste=False):
 
         self.__name = name
         self.__desc = description
@@ -131,6 +131,7 @@ class CreatureMaterial:
         self.__en_ef = energy_efficiency
         self.__is_waste = is_waste
         self.__related_rules = set()
+        self.__waste_material = waste_material
 
     def addRule(self, rule):
         self.__related_rules.add(rule)
@@ -166,6 +167,10 @@ class CreatureMaterial:
     @property
     def energy_efficiency(self):
         return self.__en_ef
+
+    @property
+    def waste_material(self):
+        return self.__waste_material
 
     @property
     def is_waste(self):
@@ -381,13 +386,14 @@ def addcreaturetraitproperties(traits, property_name_modifier=None):
     return decorator
 
 PLANT_MATERIAL = CreatureMaterial('plant_matter')
+WASTE = CreatureMaterial('waste', is_waste=True)
 
 CREATURE_MATERIALS = {
     material.name: material for material in (
-        CreatureMaterial('energy', energy_efficiency=1),
+        CreatureMaterial('energy', energy_efficiency=1, waste_material=WASTE),
         CreatureMaterial('structure', structure_efficiency=1),
         CreatureMaterial('storage'),
-        CreatureMaterial('waste', is_waste=True),
+        WASTE,
         PLANT_MATERIAL
     )
 }
@@ -395,7 +401,6 @@ CREATURE_MATERIALS = {
 energy = CREATURE_MATERIALS['energy']
 structure = CREATURE_MATERIALS['structure']
 storage = CREATURE_MATERIALS['storage']
-waste = CREATURE_MATERIALS['waste']
 
 CREATURE_MATERIAL_RULES = (
     CreatureMaterialConvertionRule(
@@ -404,47 +409,37 @@ CREATURE_MATERIAL_RULES = (
             CreatureMaterialConvertionRule.MaterialInfo(PLANT_MATERIAL, 1)
         ],
         [
-            CreatureMaterialConvertionRule.MaterialInfo(
-                CREATURE_MATERIALS['energy'], 1)
+            CreatureMaterialConvertionRule.MaterialInfo(energy, 1)
         ]
     ),
     CreatureMaterialConvertionRule(
         'create_structure',
         [
-            CreatureMaterialConvertionRule.MaterialInfo(
-                CREATURE_MATERIALS['energy'], 3)
+            CreatureMaterialConvertionRule.MaterialInfo(energy, 3)
         ],
         [
-            CreatureMaterialConvertionRule.MaterialInfo(
-                CREATURE_MATERIALS['structure'], 2),
-            CreatureMaterialConvertionRule.MaterialInfo(
-                CREATURE_MATERIALS['waste'], 1)
+            CreatureMaterialConvertionRule.MaterialInfo(structure, 2),
+            CreatureMaterialConvertionRule.MaterialInfo(WASTE, 1)
         ]
     ),
     CreatureMaterialConvertionRule(
         'create_storage',
         [
-            CreatureMaterialConvertionRule.MaterialInfo(
-                CREATURE_MATERIALS['structure'], 4)
+            CreatureMaterialConvertionRule.MaterialInfo(structure, 4)
         ],
         [
-            CreatureMaterialConvertionRule.MaterialInfo(
-                CREATURE_MATERIALS['storage'], 3),
-            CreatureMaterialConvertionRule.MaterialInfo(
-                CREATURE_MATERIALS['waste'], 1)
+            CreatureMaterialConvertionRule.MaterialInfo(storage, 3),
+            CreatureMaterialConvertionRule.MaterialInfo(WASTE, 1)
         ]
     ),
     CreatureMaterialConvertionRule(
         'revert_to_energy',
         [
-            CreatureMaterialConvertionRule.MaterialInfo(
-                CREATURE_MATERIALS['storage'], 2),
-            CreatureMaterialConvertionRule.MaterialInfo(
-                CREATURE_MATERIALS['waste'], 1)
+            CreatureMaterialConvertionRule.MaterialInfo(storage, 2),
+            CreatureMaterialConvertionRule.MaterialInfo(WASTE, 1)
         ],
         [
-            CreatureMaterialConvertionRule.MaterialInfo(
-                CREATURE_MATERIALS['energy'], 3)
+            CreatureMaterialConvertionRule.MaterialInfo(energy, 3)
         ]
     )
 )
@@ -452,7 +447,6 @@ CREATURE_MATERIAL_RULES = (
 del energy
 del structure
 del storage
-del waste
 
 ENERGY_MATERIALS = tuple(material for material in
                          CREATURE_MATERIALS.values()
@@ -595,6 +589,9 @@ class Creature(CircleSimulationObject):
 
     def __init__(self, space, *args, **kwargs):
 
+        self.__materials = {material: 0 for material in
+                            CREATURE_MATERIALS.values()}
+
         if len(args) == 1 and not kwargs:
 
             info = args[0]
@@ -622,9 +619,11 @@ class Creature(CircleSimulationObject):
             self._properties = Creature.Properties(self)
             self.selected = False
             self.__species = Species.searchByName(creature_info.get('species'))
-            self.__materials = {CREATURE_MATERIALS.get(material): quantity
-                                for material, quantity in
-                                creature_info.get('materials', {}).items()}
+
+            saved_materials = creature_info.get('materials')
+            if saved_materials:
+                for material, qtd in saved_materials.items():
+                    self.__materials[CREATURE_MATERIALS.get(material)] = qtd
 
             super().__init__(space, info)
 
@@ -676,7 +675,6 @@ class Creature(CircleSimulationObject):
         self._spent_resources = 0
         self._energy = int(energy)
         self._storage = 0
-        self.__materials = {material: 0 for material in CREATURE_MATERIALS}
 
         self.__materials[ENERGY_MATERIALS[0]] = energy
         self.__materials[STRUCTURE_MATERIALS[0]] = structure
@@ -972,12 +970,14 @@ class Creature(CircleSimulationObject):
             material_qtd = self.__materials[material]
             material_consume = material_info.priority*qtd
             if material_consume > material_qtd:
+                material_consume = material_qtd
                 material_qtd = 0
                 #TODO: distribute remaining to other materials
             else:
                 material_qtd -= material_consume
 
             self.__materials[material] = material_qtd
+            self.__materials[material.waste_material] += material_consume
 
         return True
 
