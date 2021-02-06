@@ -510,26 +510,49 @@ class Creature(CircleSimulationObject):
                         pos, radius, angle, self._vision_sensor.angle,
                         width=1)
 
-    def __consumeEnergy(self, qtd):
+    def __consumeEnergy(self, qtd, iteration=0):
 
-        if qtd < 0 or qtd > self._energy:
-            return False
+        if iteration == 0:
+            if qtd < 0 or qtd > self._energy:
+                return False
 
-        self._energy -= qtd
-        self._spent_resources += qtd
+            self._energy -= qtd
+            self._spent_resources += qtd
 
+        missing_to_spent = 0
         for material, material_info in self.__energy_materials.items():
             material_qtd = self.__materials[material]
             material_consume = material_info.priority*qtd
             if material_consume > material_qtd:
+                missing_to_spent = (material_consume - material_qtd)*\
+                    material_info.energy_efficiency
                 material_consume = material_qtd
                 material_qtd = 0
-                #TODO: distribute remaining to other materials
             else:
                 material_qtd -= material_consume
 
             self.__materials[material] = material_qtd
             self.__materials[material.waste_material] += material_consume
+
+        if missing_to_spent:
+
+            if iteration < 2:
+                return self.__consumeEnergy(
+                    missing_to_spent, iteration=iteration + 1)
+
+            for material, material_info in self.__energy_materials.items():
+                material_qtd = self.__materials[material]
+                material_consume = \
+                    missing_to_spent/material_info.energy_efficiency
+                if material_qtd > material_consume:
+                    self.__materials[material] = material_qtd - material_consume
+                    self.__materials[material.waste_material] += \
+                        material_consume
+
+                    return True
+
+                missing_to_spent -= \
+                    material_qtd*material_info.energy_efficiency
 
         return True
 
