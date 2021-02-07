@@ -13,7 +13,10 @@ from .collisiontypes import (
     SOUND_SENSOR_COLLISION_TYPE, VISION_SENSOR_COLLISION_TYPE,
     CREATURE_COLLISION_TYPE
 )
-from .materials import CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS
+from .materials import (
+    CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
+    CREATURE_MATERIAL_RULES
+)
 from .creature_traits import CREATURE_TRAITS, addcreaturetraitproperties
 
 class SoundSensor:
@@ -389,6 +392,10 @@ class Creature(CircleSimulationObject):
 
     def act(self, simulation):
 
+        for rule in CREATURE_MATERIAL_RULES:
+            rule.convert(self._structure, self.__materials,
+                         self.getTrait(f'{rule.name}_convertionrate'))
+
         total_rsc = self.__getTotalResources()
         if self._structure < self.structmax_trait and \
             self._structure < total_rsc*self.structpercentage_trait:
@@ -525,7 +532,7 @@ class Creature(CircleSimulationObject):
             material_consume = material_info.priority*qtd
             if material_consume > material_qtd:
                 missing_to_spent = (material_consume - material_qtd)*\
-                    material_info.energy_efficiency
+                    material.energy_efficiency
                 material_consume = material_qtd
                 material_qtd = 0
             else:
@@ -543,7 +550,7 @@ class Creature(CircleSimulationObject):
             for material, material_info in self.__energy_materials.items():
                 material_qtd = self.__materials[material]
                 material_consume = \
-                    missing_to_spent/material_info.energy_efficiency
+                    missing_to_spent/material.energy_efficiency
                 if material_qtd > material_consume:
                     self.__materials[material] = material_qtd - material_consume
                     self.__materials[material.waste_material] += \
@@ -552,7 +559,7 @@ class Creature(CircleSimulationObject):
                     return True
 
                 missing_to_spent -= \
-                    material_qtd*material_info.energy_efficiency
+                    material_qtd*material.energy_efficiency
 
         return True
 
