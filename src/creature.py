@@ -392,8 +392,13 @@ class Creature(CircleSimulationObject):
 
     def act(self, simulation):
 
+        structure = 0
+        for material in STRUCTURE_MATERIALS:
+            structure += \
+                material.structure_efficiency*self.__materials[material]
+
         for rule in CREATURE_MATERIAL_RULES:
-            rule.convert(self._structure, self.__materials,
+            rule.convert(structure, self.__materials,
                          self.getTrait(f'{rule.name}_convertionrate'))
 
         total_rsc = self.__getTotalResources()
