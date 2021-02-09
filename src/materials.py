@@ -109,7 +109,7 @@ class CreatureMaterialConvertionRule:
                     f'effect={self.__effect})')
 
     def __init__(self, name, input_list, output_list, catalysts=None,
-                 structure_multiplier=1, ingredient_multiplier=1, speed=1,
+                 structure_multiplier=1, ingredient_multiplier=1, speed=1e-4,
                  join_factors_function=min):
 
         for material_info in input_list:
@@ -154,6 +154,9 @@ class CreatureMaterialConvertionRule:
 
         reactions = rate*self.__speed*self.__join_func(
             factor for factor in factors if factor is not None)
+
+        if reactions <= 0:
+            return
 
         if reactions > max_reactions:
             reactions = max_reactions

@@ -197,6 +197,8 @@ class Creature(CircleSimulationObject):
         self.__energy_materials = self.__getMaterialInfo(
             '{}_energypriority', ENERGY_MATERIALS, Creature.EnergyMaterialInfo,
             lambda material, priority: priority/material.energy_efficiency)
+        self.__storage = 0
+        self.__energy = 0
 
     def __getMaterialInfo(self, priority_trait_formula, materials, info_class,
                           priority_function):
@@ -397,9 +399,17 @@ class Creature(CircleSimulationObject):
             structure += \
                 material.structure_efficiency*self.__materials[material]
 
+        energy = 0
+        for material in ENERGY_MATERIALS:
+            energy += \
+                material.energy_efficiency*self.__materials[material]
+
         for rule in CREATURE_MATERIAL_RULES:
             rule.convert(structure, self.__materials,
                          self.getTrait(f'{rule.name}_convertionrate'))
+
+        self.__structure = structure
+        self.__energy = energy
 
         total_rsc = self.__getTotalResources()
         if self._structure < self.structmax_trait and \
@@ -589,7 +599,7 @@ class Creature(CircleSimulationObject):
 
     @property
     def energy(self):
-        return self._energy
+        return self.__storage
 
     @energy.setter
     def energy(self, new_val):
@@ -598,7 +608,7 @@ class Creature(CircleSimulationObject):
 
     @property
     def structure(self):
-        return self._structure
+        return self.__structure
 
     @property
     def properties(self):
