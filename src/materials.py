@@ -155,18 +155,20 @@ class CreatureMaterialConvertionRule:
         reactions = rate*self.__speed*self.__join_func(
             factor for factor in factors if factor is not None)
 
-        if reactions <= 0:
-            return
-
         if reactions > max_reactions:
             reactions = max_reactions
+
+        reactions = int(reactions)
+
+        if reactions <= 0:
+            return
 
         for qtd, material_info in zip(current_qtd_for_input, self.__input_list):
             materials[material_info.material] = \
                 qtd - reactions*material_info.quantity
 
         for material_info in self.__output_list:
-            materials[material_info.material] -= \
+            materials[material_info.material] += \
                 reactions*material_info.quantity
 
     @property

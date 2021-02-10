@@ -544,7 +544,7 @@ class Creature(CircleSimulationObject):
         missing_to_spent = 0
         for material, material_info in self.__energy_materials.items():
             material_qtd = self.__materials[material]
-            material_consume = material_info.priority*qtd
+            material_consume = int(material_info.priority*qtd)
             if material_consume > material_qtd:
                 missing_to_spent = (material_consume - material_qtd)*\
                     material.energy_efficiency
