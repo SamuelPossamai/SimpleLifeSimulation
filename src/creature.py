@@ -165,7 +165,6 @@ class Creature(CircleSimulationObject):
 
             self.__traits = creature_info.get('traits')
             self._spent_resources = creature_info.get('spent_resources', 0)
-            self._storage = creature_info.get('storage', 0)
             self._energy = creature_info.get('energy', 0)
             self._structure = creature_info.get('structure')
             self.__config = self.Config()
@@ -231,7 +230,6 @@ class Creature(CircleSimulationObject):
 
         self._spent_resources = 0
         self._energy = int(energy)
-        self._storage = 0
 
         self.__materials[ENERGY_MATERIALS[0]] = energy
         self.__materials[STRUCTURE_MATERIALS[0]] = structure
@@ -372,11 +370,14 @@ class Creature(CircleSimulationObject):
         return sqrt(mass/self.density_trait)
 
     def __getMass(self):
-        return self.__getTotalResources()/10000
+        total_mass = 0
+        for material, qtd in self.__materials.items():
+            total_mass += material.mass*qtd
+
+        return total_mass/10000
 
     def __getTotalResources(self):
-        return self._spent_resources + self._structure + self._energy + \
-            self._storage
+        return self._spent_resources + self._structure + self._energy
 
     def __updateSelf(self):
 
@@ -636,7 +637,6 @@ class Creature(CircleSimulationObject):
             'traits': self.__traits,
             'spent_resources': self._spent_resources,
             'energy': self._energy,
-            'storage': self._storage,
             'structure': self._structure,
             'materials': {material.name: quantity for material, quantity in
                           self.__materials.items()}
