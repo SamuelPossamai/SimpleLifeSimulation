@@ -120,7 +120,6 @@ class VisionSensor:
     def angle(self):
         return self._angle
 
-@addcreaturetraitproperties(CREATURE_TRAITS, lambda prop: prop + '_trait')
 class Creature(CircleSimulationObject):
 
     LAST_ID = -1
@@ -182,13 +181,15 @@ class Creature(CircleSimulationObject):
             super().__init__(space, info)
 
             self._behaviours = [BasicBehaviour(
-                self.idlepriority_trait + 1, self.walkpriority_trait,
-                self.runpriority_trait, self.fastrunpriority_trait,
-                self.rotatepriority_trait)]
+                self.getTrait('idlepriority') + 1,
+                self.getTrait('walkpriority'),
+                self.getTrait('runpriority'),
+                self.getTrait('fastrunpriority'),
+                self.getTrait('rotatepriority'))]
 
             self._vision_sensor = VisionSensor(
-                self, 10*self.shape.radius*self.visiondistance_trait,
-                pi*(10 + 210*self.visionangle_trait)/180)
+                self, 10*self.shape.radius*self.getTrait('visiondistance'),
+                pi*(10 + 210*self.getTrait('visionangle'))/180)
 
         else:
             self.__construct(space, *args, **kwargs)
@@ -259,23 +260,23 @@ class Creature(CircleSimulationObject):
 
         self._is_eating = 0
         self._behaviours = [BasicBehaviour(
-            self.idlepriority_trait + 1, self.walkpriority_trait,
-            self.runpriority_trait, self.fastrunpriority_trait,
-            self.rotatepriority_trait)]
+            self.getTrait('idlepriority') + 1, self.getTrait('walkpriority'),
+            self.getTrait('runpriority'), self.getTrait('fastrunpriority'),
+            self.getTrait('rotatepriority'))]
 
         self._action = None
 
         #self._sound_sensor = SoundSensor(self, 200)
         self._vision_sensor = \
-            VisionSensor(self, 10*radius*self.visiondistance_trait,
-                         pi*(10 + 210*self.visionangle_trait)/180)
+            VisionSensor(self, 10*radius*self.getTrait('visiondistance'),
+                         pi*(10 + 210*self.getTrait('visionangle'))/180)
 
         self._properties = Creature.Properties(self)
         self.selected = False
 
     def reproduce(self, simulation):
 
-        child_percentage = self.childsizepercentage_trait
+        child_percentage = self.getTrait('childsizepercentage')
         child_structure = int(self._structure*child_percentage)
         child_energy = int(self._energy*child_percentage) + 1
 
@@ -305,7 +306,7 @@ class Creature(CircleSimulationObject):
 
     def eat(self, simulation, resource):
 
-        eat_speed_base = (0.3 + self.eatingspeed_trait)/3
+        eat_speed_base = (0.3 + self.getTrait('eatingspeed'))/3
         eat_speed = 50*self.__config.eating_multiplier*eat_speed_base
         energy_gained = resource.consume(simulation, self.body.mass*eat_speed)
 
@@ -367,7 +368,7 @@ class Creature(CircleSimulationObject):
 
         if mass is None:
             mass = self.body.mass
-        return sqrt(mass/self.density_trait)
+        return sqrt(mass/self.getTrait('density'))
 
     def __getMass(self):
         total_mass = 0
@@ -387,7 +388,7 @@ class Creature(CircleSimulationObject):
         if new_radius != self.shape.radius:
             self.shape.unsafe_set_radius(new_radius)
             self._vision_sensor.distance = \
-                10*new_radius*self.visiondistance_trait
+                10*new_radius*self.getTrait('visiondistance')
 
     @property
     def eating(self):
@@ -413,18 +414,18 @@ class Creature(CircleSimulationObject):
         self.__energy = energy
 
         total_rsc = self.__getTotalResources()
-        if self._structure < self.structmax_trait and \
-            self._structure < total_rsc*self.structpercentage_trait:
+        if self._structure < self.getTrait('structmax') and \
+            self._structure < total_rsc*self.getTrait('structpercentage'):
 
             energy_tranform = int(ceil(0.0001*total_rsc))
             if self._energy > energy_tranform:
                 self._energy -= energy_tranform
                 self._structure += energy_tranform
 
-        energy_consume_vision = \
-            (0.1 + self.visiondistance_trait)*(1 + self.visionangle_trait)
-        energy_consume_speed = self.speed_trait
-        energy_consume_eat_speed = 0.2*self.eatingspeed_trait
+        energy_consume_vision = (0.1 + self.getTrait('visiondistance'))*\
+            (1 + self.getTrait('visionangle'))
+        energy_consume_speed = self.getTrait('speed')
+        energy_consume_eat_speed = 0.2*self.getTrait('eatingspeed')
         base_energy_consume = self.body.mass*(energy_consume_vision + \
             energy_consume_speed + energy_consume_eat_speed)//100
 
@@ -436,10 +437,11 @@ class Creature(CircleSimulationObject):
             simulation.newResource(*self.body.position, total_rsc, 0)
             return
 
-        if self._structure >= self.structmax_trait:
+        if self._structure >= self.getTrait('structmax'):
             excess_energy_percentage = \
-                self._energy/total_rsc - 1 + self.structpercentage_trait
-            if excess_energy_percentage > self.excessenergytoreproduce_trait:
+                self._energy/total_rsc - 1 + self.getTrait('structpercentage')
+            if excess_energy_percentage > \
+                    self.getTrait('excessenergytoreproduce'):
                 self.reproduce(simulation)
 
         if self._is_eating > 0:
@@ -479,7 +481,7 @@ class Creature(CircleSimulationObject):
 
         struct_factor = self._structure/self.__getTotalResources()
 
-        speed_trait = self.speed_trait
+        speed_trait = self.getTrait('speed')
         speed = 50*(factor**2)*(speed_trait*struct_factor + 0.01)
         if factor < 0:
             speed = -speed
@@ -500,7 +502,7 @@ class Creature(CircleSimulationObject):
     def __doAngleSpeed(self, factor):
 
         struct_factor = self._structure/self.__getTotalResources()
-        speed_trait_factor = self.speed_trait/struct_factor
+        speed_trait_factor = self.getTrait('speed')/struct_factor
         velocity = self.body.velocity
         current_speed = sqrt(velocity.x**2 + velocity.y**2)
 
@@ -518,7 +520,8 @@ class Creature(CircleSimulationObject):
     def draw(self, painter, color=None):
 
         if color is None:
-            color = (230*self.eatingspeed_trait, 0, 230*self.speed_trait)
+            color = (230*self.getTrait('eatingspeed'), 0,
+                     230*self.getTrait('speed'))
 
         pos = self.body.position
         radius = self.shape.radius
@@ -529,7 +532,8 @@ class Creature(CircleSimulationObject):
                                radius + 2/painter.multiplier)
         super().draw(painter, color)
 
-        painter.drawArc((int(254*(1 - self.visiondistance_trait)), 255, 50),
+        painter.drawArc((int(254*(1 - self.getTrait('visiondistance'))),
+                         255, 50),
                         pos, radius, angle, self._vision_sensor.angle,
                         width=1)
 
