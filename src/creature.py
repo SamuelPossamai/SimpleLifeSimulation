@@ -197,7 +197,7 @@ class Creature(CircleSimulationObject):
         self.__energy_materials = self.__getMaterialInfo(
             '{}_energypriority', ENERGY_MATERIALS, Creature.EnergyMaterialInfo,
             lambda material, priority: priority/material.energy_efficiency)
-        self.__storage = 0
+        self.__structure = 0
         self.__energy = 0
 
     def __getMaterialInfo(self, priority_trait_formula, materials, info_class,
@@ -604,7 +604,7 @@ class Creature(CircleSimulationObject):
 
     @property
     def energy(self):
-        return self.__storage
+        return self.__energy
 
     @energy.setter
     def energy(self, new_val):
