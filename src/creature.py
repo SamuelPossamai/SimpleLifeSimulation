@@ -15,7 +15,7 @@ from .collisiontypes import (
 )
 from .materials import (
     CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
-    CREATURE_MATERIAL_RULES
+    CREATURE_MATERIAL_RULES, PLANT_MATERIAL
 )
 from .creature_traits import CREATURE_TRAITS, addcreaturetraitproperties
 
@@ -313,11 +313,14 @@ class Creature(CircleSimulationObject):
         if energy_gained <= 0:
             return
 
+        self.__materials[PLANT_MATERIAL] += energy_gained
+
         spent_to_eat = int((eat_speed_base/2)*energy_gained)
 
         self._spent_resources += spent_to_eat
         energy_gained -= spent_to_eat
         self._energy += energy_gained
+
 
         self._is_eating = 5
 
