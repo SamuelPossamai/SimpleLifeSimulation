@@ -132,6 +132,8 @@ class Creature(CircleSimulationObject):
 
     EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))
 
+    MASS_MULTIPLIER = 1/10000
+
     @addcreaturetraitproperties(TRAITS)
     class Properties:
 
@@ -163,9 +165,6 @@ class Creature(CircleSimulationObject):
                 self.__species = None
 
             self.__traits = creature_info.get('traits')
-            self._spent_resources = creature_info.get('spent_resources', 0)
-            self._energy = creature_info.get('energy', 0)
-            self._structure = creature_info.get('structure')
             self.__config = self.Config()
             self._is_eating = False
             self._action = None
@@ -229,9 +228,6 @@ class Creature(CircleSimulationObject):
         else:
             self.__config = config
 
-        self._spent_resources = 0
-        self._energy = int(energy)
-
         self.__materials[ENERGY_MATERIALS[0]] = energy
         self.__materials[STRUCTURE_MATERIALS[0]] = structure
 
@@ -245,10 +241,7 @@ class Creature(CircleSimulationObject):
                              for trait in Creature.TRAITS}
             self.__species = parent.species.getChildSpecies(self.__traits)
 
-        self._structure = int(structure)
-
-        mass = self.__getMass()
-        radius = self.__getRadius(mass)
+        mass, radius = self.__getMassAndRadius()
 
         super().__init__(space, mass, radius, x, y)
 
@@ -275,6 +268,10 @@ class Creature(CircleSimulationObject):
         self.selected = False
 
     def reproduce(self, simulation):
+
+        #TODO: reproduction
+
+        return
 
         child_percentage = self.getTrait('childsizepercentage')
         child_structure = int(self._structure*child_percentage)
@@ -317,10 +314,7 @@ class Creature(CircleSimulationObject):
 
         spent_to_eat = int((eat_speed_base/2)*energy_gained)
 
-        self._spent_resources += spent_to_eat
-        energy_gained -= spent_to_eat
-        self._energy += energy_gained
-
+        #TODO: Consume energy for spent
 
         self._is_eating = 5
 
@@ -367,27 +361,22 @@ class Creature(CircleSimulationObject):
         if new_action is not None:
             self._action = new_action
 
-    def __getRadius(self, mass=None):
-
-        if mass is None:
-            mass = self.body.mass
-        return sqrt(mass/self.getTrait('density'))
-
-    def __getMass(self):
+    def __getMassAndRadius(self):
         total_mass = 0
+        total_volume = 0
         for material, qtd in self.__materials.items():
             total_mass += material.mass*qtd
+            total_volume += material.mass*qtd/material.density
 
-        return total_mass/10000
+        final_mass = total_mass*Creature.MASS_MULTIPLIER
+        final_radius = sqrt(total_volume*Creature.MASS_MULTIPLIER)
 
-    def __getTotalResources(self):
-        return self._spent_resources + self._structure + self._energy
+        return final_mass, final_radius
 
     def __updateSelf(self):
 
-        self.body.mass = self.__getMass()
+        self.body.mass, new_radius = self.__getMassAndRadius()
 
-        new_radius = self.__getRadius()
         if new_radius != self.shape.radius:
             self.shape.unsafe_set_radius(new_radius)
             self._vision_sensor.distance = \
@@ -416,15 +405,6 @@ class Creature(CircleSimulationObject):
         self.__structure = structure
         self.__energy = energy
 
-        total_rsc = self.__getTotalResources()
-        if self._structure < self.getTrait('structmax') and \
-            self._structure < total_rsc*self.getTrait('structpercentage'):
-
-            energy_tranform = int(ceil(0.0001*total_rsc))
-            if self._energy > energy_tranform:
-                self._energy -= energy_tranform
-                self._structure += energy_tranform
-
         energy_consume_vision = (0.1 + self.getTrait('visiondistance'))*\
             (1 + self.getTrait('visionangle'))
         energy_consume_speed = self.getTrait('speed')
@@ -440,12 +420,7 @@ class Creature(CircleSimulationObject):
             simulation.newResource(*self.body.position, total_rsc, 0)
             return
 
-        if self._structure >= self.getTrait('structmax'):
-            excess_energy_percentage = \
-                self._energy/total_rsc - 1 + self.getTrait('structpercentage')
-            if excess_energy_percentage > \
-                    self.getTrait('excessenergytoreproduce'):
-                self.reproduce(simulation)
+        #TODO: Condition to reproduce
 
         if self._is_eating > 0:
             self._is_eating -= 1
@@ -474,15 +449,11 @@ class Creature(CircleSimulationObject):
         self.__doSpeed(speed_factor)
         self.__doAngleSpeed(angle_factor)
 
-        if self._spent_resources > 0.1*(self._energy + self._structure):
-            simulation.newResource(*self.body.position, 0,
-                                   self._spent_resources)
-            self._spent_resources = 0
-            self.__updateSelf()
+        #TODO: remove waste
 
     def __doSpeed(self, factor):
 
-        struct_factor = self._structure/self.__getTotalResources()
+        struct_factor = Creature.MASS_MULTIPLIER*self.__structure/self.body.mass
 
         speed_trait = self.getTrait('speed')
         speed = 50*(factor**2)*(speed_trait*struct_factor + 0.01)
@@ -504,8 +475,8 @@ class Creature(CircleSimulationObject):
 
     def __doAngleSpeed(self, factor):
 
-        struct_factor = self._structure/self.__getTotalResources()
-        speed_trait_factor = self.getTrait('speed')/struct_factor
+        struct_factor = Creature.MASS_MULTIPLIER*self.__structure/self.body.mass
+        speed_trait_factor = self.getTrait('speed')*struct_factor/100
         velocity = self.body.velocity
         current_speed = sqrt(velocity.x**2 + velocity.y**2)
 
@@ -541,13 +512,6 @@ class Creature(CircleSimulationObject):
                         width=1)
 
     def __consumeEnergy(self, qtd, iteration=0):
-
-        if iteration == 0:
-            if qtd < 0 or qtd > self._energy:
-                return False
-
-            self._energy -= qtd
-            self._spent_resources += qtd
 
         missing_to_spent = 0
         for material, material_info in self.__energy_materials.items():
@@ -609,11 +573,6 @@ class Creature(CircleSimulationObject):
     def energy(self):
         return self.__energy
 
-    @energy.setter
-    def energy(self, new_val):
-        self._energy = max(int(new_val), 0)
-        self.__updateSelf()
-
     @property
     def structure(self):
         return self.__structure
@@ -642,9 +601,6 @@ class Creature(CircleSimulationObject):
             'id': self._id,
             'species': self.__species.name,
             'traits': self.__traits,
-            'spent_resources': self._spent_resources,
-            'energy': self._energy,
-            'structure': self._structure,
             'materials': {material.name: quantity for material, quantity in
                           self.__materials.items()}
         }
