@@ -104,7 +104,7 @@ CREATURE_TRAITS = [
     CreatureTrait('runpriority', 0, 16, integer_only=True),
     CreatureTrait('fastrunpriority', 0, 16, integer_only=True),
     CreatureTrait('idlepriority', 0, 16, integer_only=True),
-    CreatureTrait('rotatepriority', 0, 16, integer_only=True)
+    CreatureTrait('rotatepriority', 0, 16, integer_only=True),
 ]
 
 if len(ENERGY_MATERIALS) > 1:
@@ -115,3 +115,9 @@ if len(ENERGY_MATERIALS) > 1:
 for rule in CREATURE_MATERIAL_RULES:
     CREATURE_TRAITS.append(CreatureTrait(
         f'{rule.name}_convertionrate', 0, 32, integer_only=True))
+    CREATURE_TRAITS.append(CreatureTrait(
+        f'{rule.name}_childqtd', 1.e4, 1.e7, integer_only=True,
+        exponential_random=True, proportional_mutation=True))
+    CREATURE_TRAITS.append(CreatureTrait(
+        f'{rule.name}_childqtd_min_to_reproduce', 1.1, 100,
+        proportional_mutation=True))
