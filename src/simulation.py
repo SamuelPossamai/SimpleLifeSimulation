@@ -386,7 +386,7 @@ class Simulation:
         start_y = start_point[1] + 50
         self.__writeText(to_write_list, start_point, start_y)
 
-        labels = ('Structure Max', 'Structure Percentage', 'Speed',
+        labels = ('Speed',
                   'Eating Speed', 'Vision Dist.', 'Vision Angle',
                   'Walk Priority', 'Run Priority', 'F. Run Priority',
                   'Idle Priority', 'Rotate Priority')
@@ -394,9 +394,7 @@ class Simulation:
         if creature is None:
             values = ('-' for i in range(len(labels)))
         else:
-            pvalues = (str(creature.properties.structmax),
-                       creature.properties.structpercentage,
-                       creature.properties.speed,
+            pvalues = (creature.properties.speed,
                        creature.properties.eatingspeed,
                        creature.properties.visiondistance,
                        creature.properties.visionangle)
