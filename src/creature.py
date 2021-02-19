@@ -183,6 +183,9 @@ class Creature(CircleSimulationObject):
             simulation.newCreature(pos.x, pos.y, child_structure, child_energy,
                                    parent=self)
 
+    def getMaterial(self, material):
+        return self.__materials[material]
+
     def getTrait(self, trait):
         return self.__traits[trait]
 

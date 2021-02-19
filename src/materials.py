@@ -3,7 +3,7 @@ class CreatureMaterial:
 
     def __init__(self, name, description=None, mass=1, density=1,
                  structure_efficiency=0, energy_efficiency=0,
-                 waste_material=None, is_waste=False):
+                 waste_material=None, is_waste=False, short_name=None):
 
         self.__name = name
         self.__desc = description
@@ -15,12 +15,38 @@ class CreatureMaterial:
         self.__related_rules = set()
         self.__waste_material = waste_material
 
+        if short_name is None:
+            if len(name) > 2:
+                name_parts = [part for part in name.split() if part]
+                if len(name_parts) > 2:
+                    self.__short_name = ''.join(
+                        part[0].upper() for part in name_parts)
+                elif len(name_parts) == 2:
+                    first_part = name_parts[0]
+                    sec_part = name_parts[1]
+                    if len(sec_part) > 1:
+                        self.__short_name = first_part[0].upper() + \
+                            sec_part[0].upper() + sec_part[1].lower()
+                    else:
+                        self.__short_name = first_part[0].upper() + \
+                            first_part[1].lower() + first_part[0].upper()
+                else:
+                    self.__short_name = name[0].upper() + name[1].lower()
+            else:
+                self.__short_name = name
+        else:
+            self.__short_name = short_name
+
     def addRule(self, rule):
         self.__related_rules.add(rule)
 
     @property
     def name(self):
         return self.__name
+
+    @property
+    def short_name(self):
+        return self.__short_name
 
     @property
     def description(self):

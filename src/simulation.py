@@ -23,6 +23,7 @@ from .painter import Painter
 from .simulationobject import SimulationObject
 from .resource_ import Resource
 from .creature import Creature, Species
+from .materials import CREATURE_MATERIALS
 
 from .collisiontypes import (
     CREATURE_COLLISION_TYPE, SOUND_SENSOR_COLLISION_TYPE,
@@ -362,7 +363,7 @@ class Simulation:
         self._screen.blit(
             textsurface,
             (start_point[0] + (self.__lat_column_size - text_size)/2,
-             screen_size[1] - 260))
+             screen_size[1] - 225))
 
         labels = ('Species', 'Structure', 'Energy', 'Weight', 'Radius',
                   'Position', 'Speed', 'Vision Dist.', 'Vision Angle')
@@ -412,23 +413,42 @@ class Simulation:
 
         to_write_list = zip(labels, values)
 
-        start_y = screen_size[1] - 230
+        start_y = screen_size[1] - 190
         self.__writeText(to_write_list, start_point, start_y)
 
-    def __writeText(self, to_write_list, start_point, start_y):
+        if creature is not None:
+            materials_text = ((material.short_name,
+                            '%.2E' % creature.getMaterial(material))
+                            for material in CREATURE_MATERIALS.values())
+
+            self.__writeText(materials_text, start_point, 230, double=True)
+
+    def __writeText(self, to_write_list, start_point, start_y, double=False):
+
+        x_offset = 0
+
+        column_size = self.__lat_column_size
+        if double:
+            column_size /= 2
 
         for prop, val_str in to_write_list:
 
             textsurface = self._small_font.render(prop + ':', False, (0, 0, 0))
             self._screen.blit(textsurface,
-                              (start_point[0] + 10, start_point[1] + start_y))
+                              (start_point[0] + 10 + x_offset,
+                               start_point[1] + start_y))
 
             textsurface = self._small_font.render(val_str, False, (0, 0, 0))
             text_size, _ = textsurface.get_size()
-            val_x = start_point[0] + self.__lat_column_size - 20 - text_size
+            val_x = x_offset + start_point[0] + column_size - 20 - text_size
             self._screen.blit(textsurface, (val_x, start_point[1] + start_y))
 
-            start_y += 20
+            if double and x_offset == 0:
+                x_offset = column_size
+                continue
+            else:
+                start_y += 20
+                x_offset = 0
 
     def __drawObjects(self):
 
