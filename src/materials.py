@@ -210,21 +210,27 @@ class CreatureMaterialConvertionRule:
     def __repr__(self):
         return f'CreatureMaterialConvertionRule({str(self)})'
 
-PLANT_MATERIAL = CreatureMaterial('plant_matter')
-WASTE = CreatureMaterial('waste', is_waste=True)
+PLANT_MATERIAL = CreatureMaterial('plant_matter', density=1.2)
+WASTE = CreatureMaterial('waste', is_waste=True, density=2)
 
 CREATURE_MATERIALS = {
     material.name: material for material in (
         CreatureMaterial('energy', energy_efficiency=1, waste_material=WASTE),
-        CreatureMaterial('structure', structure_efficiency=1),
-        CreatureMaterial('storage'),
+        CreatureMaterial('heavy structure', structure_efficiency=0.8,
+                         density=3),
+        CreatureMaterial('normal structure', structure_efficiency=1),
+        CreatureMaterial('light structure', structure_efficiency=0.5,
+                         density=0.5),
+        CreatureMaterial('storage', density=4),
         WASTE,
         PLANT_MATERIAL
     )
 }
 
 energy = CREATURE_MATERIALS['energy']
-structure = CREATURE_MATERIALS['structure']
+heavy_structure = CREATURE_MATERIALS['heavy structure']
+normal_structure = CREATURE_MATERIALS['normal structure']
+light_structure = CREATURE_MATERIALS['light structure']
 storage = CREATURE_MATERIALS['storage']
 
 CREATURE_MATERIAL_RULES = (
@@ -238,19 +244,81 @@ CREATURE_MATERIAL_RULES = (
         ]
     ),
     CreatureMaterialConvertionRule(
-        'create_structure',
+        'efficient digest',
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(PLANT_MATERIAL, 3),
+            CreatureMaterialConvertionRule.MaterialInfo(WASTE, 1),
+        ],
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(energy, 4)
+        ]
+    ),
+    CreatureMaterialConvertionRule(
+        'create_heavy_structure',
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(energy, 1),
+            CreatureMaterialConvertionRule.MaterialInfo(normal_structure, 1),
+            CreatureMaterialConvertionRule.MaterialInfo(storage, 1)
+        ],
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(heavy_structure, 1),
+            CreatureMaterialConvertionRule.MaterialInfo(WASTE, 2)
+        ]
+    ),
+    CreatureMaterialConvertionRule(
+        'create_normal_structure',
         [
             CreatureMaterialConvertionRule.MaterialInfo(energy, 3)
         ],
         [
-            CreatureMaterialConvertionRule.MaterialInfo(structure, 2),
+            CreatureMaterialConvertionRule.MaterialInfo(normal_structure, 2),
             CreatureMaterialConvertionRule.MaterialInfo(WASTE, 1)
+        ]
+    ),
+    CreatureMaterialConvertionRule(
+        'create_light_structure',
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(normal_structure, 1),
+            CreatureMaterialConvertionRule.MaterialInfo(WASTE, 2)
+        ],
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(light_structure, 3)
+        ]
+    ),
+    CreatureMaterialConvertionRule(
+        'digest_heavy_structure',
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(heavy_structure, 3)
+        ],
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(WASTE, 2),
+            CreatureMaterialConvertionRule.MaterialInfo(energy, 1)
+        ]
+    ),
+    CreatureMaterialConvertionRule(
+        'digest_normal_structure',
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(normal_structure, 2)
+        ],
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(energy, 1),
+            CreatureMaterialConvertionRule.MaterialInfo(WASTE, 1)
+        ]
+    ),
+    CreatureMaterialConvertionRule(
+        'digest_light_structure',
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(light_structure, 4)
+        ],
+        [
+            CreatureMaterialConvertionRule.MaterialInfo(energy, 1),
+            CreatureMaterialConvertionRule.MaterialInfo(WASTE, 3)
         ]
     ),
     CreatureMaterialConvertionRule(
         'create_storage',
         [
-            CreatureMaterialConvertionRule.MaterialInfo(structure, 4)
+            CreatureMaterialConvertionRule.MaterialInfo(normal_structure, 4)
         ],
         [
             CreatureMaterialConvertionRule.MaterialInfo(storage, 3),
@@ -258,7 +326,7 @@ CREATURE_MATERIAL_RULES = (
         ]
     ),
     CreatureMaterialConvertionRule(
-        'revert_to_energy',
+        'digest_storage',
         [
             CreatureMaterialConvertionRule.MaterialInfo(storage, 2),
             CreatureMaterialConvertionRule.MaterialInfo(WASTE, 1)
@@ -270,7 +338,9 @@ CREATURE_MATERIAL_RULES = (
 )
 
 del energy
-del structure
+del heavy_structure
+del normal_structure
+del light_structure
 del storage
 
 ENERGY_MATERIALS = tuple(material for material in
