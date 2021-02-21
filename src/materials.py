@@ -1,4 +1,6 @@
 
+from math import ceil
+
 class CreatureMaterial:
 
     def __init__(self, name, description=None, mass=1, density=1,
@@ -92,6 +94,8 @@ class CreatureMaterial:
 
 class CreatureMaterialConvertionRule:
 
+    REACTION_SPEED_BASE_MULT = 1e-4
+
     class MaterialInfo:
 
         def __init__(self, material, quantity):
@@ -135,7 +139,7 @@ class CreatureMaterialConvertionRule:
                     f'effect={self.__effect})')
 
     def __init__(self, name, input_list, output_list, catalysts=None,
-                 structure_multiplier=1, ingredient_multiplier=1, speed=1e-4,
+                 structure_multiplier=1, ingredient_multiplier=1, speed=1,
                  join_factors_function=min):
 
         for material_info in input_list:
@@ -178,8 +182,9 @@ class CreatureMaterialConvertionRule:
         if self.__ing_mult:
             factors[2] = max_reactions*self.__ing_mult
 
-        reactions = rate*self.__speed*self.__join_func(
-            factor for factor in factors if factor is not None)
+        reactions = ceil(rate*self.__speed*self.REACTION_SPEED_BASE_MULT*
+                         self.__join_func(factor for factor in factors
+                                          if factor is not None))
 
         if reactions > max_reactions:
             reactions = max_reactions
@@ -241,7 +246,8 @@ CREATURE_MATERIAL_RULES = (
         ],
         [
             CreatureMaterialConvertionRule.MaterialInfo(energy, 1)
-        ]
+        ],
+        speed=3
     ),
     CreatureMaterialConvertionRule(
         'efficient digest',
@@ -251,7 +257,8 @@ CREATURE_MATERIAL_RULES = (
         ],
         [
             CreatureMaterialConvertionRule.MaterialInfo(energy, 4)
-        ]
+        ],
+        speed=0.25
     ),
     CreatureMaterialConvertionRule(
         'create_heavy_structure',
@@ -263,7 +270,8 @@ CREATURE_MATERIAL_RULES = (
         [
             CreatureMaterialConvertionRule.MaterialInfo(heavy_structure, 1),
             CreatureMaterialConvertionRule.MaterialInfo(WASTE, 2)
-        ]
+        ],
+        speed=0.3
     ),
     CreatureMaterialConvertionRule(
         'create_normal_structure',
@@ -273,7 +281,8 @@ CREATURE_MATERIAL_RULES = (
         [
             CreatureMaterialConvertionRule.MaterialInfo(normal_structure, 2),
             CreatureMaterialConvertionRule.MaterialInfo(WASTE, 1)
-        ]
+        ],
+        speed=0.5
     ),
     CreatureMaterialConvertionRule(
         'create_light_structure',
@@ -283,7 +292,8 @@ CREATURE_MATERIAL_RULES = (
         ],
         [
             CreatureMaterialConvertionRule.MaterialInfo(light_structure, 3)
-        ]
+        ],
+        speed=0.4
     ),
     CreatureMaterialConvertionRule(
         'digest_heavy_structure',
@@ -293,7 +303,8 @@ CREATURE_MATERIAL_RULES = (
         [
             CreatureMaterialConvertionRule.MaterialInfo(WASTE, 2),
             CreatureMaterialConvertionRule.MaterialInfo(energy, 1)
-        ]
+        ],
+        speed=0.1
     ),
     CreatureMaterialConvertionRule(
         'digest_normal_structure',
@@ -303,7 +314,8 @@ CREATURE_MATERIAL_RULES = (
         [
             CreatureMaterialConvertionRule.MaterialInfo(energy, 1),
             CreatureMaterialConvertionRule.MaterialInfo(WASTE, 1)
-        ]
+        ],
+        speed=0.15
     ),
     CreatureMaterialConvertionRule(
         'digest_light_structure',
@@ -313,7 +325,8 @@ CREATURE_MATERIAL_RULES = (
         [
             CreatureMaterialConvertionRule.MaterialInfo(energy, 1),
             CreatureMaterialConvertionRule.MaterialInfo(WASTE, 3)
-        ]
+        ],
+        speed=0.2
     ),
     CreatureMaterialConvertionRule(
         'create_storage',
@@ -323,7 +336,8 @@ CREATURE_MATERIAL_RULES = (
         [
             CreatureMaterialConvertionRule.MaterialInfo(storage, 3),
             CreatureMaterialConvertionRule.MaterialInfo(WASTE, 1)
-        ]
+        ],
+        speed=0.4
     ),
     CreatureMaterialConvertionRule(
         'digest_storage',
@@ -333,7 +347,8 @@ CREATURE_MATERIAL_RULES = (
         ],
         [
             CreatureMaterialConvertionRule.MaterialInfo(energy, 3)
-        ]
+        ],
+        speed=0.5
     )
 )
 
