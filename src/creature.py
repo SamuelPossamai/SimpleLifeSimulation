@@ -1,7 +1,7 @@
 
 from collections import namedtuple
 
-from math import sqrt, floor, pi, cos, sin, ceil
+from math import sqrt, floor, pi, cos, sin, ceil, isclose
 
 import pymunk
 
@@ -12,7 +12,7 @@ from .species import Species
 from .collisiontypes import CREATURE_COLLISION_TYPE
 from .materials import (
     CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
-    CREATURE_MATERIAL_RULES, PLANT_MATERIAL
+    CREATURE_MATERIAL_RULES, PLANT_MATERIAL, WASTE_MATERIALS
 )
 from .creature_traits import CREATURE_TRAITS, addcreaturetraitproperties
 from .creature_sensors import VisionSensor
@@ -277,7 +277,7 @@ class Creature(CircleSimulationObject):
 
         self.body.mass, new_radius = self.__getMassAndRadius()
 
-        if new_radius != self.shape.radius:
+        if not isclose(new_radius, self.shape.radius, rel_tol=0.05):
             self.shape.unsafe_set_radius(new_radius)
             self._vision_sensor.distance = \
                 10*new_radius*self.getTrait('visiondistance')
@@ -349,7 +349,14 @@ class Creature(CircleSimulationObject):
         self.__doSpeed(speed_factor)
         self.__doAngleSpeed(angle_factor)
 
-        #TODO: remove waste
+        for material in WASTE_MATERIALS:
+            rsc_qtd = self.__materials.get(material, 0)
+            if rsc_qtd and rsc_qtd > 0.1*(energy + structure):
+                simulation.newResource(*self.body.position, 0,
+                                       rsc_qtd)
+                self.__materials[material] = 0
+
+        self.__updateSelf()
 
     def __doSpeed(self, factor):
 
