@@ -1,0 +1,24 @@
+{
+    "energy": {
+        "energy_efficiency": 1,
+        "waste_material": "waste"
+    },
+    "heavy structure": {
+        "structure_efficiency": 0.8,
+        "density": 3
+    },
+    "normal structure": {
+        "structure_efficiency": 1
+    },
+    "light structure": {
+        "structure_efficiency": 0.5,
+        "density": 0.5
+    },
+    "storage": {
+        "density": 4
+    },
+    "waste": {
+        "is_waste": true,
+        "density": 2
+    }
+}

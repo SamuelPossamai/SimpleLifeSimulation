@@ -1,4 +1,5 @@
 
+import json
 from math import ceil
 
 class CreatureMaterial:
@@ -215,22 +216,52 @@ class CreatureMaterialConvertionRule:
     def __repr__(self):
         return f'CreatureMaterialConvertionRule({str(self)})'
 
-PLANT_MATERIAL = CreatureMaterial('plant_matter', density=1.2)
-WASTE = CreatureMaterial('waste', is_waste=True, density=2)
+def __loadMaterial(name, material, loaded_materials, all_materials):
 
-CREATURE_MATERIALS = {
-    material.name: material for material in (
-        CreatureMaterial('energy', energy_efficiency=1, waste_material=WASTE),
-        CreatureMaterial('heavy structure', structure_efficiency=0.8,
-                         density=3),
-        CreatureMaterial('normal structure', structure_efficiency=1),
-        CreatureMaterial('light structure', structure_efficiency=0.5,
-                         density=0.5),
-        CreatureMaterial('storage', density=4),
-        WASTE,
-        PLANT_MATERIAL
+    if name in loaded_materials:
+        return
+
+    waste_material_name = material.get('waste_material')
+    if waste_material_name is None:
+        waste_material = None
+    else:
+        waste_material = loaded_materials.get(waste_material_name)
+        if waste_material is None:
+            waste_material = all_materials.get(waste_material_name)
+            if waste_material is not None:
+                waste_material = __loadMaterial(
+                    waste_material_name,
+                    waste_material,
+                    loaded_materials,
+                    all_materials
+                )
+
+    loaded_materials[name] = material = CreatureMaterial(
+        name,
+        density=material.get('density', 1),
+        energy_efficiency=material.get('energy_efficiency', 0),
+        structure_efficiency=material.get('structure_efficiency', 0),
+        is_waste=material.get('is_waste', False),
+        waste_material=waste_material
     )
-}
+
+    return material
+
+PLANT_MATERIAL = CreatureMaterial('plant_matter', density=1.2)
+
+CREATURE_MATERIALS = {}
+
+with open('data/materials.json') as file:
+    all_materials = json.load(file)
+    CREATURE_MATERIALS = {}
+
+    for material_name, material in all_materials.items():
+        __loadMaterial(material_name, material, CREATURE_MATERIALS,
+                       all_materials)
+
+CREATURE_MATERIALS[PLANT_MATERIAL.name] = PLANT_MATERIAL
+
+WASTE = CREATURE_MATERIALS['waste']
 
 energy = CREATURE_MATERIALS['energy']
 heavy_structure = CREATURE_MATERIALS['heavy structure']
