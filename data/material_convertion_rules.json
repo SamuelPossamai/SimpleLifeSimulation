@@ -1,0 +1,196 @@
+{
+    "digest": {
+        "input": [
+            {
+                "material": "plant material",
+                "quantity": 1
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 1
+            }
+        ],
+        "speed": 3
+    },
+    "efficient digest": {
+        "input": [
+            {
+                "material": "plant material",
+                "quantity": 3
+            },
+            {
+                "material": "waste",
+                "quantity": 1
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 4
+            }
+        ],
+        "speed": 0.25
+    },
+    "create heavy structure": {
+        "input": [
+            {
+                "material": "energy",
+                "quantity": 1
+            },
+            {
+                "material": "normal structure",
+                "quantity": 1
+            },
+            {
+                "material": "storage",
+                "quantity": 1
+            }
+        ],
+        "output": [
+            {
+                "material": "heavy structure",
+                "quantity": 1
+            },
+            {
+                "material": "waste",
+                "quantity": 2
+            }
+        ],
+        "speed": 0.3
+    },
+    "create normal structure": {
+        "input": [
+            {
+                "material": "energy",
+                "quantity": 3
+            }
+        ],
+        "output": [
+            {
+                "material": "normal structure",
+                "quantity": 2
+            },
+            {
+                "material": "waste",
+                "quantity": 1
+            }
+        ],
+        "speed": 0.5
+    },
+    "create light structure": {
+        "input": [
+            {
+                "material": "normal structure",
+                "quantity": 1
+            },
+            {
+                "material": "waste",
+                "quantity": 2
+            }
+        ],
+        "output": [
+            {
+                "material": "light structure",
+                "quantity": 3
+            }
+        ],
+        "speed": 0.4
+    },
+    "digest heavy structure": {
+        "input": [
+            {
+                "material": "heavy structure",
+                "quantity": 3
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 1
+            },
+            {
+                "material": "waste",
+                "quantity": 2
+            }
+        ],
+        "speed": 0.1
+    },
+    "digest normal structure": {
+        "input": [
+            {
+                "material": "normal structure",
+                "quantity": 2
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 1
+            },
+            {
+                "material": "waste",
+                "quantity": 1
+            }
+        ],
+        "speed": 0.15
+    },
+    "digest light structure": {
+        "input": [
+            {
+                "material": "light structure",
+                "quantity": 4
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 1
+            },
+            {
+                "material": "waste",
+                "quantity": 3
+            }
+        ],
+        "speed": 0.2
+    },
+    "create storage": {
+        "input": [
+            {
+                "material": "normal structure",
+                "quantity": 4
+            }
+        ],
+        "output": [
+            {
+                "material": "storage",
+                "quantity": 3
+            },
+            {
+                "material": "waste",
+                "quantity": 1
+            }
+        ],
+        "speed": 0.4
+    },
+    "digest storage": {
+        "input": [
+            {
+                "material": "storage",
+                "quantity": 2
+            },
+            {
+                "material": "waste",
+                "quantity": 1
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 3
+            }
+        ],
+        "speed": 0.5
+    }
+}
