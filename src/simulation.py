@@ -418,7 +418,7 @@ class Simulation:
 
         if creature is not None:
             materials_text = ((material.short_name,
-                            '%.2E' % creature.getMaterial(material))
+                            '%.1E' % creature.getMaterial(material))
                             for material in CREATURE_MATERIALS.values())
 
             self.__writeText(materials_text, start_point, 230, double=True)

@@ -2,7 +2,9 @@
 import random
 import numpy
 
-from .materials import ENERGY_MATERIALS, CREATURE_MATERIAL_RULES
+from .materials import (
+    ENERGY_MATERIALS, CREATURE_MATERIAL_RULES, WASTE_MATERIALS
+)
 
 class CreatureTrait:
 
@@ -121,3 +123,7 @@ for rule in CREATURE_MATERIAL_RULES:
     CREATURE_TRAITS.append(CreatureTrait(
         f'{rule.name}_childqtd_min_to_reproduce', 1.1, 100,
         proportional_mutation=True))
+
+for material in WASTE_MATERIALS:
+    CREATURE_TRAITS.append(CreatureTrait(
+        f'{material.name}_waste_qtd_to_remove', 0, 0.5))

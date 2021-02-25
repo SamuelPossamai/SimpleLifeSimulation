@@ -349,12 +349,28 @@ class Creature(CircleSimulationObject):
         self.__doSpeed(speed_factor)
         self.__doAngleSpeed(angle_factor)
 
+        total_mass = self.body.mass/Creature.MASS_MULTIPLIER
         for material in WASTE_MATERIALS:
             rsc_qtd = self.__materials.get(material, 0)
-            if rsc_qtd and rsc_qtd > 0.1*(energy + structure):
-                simulation.newResource(*self.body.position, 0,
-                                       rsc_qtd)
-                self.__materials[material] = 0
+            if rsc_qtd < 1000:
+                continue
+
+            material_info = CREATURE_MATERIALS[material.name]
+            material_mass = rsc_qtd*material_info.mass
+
+            waste_desired_qtd = self.getTrait(
+                f'{material.name}_waste_qtd_to_remove')
+
+            if material_mass > (waste_desired_qtd + 0.05)*total_mass:
+                simulation.newResource(*self.body.position, 0, rsc_qtd)
+
+                waste_qtd = (material_mass - \
+                    waste_desired_qtd*total_mass)/material_info.mass
+
+                if waste_qtd > rsc_qtd:
+                    self.__materials[material] = 0
+                else :
+                    self.__materials[material] -= int(waste_qtd)
 
         self.__updateSelf()
 
