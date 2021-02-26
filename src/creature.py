@@ -96,6 +96,8 @@ class Creature(CircleSimulationObject):
         self.__structure = 0
         self.__energy = 0
 
+        self.__spent_energy = 0
+
     def __getMaterialInfo(self, priority_trait_formula, materials, info_class,
                           priority_function):
         if len(materials) == 1:
@@ -212,9 +214,7 @@ class Creature(CircleSimulationObject):
 
         self.__materials[PLANT_MATERIAL] += energy_gained
 
-        spent_to_eat = int((eat_speed_base/2)*energy_gained)
-
-        #TODO: Consume energy for spent
+        self.__spent_energy += int((eat_speed_base/2)*energy_gained)
 
         self._is_eating = 5
 
@@ -315,10 +315,15 @@ class Creature(CircleSimulationObject):
         base_energy_consume = int(
             40*base_energy_consume*self.__config.energy_consume_multiplier) + 1
 
-        if not self.__consumeEnergy(base_energy_consume):
+        base_energy_consume += self.__spent_energy
+        self.__spent_energy = 0
+
+        if base_energy_consume > self.__energy:
             simulation.delCreature(self)
             simulation.newResource(*self.body.position, total_rsc, 0)
             return
+
+        self.__consumeEnergy(base_energy_consume)
 
         #TODO: Condition to reproduce
 
@@ -386,8 +391,7 @@ class Creature(CircleSimulationObject):
         energy_consume = int(abs(speed*self.body.mass*factor* \
             (1 + 2*abs(factor - 0.5))*sqrt(speed_trait + 0.01))//100)
 
-        if not self.__consumeEnergy(energy_consume):
-            speed = 0
+        self.__spent_energy += energy_consume
 
         angle = self.body.angle
 
@@ -409,8 +413,7 @@ class Creature(CircleSimulationObject):
         energy_consume = abs(floor(angular_speed*self.body.mass*factor* \
             sqrt(speed_trait_factor + 0.2)))//50
 
-        if not self.__consumeEnergy(energy_consume):
-            angular_speed = 0
+        self.__spent_energy += energy_consume
 
         self.body.angular_velocity += angular_speed
 
