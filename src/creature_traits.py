@@ -3,7 +3,8 @@ import random
 import numpy
 
 from .materials import (
-    ENERGY_MATERIALS, CREATURE_MATERIAL_RULES, WASTE_MATERIALS
+    ENERGY_MATERIALS, CREATURE_MATERIAL_RULES, WASTE_MATERIALS,
+    CREATURE_MATERIAL
 )
 
 class CreatureTrait:
@@ -109,6 +110,14 @@ CREATURE_TRAITS = [
     CreatureTrait('rotatepriority', 0, 16, integer_only=True),
 ]
 
+for material in CREATURE_MATERIAL:
+    CREATURE_TRAITS.append(CreatureTrait(
+        f'{material.name}_childqtd', 1.e4, 1.e7, integer_only=True,
+        exponential_random=True, proportional_mutation=True))
+    CREATURE_TRAITS.append(CreatureTrait(
+        f'{material.name}_childqtd_min_to_reproduce', 2, 100,
+        proportional_mutation=True))
+
 if len(ENERGY_MATERIALS) > 1:
     for material in ENERGY_MATERIALS:
         CREATURE_TRAITS.append(CreatureTrait(
@@ -117,12 +126,6 @@ if len(ENERGY_MATERIALS) > 1:
 for rule in CREATURE_MATERIAL_RULES:
     CREATURE_TRAITS.append(CreatureTrait(
         f'{rule.name}_convertionrate', 0, 32, integer_only=True))
-    CREATURE_TRAITS.append(CreatureTrait(
-        f'{rule.name}_childqtd', 1.e4, 1.e7, integer_only=True,
-        exponential_random=True, proportional_mutation=True))
-    CREATURE_TRAITS.append(CreatureTrait(
-        f'{rule.name}_childqtd_min_to_reproduce', 1.1, 100,
-        proportional_mutation=True))
 
 for material in WASTE_MATERIALS:
     CREATURE_TRAITS.append(CreatureTrait(

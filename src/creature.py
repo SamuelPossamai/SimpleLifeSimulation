@@ -325,7 +325,17 @@ class Creature(CircleSimulationObject):
 
         self.__consumeEnergy(base_energy_consume)
 
-        #TODO: Condition to reproduce
+        for material in CREATURE_MATERIALS:
+            material_qtd = self.__materials.get(material, 0)
+
+            child_qtd = self.getTrait(f'{material.name}_childqtd')
+            overflow_min = self.getTrait(
+                f'{material.name}_childqtd_min_to_reproduce')
+
+            if material_qtd < child_qtd*overflow_min:
+                break
+        else:
+            reproduce()
 
         if self._is_eating > 0:
             self._is_eating -= 1
