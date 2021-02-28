@@ -42,8 +42,11 @@ class Creature(CircleSimulationObject):
 
     def __init__(self, space, *args, **kwargs):
 
-        self.__materials = {material: 0 for material in
-                            CREATURE_MATERIALS.values()}
+        self.__materials = kwargs.get('materials')
+
+        if self.__materials is None:
+            self.__materials = {material: 0 for material in
+                                CREATURE_MATERIALS.values()}
 
         if len(args) == 1 and not kwargs:
 
@@ -168,22 +171,22 @@ class Creature(CircleSimulationObject):
 
     def reproduce(self, simulation):
 
-        #TODO: reproduction
+        child_materials = {}
+        for material in CREATURE_MATERIALS:
+            material_qtd = self.__materials.get(material, 0)
 
-        return
+            child_qtd = self.getTrait(f'{material.name}_childqtd')
 
-        child_percentage = self.getTrait('childsizepercentage')
-        child_structure = int(self._structure*child_percentage)
-        child_energy = int(self._energy*child_percentage) + 1
+            if material_qtd < child_qtd:
+                child_qtd = material_qtd
 
-        if child_structure > 1000 and child_energy > 1000:
+            self.__materials[material] -= child_qtd
+            child_materials[material] = child_qtd
 
-            self._structure -= child_structure
-            self._energy -= child_energy
 
-            pos = self.body.position
-            simulation.newCreature(pos.x, pos.y, child_structure, child_energy,
-                                   parent=self)
+        pos = self.body.position
+        simulation.newCreature(pos.x, pos.y, materials=child_materials,
+                               parent=self)
 
     def getMaterial(self, material):
         return self.__materials[material]
@@ -325,12 +328,12 @@ class Creature(CircleSimulationObject):
 
         self.__consumeEnergy(base_energy_consume)
 
-        for material in CREATURE_MATERIALS:
+        for material_name, material in CREATURE_MATERIALS.items():
             material_qtd = self.__materials.get(material, 0)
 
-            child_qtd = self.getTrait(f'{material.name}_childqtd')
+            child_qtd = self.getTrait(f'{material_name}_childqtd')
             overflow_min = self.getTrait(
-                f'{material.name}_childqtd_min_to_reproduce')
+                f'{material_name}_childqtd_min_to_reproduce')
 
             if material_qtd < child_qtd*overflow_min:
                 break

@@ -4,7 +4,7 @@ import numpy
 
 from .materials import (
     ENERGY_MATERIALS, CREATURE_MATERIAL_RULES, WASTE_MATERIALS,
-    CREATURE_MATERIAL
+    CREATURE_MATERIALS
 )
 
 class CreatureTrait:
@@ -110,12 +110,12 @@ CREATURE_TRAITS = [
     CreatureTrait('rotatepriority', 0, 16, integer_only=True),
 ]
 
-for material in CREATURE_MATERIAL:
+for material in CREATURE_MATERIALS:
     CREATURE_TRAITS.append(CreatureTrait(
-        f'{material.name}_childqtd', 1.e4, 1.e7, integer_only=True,
+        f'{material}_childqtd', 1.e4, 1.e7, integer_only=True,
         exponential_random=True, proportional_mutation=True))
     CREATURE_TRAITS.append(CreatureTrait(
-        f'{material.name}_childqtd_min_to_reproduce', 2, 100,
+        f'{material}_childqtd_min_to_reproduce', 2, 100,
         proportional_mutation=True))
 
 if len(ENERGY_MATERIALS) > 1:
