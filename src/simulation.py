@@ -307,9 +307,10 @@ class Simulation:
             if apply_at_least_once:
                 event()
 
-    def newCreature(self, x, y, structure, energy, parent=None):
+    def newCreature(self, x, y, structure, energy, materials=None, parent=None):
 
-        creature = Creature(self._space, x, y, structure, energy, parent=parent)
+        creature = Creature(self._space, x, y, structure, energy, parent=parent,
+                            materials=materials)
 
         self._creatures.append(creature)
 

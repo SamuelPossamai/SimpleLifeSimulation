@@ -42,7 +42,7 @@ class Creature(CircleSimulationObject):
 
     def __init__(self, space, *args, **kwargs):
 
-        self.__materials = kwargs.get('materials')
+        self.__materials = kwargs.pop('materials', None)
 
         if self.__materials is None:
             self.__materials = {material: 0 for material in
@@ -123,7 +123,7 @@ class Creature(CircleSimulationObject):
         }
 
     def __construct(self, space, x, y, structure, energy, parent=None,
-                     config=None):
+                    config=None):
 
         if config is None:
             self.__config = Creature.Config()
@@ -172,10 +172,10 @@ class Creature(CircleSimulationObject):
     def reproduce(self, simulation):
 
         child_materials = {}
-        for material in CREATURE_MATERIALS:
+        for material_name, material in CREATURE_MATERIALS.items():
             material_qtd = self.__materials.get(material, 0)
 
-            child_qtd = self.getTrait(f'{material.name}_childqtd')
+            child_qtd = self.getTrait(f'{material_name}_childqtd')
 
             if material_qtd < child_qtd:
                 child_qtd = material_qtd
@@ -185,7 +185,7 @@ class Creature(CircleSimulationObject):
 
 
         pos = self.body.position
-        simulation.newCreature(pos.x, pos.y, materials=child_materials,
+        simulation.newCreature(pos.x, pos.y, 0, 0, materials=child_materials,
                                parent=self)
 
     def getMaterial(self, material):
@@ -322,6 +322,10 @@ class Creature(CircleSimulationObject):
         self.__spent_energy = 0
 
         if base_energy_consume > self.__energy:
+            total_rsc = 0
+            for material in CREATURE_MATERIALS.values():
+                total_rsc += self.__materials.get(material)*material.mass
+
             simulation.delCreature(self)
             simulation.newResource(*self.body.position, total_rsc, 0)
             return
@@ -338,7 +342,7 @@ class Creature(CircleSimulationObject):
             if material_qtd < child_qtd*overflow_min:
                 break
         else:
-            reproduce()
+            self.reproduce(simulation)
 
         if self._is_eating > 0:
             self._is_eating -= 1
