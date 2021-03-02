@@ -12,8 +12,9 @@ from .species import Species
 from .collisiontypes import CREATURE_COLLISION_TYPE
 from .materials import (
     CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
-    CREATURE_MATERIAL_RULES, PLANT_MATERIAL, WASTE_MATERIALS
+    PLANT_MATERIAL, WASTE_MATERIALS
 )
+from .material_rules import CREATURE_MATERIAL_RULES
 from .creature_traits import CREATURE_TRAITS, addcreaturetraitproperties
 from .creature_sensors import VisionSensor
 

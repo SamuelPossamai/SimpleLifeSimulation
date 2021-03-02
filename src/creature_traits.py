@@ -2,10 +2,8 @@
 import random
 import numpy
 
-from .materials import (
-    ENERGY_MATERIALS, CREATURE_MATERIAL_RULES, WASTE_MATERIALS,
-    CREATURE_MATERIALS
-)
+from .materials import ENERGY_MATERIALS, WASTE_MATERIALS, CREATURE_MATERIALS
+from .material_rules import CREATURE_MATERIAL_RULES
 
 class CreatureTrait:
 
