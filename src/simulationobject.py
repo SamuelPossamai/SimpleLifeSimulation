@@ -51,6 +51,10 @@ class SimulationObject:
         return body
 
     @property
+    def destroyed(self):
+        return self.__destroyed
+
+    @property
     def shape(self):
         return self._shape
 

@@ -421,7 +421,7 @@ class Creature(CircleSimulationObject):
     def __doAngleSpeed(self, factor):
 
         struct_factor = Creature.MASS_MULTIPLIER*self.__structure/self.body.mass
-        speed_trait_factor = self.getTrait('speed')*struct_factor/100
+        speed_trait_factor = max(self.getTrait('speed')*struct_factor/100, 0)
         velocity = self.body.velocity
         current_speed = sqrt(velocity.x**2 + velocity.y**2)
 

@@ -99,8 +99,6 @@ CREATURE_TRAITS = [
     CreatureTrait('eatingspeed', 0, 1),
     CreatureTrait('visiondistance', 0, 1),
     CreatureTrait('visionangle', 0, 1),
-    CreatureTrait('excessenergytoreproduce', 0, 2),
-    CreatureTrait('childsizepercentage', 0.05, 0.5),
     CreatureTrait('walkpriority', 0, 16, integer_only=True),
     CreatureTrait('runpriority', 0, 16, integer_only=True),
     CreatureTrait('fastrunpriority', 0, 16, integer_only=True),

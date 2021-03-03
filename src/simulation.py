@@ -339,15 +339,17 @@ class Simulation:
         screen_size = pygame.display.get_surface().get_size()
         start_point = screen_size[0] - self.__lat_column_size, 0
         creature = self._show_creature
+        if creature is not None and creature.destroyed:
+            creature = self._show_creature = None
 
         pygame.draw.rect(self._screen, (200, 200, 200),
                          (start_point[0], start_point[1],
                           self.__lat_column_size, screen_size[1]))
 
-        if self._show_creature is None:
+        if creature is None:
             creature_number_text = '-'
         else:
-            creature_number_text = 'Creature %d' % self._show_creature.id_
+            creature_number_text = 'Creature %d' % creature.id_
 
         textsurface = self._medium_font.render(creature_number_text, False,
                                                (0, 0, 0))
@@ -364,7 +366,7 @@ class Simulation:
         self._screen.blit(
             textsurface,
             (start_point[0] + (self.__lat_column_size - text_size)/2,
-             screen_size[1] - 225))
+             screen_size[1] - 125))
 
         labels = ('Species', 'Structure', 'Energy', 'Weight', 'Radius',
                   'Position', 'Speed', 'Vision Dist.', 'Vision Angle')
@@ -388,10 +390,7 @@ class Simulation:
         start_y = start_point[1] + 50
         self.__writeText(to_write_list, start_point, start_y)
 
-        labels = ('Speed',
-                  'Eating Speed', 'Vision Dist.', 'Vision Angle',
-                  'Walk Priority', 'Run Priority', 'F. Run Priority',
-                  'Idle Priority', 'Rotate Priority')
+        labels = ('Speed', 'Eating Speed', 'Vision Dist.', 'Vision Angle')
 
         if creature is None:
             values = ('-' for i in range(len(labels)))
@@ -401,20 +400,12 @@ class Simulation:
                        creature.properties.visiondistance,
                        creature.properties.visionangle)
 
-            priority_values = (creature.properties.walkpriority,
-                               creature.properties.runpriority,
-                               creature.properties.fastrunpriority,
-                               creature.properties.idlepriority + 1,
-                               creature.properties.rotatepriority)
-            pr_val_sum = sum(priority_values)
-            priority_values = (val/pr_val_sum for val in priority_values)
-
             values = (val if isinstance(val, str) else '%.1f%%' % (100*val)
-                      for val in itertools.chain(pvalues, priority_values))
+                      for val in pvalues)
 
         to_write_list = zip(labels, values)
 
-        start_y = screen_size[1] - 190
+        start_y = screen_size[1] - 90
         self.__writeText(to_write_list, start_point, start_y)
 
         if creature is not None:
