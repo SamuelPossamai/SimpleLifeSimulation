@@ -89,7 +89,7 @@ class CreatureMaterialConvertionRule:
         for qtd, material_info in zip(current_qtd_for_input, self.__input_list):
             material_max_reactions = qtd//material_info.quantity
             if max_reactions is None or material_max_reactions < max_reactions:
-                max_reactions = qtd
+                max_reactions = material_max_reactions
 
         if self.__ing_mult:
             factors[2] = max_reactions*self.__ing_mult
