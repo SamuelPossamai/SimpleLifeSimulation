@@ -30,9 +30,7 @@ class Painter:
                          (x_start, y_start, x_end - x_start, y_end - y_start),
                          width)
 
-    # TODO: implement width
     def drawArc(self, color, center, radius, angle, open_angle, width=None):
-        del width
 
         radius *= self.__mul
         radius = int(radius)
@@ -52,7 +50,7 @@ class Painter:
             points.append(pos)
             cur_angle -= angle_diff
 
-        pygame.draw.polygon(self.__screen, color, points)
+        pygame.draw.polygon(self.__screen, color, points, width)
 
     def mapPointToScreen(self, point):
         return (int((point[0] + self.__xoff)*self.__mul),

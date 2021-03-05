@@ -445,15 +445,20 @@ class Creature(CircleSimulationObject):
         radius = self.shape.radius
         angle = self.body.angle
 
+        vision_angle = self.currentvisionangle
+
         if self.selected is True:
             painter.drawCircle((255, 80, 80), pos,
                                radius + 2/painter.multiplier)
+            painter.drawArc((0, 0, 0), pos, self.currentvisiondistance,
+                            angle, vision_angle, width=1)
+
         super().draw(painter, color)
 
         painter.drawArc((int(254*(1 - self.getTrait('visiondistance'))),
                          255, 50),
-                        pos, radius, angle, self._vision_sensor.angle,
-                        width=1)
+                        pos, radius, angle, vision_angle,
+                        width=0)
 
     def __consumeEnergy(self, qtd, iteration=0):
 
