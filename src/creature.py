@@ -87,8 +87,9 @@ class Creature(CircleSimulationObject):
                 self.getTrait('fastrunpriority'),
                 self.getTrait('rotatepriority'))]
 
+            radius = self.shape.radius
             self._vision_sensor = VisionSensor(
-                self, 10*self.shape.radius*self.getTrait('visiondistance'),
+                self, radius + 10*radius*self.getTrait('visiondistance'),
                 pi*(10 + 210*self.getTrait('visionangle'))/180)
 
         else:
@@ -164,7 +165,8 @@ class Creature(CircleSimulationObject):
 
         #self._sound_sensor = SoundSensor(self, 200)
         self._vision_sensor = \
-            VisionSensor(self, 10*radius*self.getTrait('visiondistance'),
+            VisionSensor(self,
+                         radius + 10*radius*self.getTrait('visiondistance'),
                          pi*(10 + 210*self.getTrait('visionangle'))/180)
 
         self._properties = Creature.Properties(self)
@@ -284,7 +286,7 @@ class Creature(CircleSimulationObject):
         if not isclose(new_radius, self.shape.radius, rel_tol=0.05):
             self.shape.unsafe_set_radius(new_radius)
             self._vision_sensor.distance = \
-                10*new_radius*self.getTrait('visiondistance')
+                new_radius + 10*new_radius*self.getTrait('visiondistance')
 
     @property
     def eating(self):
