@@ -125,6 +125,10 @@ class Simulation:
         handler.begin = self.__resourceAlert
 
         handler = self._space.add_collision_handler(
+            RESOURCE_COLLISION_TYPE, RESOURCE_COLLISION_TYPE)
+        handler.begin = self.__resourceMerge
+
+        handler = self._space.add_collision_handler(
             CREATURE_COLLISION_TYPE, RESOURCE_COLLISION_TYPE)
         handler.pre_solve = self.__resourceCreatureCollision
 
@@ -188,7 +192,7 @@ class Simulation:
                     creature.act(self)
 
                 for resource in self._resources:
-                    resource.step()
+                    resource.step(self)
 
                 self.__ticks_to_save -= 1
                 if self.__ticks_to_save <= 0:
@@ -333,6 +337,16 @@ class Simulation:
         self._resources.append(resource)
 
         return resource
+
+    def delResource(self, resource):
+
+        try:
+            self._resources.remove(resource)
+        except ValueError:
+            return False
+
+        resource.destroy()
+        return True
 
     def __drawSideInfo(self):
 
@@ -500,6 +514,17 @@ class Simulation:
         creature.stopAction()
 
         return True
+
+    @staticmethod
+    def __resourceMerge(arbiter, _space, _):
+
+        shapes = arbiter.shapes
+        rsc1 = shapes[0].simulation_object
+        rsc2 = shapes[1].simulation_object
+
+        new_rsc = rsc1.merge(rsc2)
+
+        return False
 
     def __addWalls(self):
 

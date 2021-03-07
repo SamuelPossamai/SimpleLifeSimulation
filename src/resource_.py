@@ -26,6 +26,23 @@ class Resource(CircleSimulationObject):
         else:
             self.__construct(space, *args, **kwargs)
 
+    def merge(self, other):
+
+        if other._ext_rsc > self._ext_rsc:
+            return other.merge(self)
+
+        self._ext_rsc += other._ext_rsc
+        self._int_rsc += other._int_rsc
+
+        other._ext_rsc = other._int_rsc = 0
+
+        self.__steps_to_convert = min(self.__steps_to_convert,
+                                      other.__steps_to_convert)
+
+        self.shape.unsafe_set_radius(self.__getRadius())
+
+        return self
+
     def __construct(self, space, x, y, external_rsc, internal_rsc,
                     rsc_density=10):
 
@@ -42,7 +59,7 @@ class Resource(CircleSimulationObject):
         self.__steps_to_convert = self.__convert_interval
         self.__convert_rsc_qtd = 100
 
-    def step(self):
+    def step(self, simulation):
 
         if self.__steps_to_convert > 0:
             self.__steps_to_convert -= 1
@@ -57,6 +74,9 @@ class Resource(CircleSimulationObject):
                 self.shape.unsafe_set_radius(self.__getRadius())
 
             self.__steps_to_convert = self.__convert_interval
+
+        if self._int_rsc == 0 and self._ext_rsc == 0:
+            simulation.delResource(self)
 
     def consume(self, _simulation, quantity):
 
