@@ -25,8 +25,14 @@ class Creature(CircleSimulationObject):
     TRAITS = CREATURE_TRAITS
 
     Config = namedtuple(
-        'CreatureConfig', ('energy_consume_multiplier', 'eating_multiplier'))
-    Config.__new__.__defaults__ = (1, 1)
+        'CreatureConfig', ('energy_consume_multiplier', 'eating_multiplier',
+                           'materials', 'energy_materials',
+                           'structure_materials', 'waste_materials',
+                           'plant_material'))
+    Config.__new__.__defaults__ = (
+        1, 1, CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
+        WASTE_MATERIALS, PLANT_MATERIAL
+    )
 
     EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))
 
@@ -44,10 +50,14 @@ class Creature(CircleSimulationObject):
     def __init__(self, space, *args, **kwargs):
 
         self.__materials = kwargs.pop('materials', None)
+        self.__config = kwargs.pop('config', None)
+
+        if self.__config is None:
+            self.__config = Creature.Config()
 
         if self.__materials is None:
             self.__materials = {material: 0 for material in
-                                CREATURE_MATERIALS.values()}
+                                self.__config.materials.values()}
 
         if len(args) == 1 and not kwargs:
 
@@ -66,7 +76,6 @@ class Creature(CircleSimulationObject):
                 self.__species = None
 
             self.__traits = creature_info.get('traits')
-            self.__config = self.Config()
             self._is_eating = False
             self._action = None
             self._properties = Creature.Properties(self)
@@ -76,7 +85,8 @@ class Creature(CircleSimulationObject):
             saved_materials = creature_info.get('materials')
             if saved_materials:
                 for material, qtd in saved_materials.items():
-                    self.__materials[CREATURE_MATERIALS.get(material)] = qtd
+                    self.__materials[
+                        self.__config.materials.get(material)] = qtd
 
             super().__init__(space, info)
 
@@ -96,7 +106,8 @@ class Creature(CircleSimulationObject):
             self.__construct(space, *args, **kwargs)
 
         self.__energy_materials = self.__getMaterialInfo(
-            '{}_energypriority', ENERGY_MATERIALS, Creature.EnergyMaterialInfo,
+            '{}_energypriority', self.__config.energy_materials,
+            Creature.EnergyMaterialInfo,
             lambda material, priority: priority/material.energy_efficiency)
         self.__structure = 0
         self.__energy = 0
@@ -124,16 +135,10 @@ class Creature(CircleSimulationObject):
             for material, priority in material_priorities
         }
 
-    def __construct(self, space, x, y, structure, energy, parent=None,
-                    config=None):
+    def __construct(self, space, x, y, structure, energy, parent=None):
 
-        if config is None:
-            self.__config = Creature.Config()
-        else:
-            self.__config = config
-
-        self.__materials[ENERGY_MATERIALS[0]] = energy
-        self.__materials[STRUCTURE_MATERIALS[0]] = structure
+        self.__materials[self.__config.energy_materials[0]] = energy
+        self.__materials[self.__config.structure_materials[0]] = structure
 
         if parent is None:
             self.__traits = {trait.name: trait.random()
@@ -175,7 +180,7 @@ class Creature(CircleSimulationObject):
     def reproduce(self, simulation):
 
         child_materials = {}
-        for material_name, material in CREATURE_MATERIALS.items():
+        for material_name, material in self.__config.materials.items():
             material_qtd = self.__materials.get(material, 0)
 
             child_qtd = self.getTrait(f'{material_name}_childqtd')
@@ -218,7 +223,7 @@ class Creature(CircleSimulationObject):
         if energy_gained <= 0:
             return
 
-        self.__materials[PLANT_MATERIAL] += energy_gained
+        self.__materials[self.__config.plant_material] += energy_gained
 
         self.__spent_energy += int((eat_speed_base/2)*energy_gained)
 
@@ -295,12 +300,12 @@ class Creature(CircleSimulationObject):
     def act(self, simulation):
 
         structure = 0
-        for material in STRUCTURE_MATERIALS:
+        for material in self.__config.structure_materials:
             structure += \
                 material.structure_efficiency*self.__materials[material]
 
         energy = 0
-        for material in ENERGY_MATERIALS:
+        for material in self.__config.energy_materials:
             energy += \
                 material.energy_efficiency*self.__materials[material]
 
@@ -326,7 +331,7 @@ class Creature(CircleSimulationObject):
 
         if base_energy_consume > self.__energy:
             total_rsc = 0
-            for material in CREATURE_MATERIALS.values():
+            for material in self.__config.materials.values():
                 total_rsc += self.__materials.get(material)*material.mass
 
             simulation.delCreature(self)
@@ -335,7 +340,7 @@ class Creature(CircleSimulationObject):
 
         self.__consumeEnergy(base_energy_consume)
 
-        for material_name, material in CREATURE_MATERIALS.items():
+        for material_name, material in self.__config.materials.items():
             material_qtd = self.__materials.get(material, 0)
 
             child_qtd = self.getTrait(f'{material_name}_childqtd')
@@ -375,12 +380,12 @@ class Creature(CircleSimulationObject):
         self.__doAngleSpeed(angle_factor)
 
         total_mass = self.body.mass/Creature.MASS_MULTIPLIER
-        for material in WASTE_MATERIALS:
+        for material in self.__config.waste_materials:
             rsc_qtd = self.__materials.get(material, 0)
             if rsc_qtd < 1000:
                 continue
 
-            material_info = CREATURE_MATERIALS[material.name]
+            material_info = self.__config.materials[material.name]
             material_mass = rsc_qtd*material_info.mass
 
             waste_desired_qtd = self.getTrait(
