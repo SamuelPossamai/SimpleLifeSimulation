@@ -28,10 +28,10 @@ class Creature(CircleSimulationObject):
         'CreatureConfig', ('energy_consume_multiplier', 'eating_multiplier',
                            'materials', 'energy_materials',
                            'structure_materials', 'waste_materials',
-                           'plant_material'))
+                           'plant_material', 'material_rules'))
     Config.__new__.__defaults__ = (
         1, 1, CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
-        WASTE_MATERIALS, PLANT_MATERIAL
+        WASTE_MATERIALS, PLANT_MATERIAL, CREATURE_MATERIAL_RULES
     )
 
     EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))
@@ -309,7 +309,7 @@ class Creature(CircleSimulationObject):
             energy += \
                 material.energy_efficiency*self.__materials[material]
 
-        for rule in CREATURE_MATERIAL_RULES:
+        for rule in self.__config.material_rules:
             rule.convert(structure, self.__materials,
                          self.getTrait(f'{rule.name}_convertionrate'))
 
