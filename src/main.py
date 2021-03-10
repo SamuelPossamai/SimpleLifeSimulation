@@ -3,6 +3,8 @@
 import argparse
 
 from .simulation import Simulation
+from .creature import Creature
+from .material_rules import loadConvertionRules
 
 def interval_integer_min_limit(arg_name, min_, arg):
 
@@ -63,6 +65,7 @@ def main():
                         help='Name of the input file, if -p flag is specified it is ignored, the population size will be determined by the file')
     parser.add_argument('--no-graphic', dest='use_graphic', action='store_false', help='Do not run graphics')
     parser.add_argument('--quiet', action='store_true', help='Print less information')
+    parser.add_argument('--material-rules-config', default=None, help='Name of the material convertion rules configuration file')
 
     args = parser.parse_args()
 
@@ -71,13 +74,18 @@ def main():
     else:
         screen_size = None
 
+    creature_config = None
+    if args.material_rules_config is not None:
+        creature_config = Creature.Config(material_rules=loadConvertionRules(
+            args.material_rules_config))
+
     game = Simulation(population_size=args.pop_size,
                       ticks_per_second=args.simulation_speed,
                       starting_resources=args.resources_qtd,
                       size=args.size, out_file=args.out_file,
                       screen_size=screen_size,
                       in_file=args.in_file, use_graphic=args.use_graphic,
-                      quiet=args.quiet)
+                      quiet=args.quiet, creature_config=creature_config)
     game.run()
 
 if __name__ == '__main__':

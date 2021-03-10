@@ -34,7 +34,10 @@ class Simulation:
 
     def __init__(self, population_size=16, starting_resources=20, size=1000,
                  out_file=None, in_file=None, screen_size=None,
-                 ticks_per_second=50, use_graphic=True, quiet=False):
+                 ticks_per_second=50, use_graphic=True, quiet=False,
+                 creature_config=None):
+
+        self.__creature_config = creature_config
 
         mul = size/300
 
@@ -314,7 +317,7 @@ class Simulation:
     def newCreature(self, x, y, structure, energy, materials=None, parent=None):
 
         creature = Creature(self._space, x, y, structure, energy, parent=parent,
-                            materials=materials)
+                            materials=materials, config=self.__creature_config)
 
         self._creatures.append(creature)
 

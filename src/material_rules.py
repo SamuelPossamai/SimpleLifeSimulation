@@ -147,8 +147,13 @@ def __loadConvertionRule(name, rule):
         speed=rule.get('speed', 1)
     )
 
-with open('data/material_convertion_rules.json') as file:
-    CREATURE_MATERIAL_RULES = tuple(
-        __loadConvertionRule(rule_name, rule)
-        for rule_name, rule in json.load(file).items()
-    )
+def loadConvertionRules(filename):
+
+    with open(filename) as file:
+        return tuple(
+            __loadConvertionRule(rule_name, rule)
+            for rule_name, rule in json.load(file).items()
+        )
+
+CREATURE_MATERIAL_RULES = loadConvertionRules(
+    'data/material_convertion_rules.json')
