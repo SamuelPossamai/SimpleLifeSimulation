@@ -123,28 +123,28 @@ def __loadMaterial(name, material, loaded_materials, all_materials):
 
     return material
 
+def loadMaterials(filename):
+
+    with open(filename) as file:
+        all_materials = json.load(file)
+        materials = {}
+
+        for material_name, material in all_materials.items():
+            __loadMaterial(material_name, material, materials, all_materials)
+
+    materials[PLANT_MATERIAL.name] = PLANT_MATERIAL
+
+    return (
+        materials,
+        tuple(material for material in materials.values()
+              if material.is_energy_source),
+        tuple(material for material in materials.values()
+              if material.is_structure),
+        tuple(material for material in materials.values()
+              if material.is_waste)
+    )
+
 PLANT_MATERIAL = CreatureMaterial('plant material', density=1.2)
 
-CREATURE_MATERIALS = {}
-
-with open('data/materials.json') as file:
-    all_materials = json.load(file)
-    CREATURE_MATERIALS = {}
-
-    for material_name, material in all_materials.items():
-        __loadMaterial(material_name, material, CREATURE_MATERIALS,
-                       all_materials)
-
-    del all_materials
-
-CREATURE_MATERIALS[PLANT_MATERIAL.name] = PLANT_MATERIAL
-
-ENERGY_MATERIALS = tuple(material for material in
-                         CREATURE_MATERIALS.values()
-                         if material.is_energy_source)
-STRUCTURE_MATERIALS = tuple(material for material in
-                            CREATURE_MATERIALS.values()
-                            if material.is_structure)
-WASTE_MATERIALS = tuple(material for material in
-                        CREATURE_MATERIALS.values()
-                        if material.is_waste)
+CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS, WASTE_MATERIALS = \
+    loadMaterials('data/materials.json')

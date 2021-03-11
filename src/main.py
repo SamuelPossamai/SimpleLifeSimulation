@@ -66,6 +66,7 @@ def main():
     parser.add_argument('--no-graphic', dest='use_graphic', action='store_false', help='Do not run graphics')
     parser.add_argument('--quiet', action='store_true', help='Print less information')
     parser.add_argument('--material-rules-config', default=None, help='Name of the material convertion rules configuration file')
+    parser.add_argument('--materials-config', default=None, help='Name of the materials configuration file')
 
     args = parser.parse_args()
 
@@ -74,10 +75,24 @@ def main():
     else:
         screen_size = None
 
-    creature_config = None
+    creature_config_kwargs = {}
+
     if args.material_rules_config is not None:
-        creature_config = Creature.Config(material_rules=loadConvertionRules(
-            args.material_rules_config))
+        creature_config_kwargs['material_rules'] = loadConvertionRules(
+            args.material_rules_config)
+
+    if args.materials_config is not None:
+        materials, energy_materials, structure_materials, waste_materials = \
+            loadConvertionRules(args.materials_config)
+
+        creature_config_kwargs['materials'] = materials
+        creature_config_kwargs['energy_materials'] = energy_materials
+        creature_config_kwargs['structure_materials'] = structure_materials
+        creature_config_kwargs['waste_materials'] = structure_materials
+
+    creature_config = None
+    if creature_config_kwargs:
+        creature_config = Creature.Config(**creature_config_kwargs)
 
     game = Simulation(population_size=args.pop_size,
                       ticks_per_second=args.simulation_speed,
