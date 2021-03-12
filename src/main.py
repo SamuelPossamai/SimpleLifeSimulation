@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
+
 import argparse
 
 from .simulation import Simulation
 from .creature import Creature
 from .material_rules import loadConvertionRules
+from .materials import loadMaterials, CREATURE_MATERIALS
 
 def interval_integer_min_limit(arg_name, min_, arg):
 
     values = arg.split('-')
 
     if len(values) > 2:
-        raise argparse.ArgumentTypeError("%s cannot contain more than one '-' character" % arg_name)
+        raise argparse.ArgumentTypeError(
+            "%s cannot contain more than one '-' character" % arg_name)
 
     if len(values) == 2:
 
-        min_, max_ = integer_min_limit(arg_name + '(min value)', min_, values[0]), integer_min_limit(arg_name + '(max value)', min_, values[1])
+        min_ = integer_min_limit(arg_name + '(min value)', min_, values[0])
+        max_ = integer_min_limit(arg_name + '(max value)', min_, values[1])
         if min_ > max_:
-            raise argparse.ArgumentTypeError("%s min value must be lower than max value" % arg_name)
+            raise argparse.ArgumentTypeError(
+                "%s min value must be lower than max value" % arg_name)
 
         return min_, max_
 
@@ -31,7 +37,8 @@ def integer_min_limit(arg_name, min_, x):
         raise argparse.ArgumentTypeError("%s must be an integer" % arg_name)
 
     if x < min_:
-        raise argparse.ArgumentTypeError("%s must be higher or equal to %d" % (arg_name, min_))
+        raise argparse.ArgumentTypeError(
+            "%s must be higher or equal to %d" % (arg_name, min_))
 
     return x
 
@@ -40,7 +47,8 @@ def interval_integer(arg_name, min_, max_, x):
     x = integer_min_limit(arg_name, min_, x)
 
     if x > max_:
-        raise argparse.ArgumentTypeError("%s must be lower or equal to %d" % (arg_name, max_))
+        raise argparse.ArgumentTypeError(
+            "%s must be lower or equal to %d" % (arg_name, max_))
 
     return x
 
@@ -67,6 +75,7 @@ def main():
     parser.add_argument('--quiet', action='store_true', help='Print less information')
     parser.add_argument('--material-rules-config', default=None, help='Name of the material convertion rules configuration file')
     parser.add_argument('--materials-config', default=None, help='Name of the materials configuration file')
+    parser.add_argument('-c', '--config', default=None, help='Name of the materials configuration file')
 
     args = parser.parse_args()
 
@@ -77,18 +86,36 @@ def main():
 
     creature_config_kwargs = {}
 
-    if args.material_rules_config is not None:
-        creature_config_kwargs['material_rules'] = loadConvertionRules(
-            args.material_rules_config)
+    material_rules_config_file = args.material_rules_config
+    materials_config_file = args.materials_config
 
-    if args.materials_config is not None:
+    config_dir = args.config
+
+    if config_dir is not None:
+
+        config_dir = Path(config_dir)
+
+        if material_rules_config_file is None:
+            material_rules_config_file = config_dir.joinpath(
+                'material_convertion_rules.json')
+
+        if materials_config_file is None:
+            materials_config_file = config_dir.joinpath('materials.json')
+
+    if materials_config_file is not None:
         materials, energy_materials, structure_materials, waste_materials = \
-            loadConvertionRules(args.materials_config)
+            loadMaterials(materials_config_file)
 
         creature_config_kwargs['materials'] = materials
         creature_config_kwargs['energy_materials'] = energy_materials
         creature_config_kwargs['structure_materials'] = structure_materials
         creature_config_kwargs['waste_materials'] = structure_materials
+    else:
+        materials = CREATURE_MATERIALS
+
+    if material_rules_config_file is not None:
+        creature_config_kwargs['material_rules'] = loadConvertionRules(
+            material_rules_config_file, materials)
 
     creature_config = None
     if creature_config_kwargs:

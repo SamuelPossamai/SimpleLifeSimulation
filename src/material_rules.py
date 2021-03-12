@@ -127,18 +127,20 @@ class CreatureMaterialConvertionRule:
     def __repr__(self):
         return f'CreatureMaterialConvertionRule({str(self)})'
 
-def __loadConvertionRuleMaterialInfo(material_info_list):
+def __loadConvertionRuleMaterialInfo(material_info_list, materials):
     return [
         CreatureMaterialConvertionRule.MaterialInfo(
-            CREATURE_MATERIALS[input_info['material']],
+            materials[input_info['material']],
             input_info.get('quantity', 1)
         ) for input_info in material_info_list
     ]
 
-def __loadConvertionRule(name, rule):
+def __loadConvertionRule(name, rule, materials):
 
-    input_materials = __loadConvertionRuleMaterialInfo(rule['input'])
-    output_materials = __loadConvertionRuleMaterialInfo(rule['output'])
+    input_materials = __loadConvertionRuleMaterialInfo(
+        rule['input'], materials)
+    output_materials = __loadConvertionRuleMaterialInfo(
+        rule['output'], materials)
 
     return CreatureMaterialConvertionRule(
         name,
@@ -147,13 +149,13 @@ def __loadConvertionRule(name, rule):
         speed=rule.get('speed', 1)
     )
 
-def loadConvertionRules(filename):
+def loadConvertionRules(filename, materials):
 
     with open(filename) as file:
         return tuple(
-            __loadConvertionRule(rule_name, rule)
+            __loadConvertionRule(rule_name, rule, materials)
             for rule_name, rule in json.load(file).items()
         )
 
 CREATURE_MATERIAL_RULES = loadConvertionRules(
-    'data/material_convertion_rules.json')
+    'data/material_convertion_rules.json', CREATURE_MATERIALS)
