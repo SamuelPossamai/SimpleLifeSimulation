@@ -79,21 +79,35 @@ class CreatureTrait:
 
         return val
 
-def addcreaturetraitproperties(traits, property_name_modifier=None):
+def getCreatureTraits(materials, energy_materials, waste_materials,
+                      material_rules):
 
-    def decorator(baseclass):
-        for trait in traits:
-            if property_name_modifier is None:
-                property_name = trait.name
-            else:
-                property_name = property_name_modifier(trait.name)
-            setattr(baseclass, property_name,
-                    property(lambda self, name=trait.name: self.getTrait(name)))
-        return baseclass
+    traits = CREATURE_BASE_TRAITS.copy()
 
-    return decorator
+    for material in materials:
+        traits.append(CreatureTrait(
+            f'{material}_childqtd', 1.e4, 1.e7, integer_only=True,
+            exponential_random=True, proportional_mutation=True))
+        traits.append(CreatureTrait(
+            f'{material}_childqtd_min_to_reproduce', 2, 100,
+            proportional_mutation=True))
 
-CREATURE_TRAITS = [
+    if len(energy_materials) > 1:
+        for material in energy_materials:
+            traits.append(CreatureTrait(
+                f'{material.name}_energypriority', 0, 32, integer_only=True))
+
+    for rule in material_rules:
+        traits.append(CreatureTrait(
+            f'{rule.name}_convertionrate', 0, 32, integer_only=True))
+
+    for material in waste_materials:
+        traits.append(CreatureTrait(
+            f'{material.name}_waste_qtd_to_remove', 0, 0.5))
+
+    return traits
+
+CREATURE_BASE_TRAITS = [
 
     CreatureTrait('speed', 0, 1),
     CreatureTrait('eatingspeed', 0, 1),
@@ -106,23 +120,6 @@ CREATURE_TRAITS = [
     CreatureTrait('rotatepriority', 0, 16, integer_only=True),
 ]
 
-for material in CREATURE_MATERIALS:
-    CREATURE_TRAITS.append(CreatureTrait(
-        f'{material}_childqtd', 1.e4, 1.e7, integer_only=True,
-        exponential_random=True, proportional_mutation=True))
-    CREATURE_TRAITS.append(CreatureTrait(
-        f'{material}_childqtd_min_to_reproduce', 2, 100,
-        proportional_mutation=True))
-
-if len(ENERGY_MATERIALS) > 1:
-    for material in ENERGY_MATERIALS:
-        CREATURE_TRAITS.append(CreatureTrait(
-            f'{material.name}_energypriority', 0, 32, integer_only=True))
-
-for rule in CREATURE_MATERIAL_RULES:
-    CREATURE_TRAITS.append(CreatureTrait(
-        f'{rule.name}_convertionrate', 0, 32, integer_only=True))
-
-for material in WASTE_MATERIALS:
-    CREATURE_TRAITS.append(CreatureTrait(
-        f'{material.name}_waste_qtd_to_remove', 0, 0.5))
+CREATURE_TRAITS = getCreatureTraits(
+    CREATURE_MATERIALS, ENERGY_MATERIALS, WASTE_MATERIALS,
+    CREATURE_MATERIAL_RULES)

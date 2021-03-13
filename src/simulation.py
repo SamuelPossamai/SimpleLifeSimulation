@@ -23,7 +23,6 @@ from .painter import Painter
 from .simulationobject import SimulationObject
 from .resource_ import Resource
 from .creature import Creature, Species
-from .materials import CREATURE_MATERIALS
 
 from .collisiontypes import (
     CREATURE_COLLISION_TYPE, SOUND_SENSOR_COLLISION_TYPE,
@@ -412,10 +411,10 @@ class Simulation:
         if creature is None:
             values = ('-' for i in range(len(labels)))
         else:
-            pvalues = (creature.properties.speed,
-                       creature.properties.eatingspeed,
-                       creature.properties.visiondistance,
-                       creature.properties.visionangle)
+            pvalues = (creature.getTrait('speed'),
+                       creature.getTrait('eatingspeed'),
+                       creature.getTrait('visiondistance'),
+                       creature.getTrait('visionangle'))
 
             values = (val if isinstance(val, str) else '%.1f%%' % (100*val)
                       for val in pvalues)
@@ -426,9 +425,9 @@ class Simulation:
         self.__writeText(to_write_list, start_point, start_y)
 
         if creature is not None:
-            materials_text = ((material.short_name,
-                            '%.1E' % creature.getMaterial(material))
-                            for material in CREATURE_MATERIALS.values())
+            materials_text = (
+                (material.short_name, '%.1E' % creature.getMaterial(material))
+                for material in self.__creature_config.materials.values())
 
             self.__writeText(materials_text, start_point, 230, double=True)
 

@@ -15,37 +15,27 @@ from .materials import (
     PLANT_MATERIAL, WASTE_MATERIALS
 )
 from .material_rules import CREATURE_MATERIAL_RULES
-from .creature_traits import CREATURE_TRAITS, addcreaturetraitproperties
+from .creature_traits import CREATURE_TRAITS
 from .creature_sensors import VisionSensor
 
 class Creature(CircleSimulationObject):
 
     LAST_ID = -1
 
-    TRAITS = CREATURE_TRAITS
-
     Config = namedtuple(
         'CreatureConfig', ('energy_consume_multiplier', 'eating_multiplier',
                            'materials', 'energy_materials',
                            'structure_materials', 'waste_materials',
-                           'plant_material', 'material_rules'))
+                           'plant_material', 'material_rules', 'traits'))
     Config.__new__.__defaults__ = (
         1, 1, CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
-        WASTE_MATERIALS, PLANT_MATERIAL, CREATURE_MATERIAL_RULES
+        WASTE_MATERIALS, PLANT_MATERIAL, CREATURE_MATERIAL_RULES,
+        CREATURE_TRAITS
     )
 
     EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))
 
     MASS_MULTIPLIER = 1/10000
-
-    @addcreaturetraitproperties(TRAITS)
-    class Properties:
-
-        def __init__(self, creature):
-            self.__creature = creature
-
-        def getTrait(self, trait):
-            return self.__creature.getTrait(trait)
 
     def __init__(self, space, *args, **kwargs):
 
@@ -78,7 +68,6 @@ class Creature(CircleSimulationObject):
             self.__traits = creature_info.get('traits')
             self._is_eating = False
             self._action = None
-            self._properties = Creature.Properties(self)
             self.selected = False
             self.__species = Species.searchByName(creature_info.get('species'))
 
@@ -142,12 +131,12 @@ class Creature(CircleSimulationObject):
 
         if parent is None:
             self.__traits = {trait.name: trait.random()
-                             for trait in Creature.TRAITS}
+                             for trait in self.__config.traits}
             self.__species = Species(self.__traits)
         else:
             self.__traits = {trait.name:
                                  trait.mutate(parent.__traits[trait.name])
-                             for trait in Creature.TRAITS}
+                             for trait in self.__config.traits}
             self.__species = parent.species.getChildSpecies(self.__traits)
 
         mass, radius = self.__getMassAndRadius()
@@ -174,7 +163,6 @@ class Creature(CircleSimulationObject):
                          radius + 10*radius*self.getTrait('visiondistance'),
                          pi*(10 + 210*self.getTrait('visionangle'))/180)
 
-        self._properties = Creature.Properties(self)
         self.selected = False
 
     def reproduce(self, simulation):
@@ -532,10 +520,6 @@ class Creature(CircleSimulationObject):
     @property
     def structure(self):
         return self.__structure
-
-    @property
-    def properties(self):
-        return self._properties
 
     @property
     def currentspeed(self):
