@@ -15,7 +15,6 @@ from .materials import (
     PLANT_MATERIAL, WASTE_MATERIALS
 )
 from .material_rules import CREATURE_MATERIAL_RULES
-from .creature_traits import CREATURE_TRAITS
 from .creature_sensors import VisionSensor
 
 class Creature(CircleSimulationObject):
@@ -30,7 +29,7 @@ class Creature(CircleSimulationObject):
     Config.__new__.__defaults__ = (
         1, 1, CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
         WASTE_MATERIALS, PLANT_MATERIAL, CREATURE_MATERIAL_RULES,
-        CREATURE_TRAITS
+        None
     )
 
     EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))
@@ -137,7 +136,8 @@ class Creature(CircleSimulationObject):
             self.__traits = {trait.name:
                                  trait.mutate(parent.__traits[trait.name])
                              for trait in self.__config.traits}
-            self.__species = parent.species.getChildSpecies(self.__traits)
+            self.__species = parent.species.getChildSpecies(
+                self.__config.traits, self.__traits)
 
         mass, radius = self.__getMassAndRadius()
 

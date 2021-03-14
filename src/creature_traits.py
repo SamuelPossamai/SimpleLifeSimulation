@@ -119,7 +119,3 @@ CREATURE_BASE_TRAITS = [
     CreatureTrait('idlepriority', 0, 16, integer_only=True),
     CreatureTrait('rotatepriority', 0, 16, integer_only=True),
 ]
-
-CREATURE_TRAITS = getCreatureTraits(
-    CREATURE_MATERIALS, ENERGY_MATERIALS, WASTE_MATERIALS,
-    CREATURE_MATERIAL_RULES)

@@ -134,9 +134,8 @@ def main():
     else:
         convertion_rules = CREATURE_MATERIAL_RULES
 
-    if get_new_traits:
-        creature_config_kwargs['traits'] = getCreatureTraits(
-            materials, energy_materials, waste_materials, convertion_rules)
+    creature_config_kwargs['traits'] = getCreatureTraits(
+        materials, energy_materials, waste_materials, convertion_rules)
 
     creature_config = None
     if creature_config_kwargs:

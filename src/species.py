@@ -1,6 +1,4 @@
 
-from .creature_traits import CREATURE_TRAITS
-
 class Species:
 
     __all_species = []
@@ -34,16 +32,16 @@ class Species:
 
         return chr(first_letter_val + i) + name
 
-    def getChildSpecies(self, traits):
+    def getChildSpecies(self, traits_config, traits):
 
         similarity = 0
 
-        for trait in CREATURE_TRAITS:
+        for trait in traits_config:
             parent_val = self.__traits.get(trait.name)
             child_val = traits.get(trait.name)
 
             similarity += trait.valuesSimilarity(
-                parent_val, child_val)/len(CREATURE_TRAITS)
+                parent_val, child_val)/len(traits_config)
 
             if similarity > 0.8:
                 return self
