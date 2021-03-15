@@ -2,9 +2,6 @@
 import random
 import numpy
 
-from .materials import ENERGY_MATERIALS, WASTE_MATERIALS, CREATURE_MATERIALS
-from .material_rules import CREATURE_MATERIAL_RULES
-
 class CreatureTrait:
 
     def __init__(self, name, min_val, max_val, integer_only=False,

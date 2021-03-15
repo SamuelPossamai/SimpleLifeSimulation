@@ -156,6 +156,3 @@ def loadConvertionRules(filename, materials):
             __loadConvertionRule(rule_name, rule, materials)
             for rule_name, rule in json.load(file).items()
         )
-
-CREATURE_MATERIAL_RULES = loadConvertionRules(
-    'data/material_convertion_rules.json', CREATURE_MATERIALS)

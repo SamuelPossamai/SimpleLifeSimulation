@@ -14,7 +14,6 @@ from .materials import (
     CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
     PLANT_MATERIAL, WASTE_MATERIALS
 )
-from .material_rules import CREATURE_MATERIAL_RULES
 from .creature_sensors import VisionSensor
 
 class Creature(CircleSimulationObject):
@@ -28,8 +27,7 @@ class Creature(CircleSimulationObject):
                            'plant_material', 'material_rules', 'traits'))
     Config.__new__.__defaults__ = (
         1, 1, CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
-        WASTE_MATERIALS, PLANT_MATERIAL, CREATURE_MATERIAL_RULES,
-        None
+        WASTE_MATERIALS, PLANT_MATERIAL, None, None
     )
 
     EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))

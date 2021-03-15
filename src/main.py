@@ -7,7 +7,7 @@ import argparse
 from .simulation import Simulation
 from .creature import Creature
 
-from .material_rules import loadConvertionRules, CREATURE_MATERIAL_RULES
+from .material_rules import loadConvertionRules
 from .materials import (
     loadMaterials, CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
     WASTE_MATERIALS
@@ -107,8 +107,6 @@ def main():
         if materials_config_file is None:
             materials_config_file = config_dir.joinpath('materials.json')
 
-    get_new_traits = False
-
     if materials_config_file is not None:
         materials, energy_materials, structure_materials, waste_materials = \
             loadMaterials(materials_config_file)
@@ -117,22 +115,18 @@ def main():
         creature_config_kwargs['energy_materials'] = energy_materials
         creature_config_kwargs['structure_materials'] = structure_materials
         creature_config_kwargs['waste_materials'] = waste_materials
-
-        get_new_traits = True
     else:
         materials = CREATURE_MATERIALS
         energy_materials = ENERGY_MATERIALS
         structure_materials = STRUCTURE_MATERIALS
         waste_materials = WASTE_MATERIALS
 
-    if material_rules_config_file is not None:
-        convertion_rules = loadConvertionRules(
-            material_rules_config_file, materials)
-        creature_config_kwargs['material_rules'] = convertion_rules
+    if material_rules_config_file is None:
+        material_rules_config_file = 'data/material_convertion_rules.json'
 
-        get_new_traits = True
-    else:
-        convertion_rules = CREATURE_MATERIAL_RULES
+    convertion_rules = loadConvertionRules(
+        material_rules_config_file, materials)
+    creature_config_kwargs['material_rules'] = convertion_rules
 
     creature_config_kwargs['traits'] = getCreatureTraits(
         materials, energy_materials, waste_materials, convertion_rules)
