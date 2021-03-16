@@ -2,8 +2,6 @@
 import json
 from math import ceil
 
-from .materials import CREATURE_MATERIALS
-
 class CreatureMaterialConvertionRule:
 
     REACTION_SPEED_BASE_MULT = 1e-4

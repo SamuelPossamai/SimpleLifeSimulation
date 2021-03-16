@@ -145,6 +145,3 @@ def loadMaterials(filename):
     )
 
 PLANT_MATERIAL = CreatureMaterial('plant material', density=1.2)
-
-CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS, WASTE_MATERIALS = \
-    loadMaterials('data/materials.json')

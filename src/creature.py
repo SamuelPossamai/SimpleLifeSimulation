@@ -10,10 +10,7 @@ from .simulationobject import CircleSimulationObject
 from .species import Species
 
 from .collisiontypes import CREATURE_COLLISION_TYPE
-from .materials import (
-    CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
-    PLANT_MATERIAL, WASTE_MATERIALS
-)
+from .materials import PLANT_MATERIAL
 from .creature_sensors import VisionSensor
 
 class Creature(CircleSimulationObject):
@@ -26,8 +23,7 @@ class Creature(CircleSimulationObject):
                            'structure_materials', 'waste_materials',
                            'plant_material', 'material_rules', 'traits'))
     Config.__new__.__defaults__ = (
-        1, 1, CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
-        WASTE_MATERIALS, PLANT_MATERIAL, None, None
+        1, 1, None, None, None, None, PLANT_MATERIAL, None, None
     )
 
     EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))

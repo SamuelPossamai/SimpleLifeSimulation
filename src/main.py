@@ -8,10 +8,7 @@ from .simulation import Simulation
 from .creature import Creature
 
 from .material_rules import loadConvertionRules
-from .materials import (
-    loadMaterials, CREATURE_MATERIALS, ENERGY_MATERIALS, STRUCTURE_MATERIALS,
-    WASTE_MATERIALS
-)
+from .materials import loadMaterials
 from .creature_traits import getCreatureTraits
 
 def interval_integer_min_limit(arg_name, min_, arg):
@@ -107,19 +104,16 @@ def main():
         if materials_config_file is None:
             materials_config_file = config_dir.joinpath('materials.json')
 
-    if materials_config_file is not None:
-        materials, energy_materials, structure_materials, waste_materials = \
-            loadMaterials(materials_config_file)
+    if materials_config_file is None:
+        materials_config_file = 'data/materials.json'
 
-        creature_config_kwargs['materials'] = materials
-        creature_config_kwargs['energy_materials'] = energy_materials
-        creature_config_kwargs['structure_materials'] = structure_materials
-        creature_config_kwargs['waste_materials'] = waste_materials
-    else:
-        materials = CREATURE_MATERIALS
-        energy_materials = ENERGY_MATERIALS
-        structure_materials = STRUCTURE_MATERIALS
-        waste_materials = WASTE_MATERIALS
+    materials, energy_materials, structure_materials, waste_materials = \
+        loadMaterials(materials_config_file)
+
+    creature_config_kwargs['materials'] = materials
+    creature_config_kwargs['energy_materials'] = energy_materials
+    creature_config_kwargs['structure_materials'] = structure_materials
+    creature_config_kwargs['waste_materials'] = waste_materials
 
     if material_rules_config_file is None:
         material_rules_config_file = 'data/material_convertion_rules.json'
