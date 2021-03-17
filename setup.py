@@ -12,10 +12,15 @@ setup(
     name='SimpleLifeSimulation',
     version='0.1',
     install_requires=requirements,
-    packages=['simplelifesimulation'],
+    packages=['simplelifesimulation', 'simplelifesimulation.data'],
     package_dir={
 
         'simplelifesimulation': 'src',
+        'simplelifesimulation.data': 'data'
+    },
+    package_data={
+
+        'simplelifesimulation.data': ['*.json']
     },
     entry_points={
 

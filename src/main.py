@@ -104,8 +104,15 @@ def main():
         if materials_config_file is None:
             materials_config_file = config_dir.joinpath('materials.json')
 
+    current_file_path = Path(__file__)
+
+    base_file_path = current_file_path.parent.joinpath('data')
+
+    if not base_file_path.exists():
+        base_file_path = current_file_path.parents[1].joinpath('data')
+
     if materials_config_file is None:
-        materials_config_file = 'data/materials.json'
+        materials_config_file = base_file_path.joinpath('materials.json')
 
     materials, energy_materials, structure_materials, waste_materials = \
         loadMaterials(materials_config_file)
@@ -116,7 +123,8 @@ def main():
     creature_config_kwargs['waste_materials'] = waste_materials
 
     if material_rules_config_file is None:
-        material_rules_config_file = 'data/material_convertion_rules.json'
+        material_rules_config_file = base_file_path.joinpath(
+            'material_convertion_rules.json')
 
     convertion_rules = loadConvertionRules(
         material_rules_config_file, materials)
