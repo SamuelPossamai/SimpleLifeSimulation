@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
+import json
 
 import argparse
 
@@ -77,6 +78,7 @@ def main():
     parser.add_argument('--quiet', action='store_true', help='Print less information')
     parser.add_argument('--material-rules-config', default=None, help='Name of the material convertion rules configuration file')
     parser.add_argument('--materials-config', default=None, help='Name of the materials configuration file')
+    parser.add_argument('--materials-quantity', default=None, help='Name of the materials initial quantity configuration file')
     parser.add_argument('-c', '--config', default=None, help='Name of the materials configuration file')
 
     args = parser.parse_args()
@@ -90,29 +92,30 @@ def main():
 
     material_rules_config_file = args.material_rules_config
     materials_config_file = args.materials_config
+    materials_quantity_file = args.materials_quantity
 
     config_dir = args.config
 
-    if config_dir is not None:
+    if config_dir is None:
 
-        config_dir = Path(config_dir)
+        current_file_path = Path(__file__)
+        config_dir = current_file_path.parent.joinpath('data')
 
-        if material_rules_config_file is None:
-            material_rules_config_file = config_dir.joinpath(
-                'material_convertion_rules.json')
+        if not config_dir.exists():
+            config_dir = current_file_path.parents[1].joinpath('data')
 
-        if materials_config_file is None:
-            materials_config_file = config_dir.joinpath('materials.json')
+    config_dir = Path(config_dir)
 
-    current_file_path = Path(__file__)
-
-    base_file_path = current_file_path.parent.joinpath('data')
-
-    if not base_file_path.exists():
-        base_file_path = current_file_path.parents[1].joinpath('data')
+    if material_rules_config_file is None:
+        material_rules_config_file = config_dir.joinpath(
+            'material_convertion_rules.json')
 
     if materials_config_file is None:
-        materials_config_file = base_file_path.joinpath('materials.json')
+        materials_config_file = config_dir.joinpath('materials.json')
+
+    if materials_quantity_file is None:
+        materials_quantity_file = config_dir.joinpath(
+            'materials_initial_quantity.json')
 
     materials, energy_materials, structure_materials, waste_materials = \
         loadMaterials(materials_config_file)
@@ -137,13 +140,24 @@ def main():
     if creature_config_kwargs:
         creature_config = Creature.Config(**creature_config_kwargs)
 
+    if materials_quantity_file:
+
+        with open(materials_quantity_file) as file:
+            materials_quantity_file_content = json.load(file)
+
+        initial_materials = {
+            material: materials_quantity_file_content.get(material.name, 0)
+            for material in materials.values()
+        }
+
     game = Simulation(population_size=args.pop_size,
                       ticks_per_second=args.simulation_speed,
                       starting_resources=args.resources_qtd,
                       size=args.size, out_file=args.out_file,
                       screen_size=screen_size,
                       in_file=args.in_file, use_graphic=args.use_graphic,
-                      quiet=args.quiet, creature_config=creature_config)
+                      quiet=args.quiet, creature_config=creature_config,
+                      creature_materials_start=initial_materials)
     game.run()
 
 if __name__ == '__main__':

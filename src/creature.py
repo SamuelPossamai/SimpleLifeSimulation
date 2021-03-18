@@ -117,10 +117,7 @@ class Creature(CircleSimulationObject):
             for material, priority in material_priorities
         }
 
-    def __construct(self, space, x, y, structure, energy, parent=None):
-
-        self.__materials[self.__config.energy_materials[0]] = energy
-        self.__materials[self.__config.structure_materials[0]] = structure
+    def __construct(self, space, x, y, parent=None):
 
         if parent is None:
             self.__traits = {trait.name: trait.random()
@@ -175,7 +172,7 @@ class Creature(CircleSimulationObject):
 
 
         pos = self.body.position
-        simulation.newCreature(pos.x, pos.y, 0, 0, materials=child_materials,
+        simulation.newCreature(pos.x, pos.y, materials=child_materials,
                                parent=self)
 
     def getMaterial(self, material):

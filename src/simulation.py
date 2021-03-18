@@ -34,9 +34,10 @@ class Simulation:
     def __init__(self, population_size=16, starting_resources=20, size=1000,
                  out_file=None, in_file=None, screen_size=None,
                  ticks_per_second=50, use_graphic=True, quiet=False,
-                 creature_config=None):
+                 creature_config=None, creature_materials_start=None):
 
         self.__creature_config = creature_config
+        self.__start_materials = creature_materials_start
 
         mul = size/300
 
@@ -150,8 +151,8 @@ class Simulation:
             for _ in range(randint(self._population_size_min,
                                 self._population_size_max)):
                 self.newCreature(self._size[0]*(0.1 + 0.8*random.random()),
-                                self._size[1]*(0.1 + 0.8*random.random()),
-                                1000000, 9000000)
+                                 self._size[1]*(0.1 + 0.8*random.random()),
+                                 self.__start_materials)
 
             self.__generateResources()
         else:
@@ -313,9 +314,12 @@ class Simulation:
             if apply_at_least_once:
                 event()
 
-    def newCreature(self, x, y, structure, energy, materials=None, parent=None):
+    def newCreature(self, x, y, materials=None, parent=None):
 
-        creature = Creature(self._space, x, y, structure, energy, parent=parent,
+        if materials is None:
+            materials = self.__start_materials.copy()
+
+        creature = Creature(self._space, x, y, parent=parent,
                             materials=materials, config=self.__creature_config)
 
         self._creatures.append(creature)
