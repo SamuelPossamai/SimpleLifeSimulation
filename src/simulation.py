@@ -34,10 +34,13 @@ class Simulation:
     def __init__(self, population_size=16, starting_resources=20, size=1000,
                  out_file=None, in_file=None, screen_size=None,
                  ticks_per_second=50, use_graphic=True, quiet=False,
-                 creature_config=None, creature_materials_start=None):
+                 creature_config=None, creature_materials_start=None,
+                 use_wall=True):
 
         self.__creature_config = creature_config
         self.__start_materials = creature_materials_start
+
+        self.__use_wall = use_wall
 
         mul = size/300
 
@@ -172,7 +175,8 @@ class Simulation:
                 if resource is not None
             ]
 
-        self.__addWalls()
+        if self.__use_wall is True:
+            self.__addWalls()
 
     def __generateResources(self):
 
@@ -207,7 +211,8 @@ class Simulation:
                 pygame.display.set_caption('Simulation')
 
                 self.__processEvents()
-                self._screen.fill((100, 100, 100))
+                self._screen.fill((100, 100, 100) if self.__use_wall is True
+                                  else (255, 255, 255))
                 self.__drawObjects()
                 self.__drawSideInfo()
                 pygame.display.flip()
@@ -469,8 +474,6 @@ class Simulation:
 
         for obj in itertools.chain(self._resources, self._creatures):
             obj.draw(self._painter)
-
-        #self._space.debug_draw(pymunk.pygame_util.DrawOptions(self._screen))
 
     @staticmethod
     def __sensorAlert(arbiter, _space, _):

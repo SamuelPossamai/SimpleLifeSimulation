@@ -80,6 +80,7 @@ def main():
     parser.add_argument('--materials-config', default=None, help='Name of the materials configuration file')
     parser.add_argument('--materials-quantity', default=None, help='Name of the materials initial quantity configuration file')
     parser.add_argument('-c', '--config', default=None, help='Name of the materials configuration file')
+    parser.add_argument('--no-wall', dest='use_wall', action='store_false', default=True, help='Remove frontier wall')
 
     args = parser.parse_args()
 
@@ -157,7 +158,8 @@ def main():
                       screen_size=screen_size,
                       in_file=args.in_file, use_graphic=args.use_graphic,
                       quiet=args.quiet, creature_config=creature_config,
-                      creature_materials_start=initial_materials)
+                      creature_materials_start=initial_materials,
+                      use_wall=args.use_wall)
     game.run()
 
 if __name__ == '__main__':
