@@ -25,7 +25,7 @@ setup(
     entry_points={
 
         'gui_scripts': [
-            'simplelifesimulation = simplelifesimulation.main:main',
+            'simplelifesimulation = simplelifesimulation.__main__:main',
         ]
     },
     license='LGPL-3.0'
