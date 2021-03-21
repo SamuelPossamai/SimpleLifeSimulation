@@ -55,6 +55,19 @@ def interval_integer(arg_name, min_, max_, x):
 
     return x
 
+def real_min_limit(arg_name, min_, x):
+
+    try:
+        x = float(x)
+    except ValueError:
+        raise argparse.ArgumentTypeError("%s must be a number" % arg_name)
+
+    if x < min_:
+        raise argparse.ArgumentTypeError(
+            "%s must be higher or equal to %d" % (arg_name, min_))
+
+    return x
+
 def main():
 
     parser = argparse.ArgumentParser()
@@ -81,6 +94,8 @@ def main():
     parser.add_argument('--materials-quantity', default=None, help='Name of the materials initial quantity configuration file')
     parser.add_argument('-c', '--config', default=None, help='Name of the materials configuration file')
     parser.add_argument('--no-wall', dest='use_wall', action='store_false', default=True, help='Remove frontier wall')
+    parser.add_argument('-m', '--starting-materials-multiplier', type=lambda x : real_min_limit('Starting materials multiplier', 0.1, x),
+                        default=1, help='Multiplier factor for creature starting materials')
 
     args = parser.parse_args()
 
@@ -141,15 +156,16 @@ def main():
     if creature_config_kwargs:
         creature_config = Creature.Config(**creature_config_kwargs)
 
-    if materials_quantity_file:
+    st_materials_mult = args.starting_materials_multiplier
 
-        with open(materials_quantity_file) as file:
-            materials_quantity_file_content = json.load(file)
+    with open(materials_quantity_file) as file:
+        materials_qtd_file_content = json.load(file)
 
-        initial_materials = {
-            material: materials_quantity_file_content.get(material.name, 0)
-            for material in materials.values()
-        }
+    initial_materials = {
+        material: materials_qtd_file_content.get(
+            material.name, 0)*st_materials_mult
+        for material in materials.values()
+    }
 
     game = Simulation(population_size=args.pop_size,
                       ticks_per_second=args.simulation_speed,
