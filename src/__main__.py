@@ -149,13 +149,6 @@ def main():
         material_rules_config_file, materials)
     creature_config_kwargs['material_rules'] = convertion_rules
 
-    creature_config_kwargs['traits'] = getCreatureTraits(
-        materials, energy_materials, waste_materials, convertion_rules)
-
-    creature_config = None
-    if creature_config_kwargs:
-        creature_config = Creature.Config(**creature_config_kwargs)
-
     st_materials_mult = args.starting_materials_multiplier
 
     with open(materials_quantity_file) as file:
@@ -166,6 +159,14 @@ def main():
             material.name, 0)*st_materials_mult
         for material in materials.values()
     }
+
+    creature_config_kwargs['traits'] = getCreatureTraits(
+        materials, energy_materials, waste_materials, convertion_rules,
+        initial_materials)
+
+    creature_config = None
+    if creature_config_kwargs:
+        creature_config = Creature.Config(**creature_config_kwargs)
 
     game = Simulation(population_size=args.pop_size,
                       ticks_per_second=args.simulation_speed,

@@ -6,7 +6,7 @@ class CreatureTrait:
 
     def __init__(self, name, min_val, max_val, integer_only=False,
                  mutation_rate=0.1, proportional_mutation=False,
-                 exponential_random=False):
+                 exponential_random=False, initial=None):
 
         self.__name = name
         self.__min = min_val
@@ -15,6 +15,7 @@ class CreatureTrait:
         self.__mut = mutation_rate
         self.__prop_mut = proportional_mutation
         self.__exp_rnd = exponential_random
+        self.__initial = initial
 
     @property
     def name(self):
@@ -35,8 +36,10 @@ class CreatureTrait:
 
         return 1 - abs(val1 - val2)/(self.__max - self.__min)
 
-
     def random(self):
+
+        if self.__initial is not None:
+            return self.mutate(self.__initial)
 
         diff = self.__max - self.__min
 
@@ -77,16 +80,17 @@ class CreatureTrait:
         return val
 
 def getCreatureTraits(materials, energy_materials, waste_materials,
-                      material_rules):
+                      material_rules, initial_materials):
 
     traits = CREATURE_BASE_TRAITS.copy()
 
-    for material in materials:
+    for material_name, material in materials.items():
         traits.append(CreatureTrait(
-            f'{material}_childqtd', 1.e4, 1.e7, integer_only=True,
-            exponential_random=True, proportional_mutation=True))
+            f'{material_name}_childqtd', 1.e4, 1.e7, integer_only=True,
+            exponential_random=True, proportional_mutation=True,
+            initial=initial_materials.get(material)))
         traits.append(CreatureTrait(
-            f'{material}_childqtd_min_to_reproduce', 2, 100,
+            f'{material_name}_childqtd_min_to_reproduce', 2, 100,
             proportional_mutation=True))
 
     if len(energy_materials) > 1:
