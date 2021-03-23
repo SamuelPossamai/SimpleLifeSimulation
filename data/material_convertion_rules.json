@@ -58,7 +58,7 @@
                 "quantity": 2
             }
         ],
-        "speed": 0.3
+        "speed": 0.1
     },
     "create normal structure": {
         "input": [
@@ -77,7 +77,7 @@
                 "quantity": 1
             }
         ],
-        "speed": 0.5
+        "speed": 0.3
     },
     "create light structure": {
         "input": [
@@ -96,7 +96,7 @@
                 "quantity": 3
             }
         ],
-        "speed": 0.4
+        "speed": 0.15
     },
     "digest heavy structure": {
         "input": [
@@ -115,7 +115,7 @@
                 "quantity": 2
             }
         ],
-        "speed": 0.1
+        "speed": 0.03
     },
     "digest normal structure": {
         "input": [
@@ -134,7 +134,7 @@
                 "quantity": 1
             }
         ],
-        "speed": 0.15
+        "speed": 0.2
     },
     "digest light structure": {
         "input": [
@@ -153,7 +153,7 @@
                 "quantity": 3
             }
         ],
-        "speed": 0.2
+        "speed": 0.1
     },
     "create storage": {
         "input": [
@@ -172,7 +172,7 @@
                 "quantity": 1
             }
         ],
-        "speed": 0.4
+        "speed": 0.2
     },
     "digest storage": {
         "input": [
@@ -191,6 +191,6 @@
                 "quantity": 3
             }
         ],
-        "speed": 0.5
+        "speed": 0.3
     }
 }

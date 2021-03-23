@@ -1,4 +1,8 @@
 {
+    "plant material": {
+        "is_plant_material": true,
+        "density": 1.5
+    },
     "energy": {
         "energy_efficiency": 1,
         "waste_material": "waste"

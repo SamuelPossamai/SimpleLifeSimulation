@@ -133,13 +133,19 @@ def main():
         materials_quantity_file = config_dir.joinpath(
             'materials_initial_quantity.json')
 
-    materials, energy_materials, structure_materials, waste_materials = \
+    materials_all = \
         loadMaterials(materials_config_file)
+
+    materials = materials_all.materials
+    energy_materials = materials_all.energy_materials
+    structure_materials = materials_all.structure_materials
+    waste_materials = materials_all.waste_materials
 
     creature_config_kwargs['materials'] = materials
     creature_config_kwargs['energy_materials'] = energy_materials
     creature_config_kwargs['structure_materials'] = structure_materials
     creature_config_kwargs['waste_materials'] = waste_materials
+    creature_config_kwargs['plant_material'] = materials_all.plant_material
 
     if material_rules_config_file is None:
         material_rules_config_file = base_file_path.joinpath(

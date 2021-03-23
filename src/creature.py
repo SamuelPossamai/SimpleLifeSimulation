@@ -10,7 +10,6 @@ from .simulationobject import CircleSimulationObject
 from .species import Species
 
 from .collisiontypes import CREATURE_COLLISION_TYPE
-from .materials import PLANT_MATERIAL
 from .creature_sensors import VisionSensor
 
 class Creature(CircleSimulationObject):
@@ -23,7 +22,7 @@ class Creature(CircleSimulationObject):
                            'structure_materials', 'waste_materials',
                            'plant_material', 'material_rules', 'traits'))
     Config.__new__.__defaults__ = (
-        1, 1, None, None, None, None, PLANT_MATERIAL, None, None
+        1, 1, None, None, None, None, None, None, None
     )
 
     EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))
@@ -196,7 +195,7 @@ class Creature(CircleSimulationObject):
     def eat(self, simulation, resource):
 
         eat_speed_base = (0.3 + self.getTrait('eatingspeed'))/3
-        eat_speed = 50*self.__config.eating_multiplier*eat_speed_base
+        eat_speed = 40*self.__config.eating_multiplier*eat_speed_base
         energy_gained = resource.consume(simulation, self.body.mass*eat_speed)
 
         if energy_gained <= 0:
@@ -278,6 +277,10 @@ class Creature(CircleSimulationObject):
 
     def act(self, simulation):
 
+        for rule in self.__config.material_rules:
+            rule.convert(self.__structure, self.__materials,
+                         self.getTrait(f'{rule.name}_convertionrate'))
+
         structure = 0
         for material in self.__config.structure_materials:
             structure += \
@@ -287,10 +290,6 @@ class Creature(CircleSimulationObject):
         for material in self.__config.energy_materials:
             energy += \
                 material.energy_efficiency*self.__materials[material]
-
-        for rule in self.__config.material_rules:
-            rule.convert(structure, self.__materials,
-                         self.getTrait(f'{rule.name}_convertionrate'))
 
         self.__structure = structure
         self.__energy = energy

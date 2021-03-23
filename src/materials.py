@@ -1,11 +1,13 @@
 
+from collections import namedtuple
 import json
 
 class CreatureMaterial:
 
     def __init__(self, name, description=None, mass=1, density=1,
                  structure_efficiency=0, energy_efficiency=0,
-                 waste_material=None, is_waste=False, short_name=None):
+                 is_plant_material=False, waste_material=None, is_waste=False,
+                 short_name=None):
 
         self.__name = name
         self.__desc = description
@@ -16,6 +18,7 @@ class CreatureMaterial:
         self.__is_waste = is_waste
         self.__related_rules = set()
         self.__waste_material = waste_material
+        self.__is_plant_material = is_plant_material
 
         if short_name is None:
             if len(name) > 2:
@@ -79,6 +82,10 @@ class CreatureMaterial:
         return self.__en_ef
 
     @property
+    def is_plant_material(self):
+        return self.__is_plant_material
+
+    @property
     def waste_material(self):
         return self.__waste_material
 
@@ -118,10 +125,16 @@ def __loadMaterial(name, material, loaded_materials, all_materials):
         energy_efficiency=material.get('energy_efficiency', 0),
         structure_efficiency=material.get('structure_efficiency', 0),
         is_waste=material.get('is_waste', False),
+        is_plant_material=material.get('is_plant_material', False),
         waste_material=waste_material
     )
 
     return material
+
+MaterialList = namedtuple('MaterialList', (
+    'materials', 'energy_materials', 'structure_materials', 'waste_materials',
+    'plant_material'
+))
 
 def loadMaterials(filename):
 
@@ -132,16 +145,19 @@ def loadMaterials(filename):
         for material_name, material in all_materials.items():
             __loadMaterial(material_name, material, materials, all_materials)
 
-    materials[PLANT_MATERIAL.name] = PLANT_MATERIAL
+    plant_materials = tuple(material for material in materials.values()
+                            if material.is_plant_material)
 
-    return (
+    if len(plant_materials) != 1:
+        raise Exception('Must have exactly one plant material')
+
+    return MaterialList(
         materials,
         tuple(material for material in materials.values()
               if material.is_energy_source),
         tuple(material for material in materials.values()
               if material.is_structure),
         tuple(material for material in materials.values()
-              if material.is_waste)
+              if material.is_waste),
+        plant_materials[0]
     )
-
-PLANT_MATERIAL = CreatureMaterial('plant material', density=1.2)
