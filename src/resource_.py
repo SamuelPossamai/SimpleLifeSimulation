@@ -19,8 +19,9 @@ class Resource(CircleSimulationObject):
 
             self._ext_rsc = resource_info.get('internal', 0)
             self._int_rsc = resource_info.get('external', 0)
-            self.__convert_interval = resource_info.get('ticks-to-convert', 0)
-            self.__steps_to_convert = 2000
+            self.__convert_interval = resource_info.get('convert-interval', 0)
+            self.__steps_to_convert = resource_info.get(
+                'ticks-to-convert', 2000)
 
             super().__init__(space, info)
         else:
@@ -44,7 +45,7 @@ class Resource(CircleSimulationObject):
         return self
 
     def __construct(self, space, x, y, external_rsc, internal_rsc,
-                    rsc_density=10):
+                    rsc_density=10, convert_interval=2000):
 
         self._ext_rsc = external_rsc
         self._int_rsc = internal_rsc
@@ -55,7 +56,7 @@ class Resource(CircleSimulationObject):
         self.shape.filter = pymunk.ShapeFilter(
             categories=(1 << (RESOURCE_COLLISION_TYPE - 1)))
 
-        self.__convert_interval = 2000
+        self.__convert_interval = convert_interval
         self.__steps_to_convert = self.__convert_interval
         self.__convert_rsc_qtd = 100
 
@@ -111,7 +112,8 @@ class Resource(CircleSimulationObject):
         base_dict['resource'] = {
             'internal': self._ext_rsc,
             'external': self._int_rsc,
-            'ticks-to-convert': self.__convert_interval
+            'ticks-to-convert': self.__steps_to_convert,
+            'convert-interval': self.__convert_interval
         }
 
         return base_dict

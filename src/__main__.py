@@ -96,6 +96,8 @@ def main():
     parser.add_argument('--no-wall', dest='use_wall', action='store_false', default=True, help='Remove frontier wall')
     parser.add_argument('-m', '--starting-materials-multiplier', type=lambda x : real_min_limit('Starting materials multiplier', 0.1, x),
                         default=1, help='Multiplier factor for creature starting materials')
+    parser.add_argument('--plant-grow-interval', type=lambda x : integer_min_limit('Plant grow interval', 1, x),
+                        default=2000, help='How much time it takes for plants to grow')
 
     args = parser.parse_args()
 
@@ -182,7 +184,8 @@ def main():
                       in_file=args.in_file, use_graphic=args.use_graphic,
                       quiet=args.quiet, creature_config=creature_config,
                       creature_materials_start=initial_materials,
-                      use_wall=args.use_wall)
+                      use_wall=args.use_wall,
+                      resource_convert_interval=args.plant_grow_interval)
     game.run()
 
 if __name__ == '__main__':

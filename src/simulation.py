@@ -35,10 +35,12 @@ class Simulation:
                  out_file=None, in_file=None, screen_size=None,
                  ticks_per_second=50, use_graphic=True, quiet=False,
                  creature_config=None, creature_materials_start=None,
-                 use_wall=True):
+                 use_wall=True, resource_convert_interval=2000):
 
         self.__creature_config = creature_config
         self.__start_materials = creature_materials_start
+
+        self.__resource_convert_interval = resource_convert_interval
 
         self.__use_wall = use_wall
 
@@ -343,7 +345,8 @@ class Simulation:
 
     def newResource(self, x, y, ext_rsc, int_rsc):
 
-        resource = Resource(self._space, x, y, ext_rsc, int_rsc)
+        resource = Resource(self._space, x, y, ext_rsc, int_rsc,
+                            convert_interval=self.__resource_convert_interval)
 
         self._resources.append(resource)
 
