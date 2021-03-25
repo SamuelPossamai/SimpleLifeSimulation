@@ -58,20 +58,21 @@ class Resource(CircleSimulationObject):
 
         self.__convert_interval = convert_interval
         self.__steps_to_convert = self.__convert_interval
-        self.__convert_rsc_qtd = 100
+        self.__convert_rsc_qtd = 0.1
 
     def step(self, simulation):
 
         if self.__steps_to_convert > 0:
             self.__steps_to_convert -= 1
         else:
+            convert_quantity = self.__convert_rsc_qtd*self._ext_rsc
             if self._int_rsc > 0:
-                if self._int_rsc < self.__convert_rsc_qtd:
+                if self._int_rsc < convert_quantity:
                     self._int_rsc = 0
                     self._ext_rsc += self._int_rsc
                 else:
-                    self._int_rsc -= self.__convert_rsc_qtd
-                    self._ext_rsc += self.__convert_rsc_qtd
+                    self._int_rsc -= convert_quantity
+                    self._ext_rsc += convert_quantity
                 self.shape.unsafe_set_radius(self.__getRadius())
 
             self.__steps_to_convert = self.__convert_interval
