@@ -65,11 +65,11 @@ class Resource(CircleSimulationObject):
         if self.__steps_to_convert > 0:
             self.__steps_to_convert -= 1
         else:
-            convert_quantity = self.__convert_rsc_qtd*self._ext_rsc
             if self._int_rsc > 0:
+                convert_quantity = self.__convert_rsc_qtd*self._ext_rsc
                 if self._int_rsc < convert_quantity:
-                    self._int_rsc = 0
                     self._ext_rsc += self._int_rsc
+                    self._int_rsc = 0
                 else:
                     self._int_rsc -= convert_quantity
                     self._ext_rsc += convert_quantity
@@ -77,7 +77,7 @@ class Resource(CircleSimulationObject):
 
             self.__steps_to_convert = self.__convert_interval
 
-        if self._int_rsc == 0 and self._ext_rsc == 0:
+        if self._int_rsc <= 0 and self._ext_rsc <= 0:
             simulation.delResource(self)
 
     def consume(self, _simulation, quantity):

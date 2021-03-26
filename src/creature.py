@@ -40,6 +40,8 @@ class Creature(CircleSimulationObject):
         if self.__materials is None:
             self.__materials = {material: 0 for material in
                                 self.__config.materials.values()}
+        else:
+            self.__materials = self.__materials.copy()
 
         if len(args) == 1 and not kwargs:
 
@@ -359,6 +361,7 @@ class Creature(CircleSimulationObject):
 
         total_mass = self.body.mass/Creature.MASS_MULTIPLIER
         for material in self.__config.waste_materials:
+
             rsc_qtd = self.__materials.get(material, 0)
             if rsc_qtd < 1000:
                 continue
@@ -370,15 +373,17 @@ class Creature(CircleSimulationObject):
                 f'{material.name}_waste_qtd_to_remove')
 
             if material_mass > (waste_desired_qtd + 0.05)*total_mass:
-                simulation.newResource(*self.body.position, 0, rsc_qtd)
 
-                waste_qtd = (material_mass - \
-                    waste_desired_qtd*total_mass)/material_info.mass
+                waste_qtd = int((material_mass - \
+                    waste_desired_qtd*total_mass)/material_info.mass)
 
                 if waste_qtd > rsc_qtd:
                     self.__materials[material] = 0
-                else :
-                    self.__materials[material] -= int(waste_qtd)
+                    waste_qtd = rsc_qtd
+                else:
+                    self.__materials[material] -= waste_qtd
+
+                simulation.newResource(*self.body.position, waste_qtd, 0)
 
         self.__updateSelf()
 
