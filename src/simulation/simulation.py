@@ -19,15 +19,16 @@ from pygame.constants import (
 import pymunk
 
 from .painter import Painter
-
 from .simulationobject import SimulationObject
-from .resource_ import Resource
-from .creature import Creature, Species
-
 from .collisiontypes import (
     CREATURE_COLLISION_TYPE, SOUND_SENSOR_COLLISION_TYPE,
     VISION_SENSOR_COLLISION_TYPE, RESOURCE_COLLISION_TYPE, WALL_COLLISION_TYPE
 )
+
+from ..plants.resource_ import Resource
+
+from ..creatures.creature import Creature, Species
+
 
 class Simulation:
 

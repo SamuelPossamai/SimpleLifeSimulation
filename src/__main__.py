@@ -5,12 +5,12 @@ import json
 
 import argparse
 
-from .simulation import Simulation
-from .creature import Creature
+from .simulation.simulation import Simulation
 
-from .material_rules import loadConvertionRules
-from .materials import loadMaterials
-from .creature_traits import getCreatureTraits
+from .creatures.creature import Creature
+from .creatures.material_rules import loadConvertionRules
+from .creatures.materials import loadMaterials
+from .creatures.creature_traits import getCreatureTraits
 
 def interval_integer_min_limit(arg_name, min_, arg):
 

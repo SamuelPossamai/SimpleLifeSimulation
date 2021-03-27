@@ -3,9 +3,8 @@ from math import sqrt
 
 import pymunk
 
-from .simulationobject import CircleSimulationObject
-
-from .collisiontypes import RESOURCE_COLLISION_TYPE
+from ..simulation.simulationobject import CircleSimulationObject
+from ..simulation.collisiontypes import RESOURCE_COLLISION_TYPE
 
 class Resource(CircleSimulationObject):
 

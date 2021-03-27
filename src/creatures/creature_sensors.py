@@ -3,7 +3,7 @@ from math import pi, cos, sin
 
 import pymunk
 
-from .collisiontypes import (
+from ..simulation.collisiontypes import (
     SOUND_SENSOR_COLLISION_TYPE, VISION_SENSOR_COLLISION_TYPE
 )
 
