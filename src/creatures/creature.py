@@ -10,7 +10,7 @@ from ..simulation.collisiontypes import CREATURE_COLLISION_TYPE
 
 from .behaviours import BasicBehaviour
 from .species import Species
-from .creature_sensors import VisionSensor
+from .sensors import VisionSensor
 
 class Creature(CircleSimulationObject):
 

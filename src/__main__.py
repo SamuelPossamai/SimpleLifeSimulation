@@ -8,9 +8,9 @@ import argparse
 from .simulation.simulation import Simulation
 
 from .creatures.creature import Creature
-from .creatures.material_rules import loadConvertionRules
-from .creatures.materials import loadMaterials
-from .creatures.creature_traits import getCreatureTraits
+from .creatures.materials.rule import loadConvertionRules
+from .creatures.materials.material import loadMaterials
+from .creatures.traits import getCreatureTraits
 
 def interval_integer_min_limit(arg_name, min_, arg):
 
