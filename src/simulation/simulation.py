@@ -389,14 +389,6 @@ class Simulation:
             (start_point[0] + (self.__lat_column_size - text_size)/2,
              start_point[1] + 20))
 
-        textsurface = self._medium_font.render('Genes', False, (0, 0, 0))
-        text_size, _ = textsurface.get_size()
-
-        self._screen.blit(
-            textsurface,
-            (start_point[0] + (self.__lat_column_size - text_size)/2,
-             screen_size[1] - 125))
-
         labels = ('Species', 'Structure', 'Energy', 'Weight', 'Radius',
                   'Position', 'Speed', 'Vision Dist.', 'Vision Angle')
 
@@ -419,6 +411,23 @@ class Simulation:
         start_y = start_point[1] + 50
         self.__writeText(to_write_list, start_point, start_y)
 
+        if creature is not None:
+            materials_text = (
+                (material.short_name, '%.1E' % creature.getMaterial(material))
+                for material in self.__creature_config.materials.values())
+
+            self.__writeText(materials_text, start_point, 230, double=True)
+
+        textsurface = self._medium_font.render('Genes', False, (0, 0, 0))
+        text_size, _ = textsurface.get_size()
+
+        materials_text_offset = 20*(
+            1 + len(self.__creature_config.materials)//2)
+        self._screen.blit(
+            textsurface,
+            (start_point[0] + (self.__lat_column_size - text_size)/2,
+             start_point[1] + 230 + materials_text_offset))
+
         labels = ('Speed', 'Eating Speed', 'Vision Dist.', 'Vision Angle')
 
         if creature is None:
@@ -434,15 +443,8 @@ class Simulation:
 
         to_write_list = zip(labels, values)
 
-        start_y = screen_size[1] - 90
-        self.__writeText(to_write_list, start_point, start_y)
-
-        if creature is not None:
-            materials_text = (
-                (material.short_name, '%.1E' % creature.getMaterial(material))
-                for material in self.__creature_config.materials.values())
-
-            self.__writeText(materials_text, start_point, 230, double=True)
+        self.__writeText(to_write_list, start_point,
+                         260 + materials_text_offset)
 
     def __writeText(self, to_write_list, start_point, start_y, double=False):
 
@@ -470,6 +472,8 @@ class Simulation:
             else:
                 start_y += 20
                 x_offset = 0
+
+        return start_y
 
     def __drawObjects(self):
 
