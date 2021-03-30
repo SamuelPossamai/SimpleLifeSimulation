@@ -21,7 +21,10 @@ class CreatureMaterialConvertionRule:
             return self.__quantity
 
         def __str__(self):
-            return f'{self.__quantity}*{self.__material}'
+            if self.__quantity == 1:
+                return self.__material.short_name
+
+            return f'{self.__quantity}x{self.__material.short_name}'
 
         def __repr__(self):
             return (f'MaterialInfo(material={repr(self.__material)}, '

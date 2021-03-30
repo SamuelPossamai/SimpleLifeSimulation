@@ -443,8 +443,16 @@ class Simulation:
 
         to_write_list = zip(labels, values)
 
-        self.__writeText(to_write_list, start_point,
-                         260 + materials_text_offset)
+        start_y = self.__writeText(to_write_list, start_point,
+                                   260 + materials_text_offset)
+
+        if creature is not None:
+            rules_text = (
+                (str(rule), '%.1E' %
+                 creature.getTrait(f'{rule.name}_convertionrate'))
+                for rule in self.__creature_config.material_rules)
+
+            self.__writeText(rules_text, start_point, start_y)
 
     def __writeText(self, to_write_list, start_point, start_y, double=False):
 
