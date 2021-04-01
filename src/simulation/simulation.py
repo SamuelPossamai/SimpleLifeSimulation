@@ -2,7 +2,6 @@
 import os
 import random
 from random import randint
-from math import pi
 import json
 
 import pymunk

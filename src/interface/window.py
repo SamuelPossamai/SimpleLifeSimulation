@@ -1,4 +1,5 @@
 
+from math import pi
 import itertools
 
 import pygame
@@ -7,9 +8,11 @@ import pygame
 from pygame.constants import (
     QUIT, KEYDOWN, K_ESCAPE, K_SPACE, K_p, MOUSEBUTTONUP, K_EQUALS, K_KP_PLUS,
     K_KP_MINUS, K_MINUS, KMOD_LCTRL, KMOD_RCTRL, K_a, K_s, K_d, K_w, K_LEFT,
-    K_DOWN, K_RIGHT, K_UP, KEYUP
+    K_DOWN, K_RIGHT, K_UP, KEYUP, K_PAGEDOWN, K_PAGEUP
 )
 # pylint: enable=no-name-in-module
+
+from ..simulation.collisiontypes import CREATURE_COLLISION_TYPE
 
 from .painter import Painter
 
@@ -26,6 +29,9 @@ class Window:
         self._ticks = ticks_per_second
 
         self._size = screen_size
+
+        self.__max_lat_column_y_offset = 0
+        self.__cur_lat_column_y_offset = 0
 
         screen_size = (screen_size[0] + self.__lat_column_size, screen_size[1])
 
@@ -45,7 +51,8 @@ class Window:
         self.__start_painter_mult = 300/size
         self._painter = Painter(self._screen, self.__start_painter_mult)
 
-        self.__original_size = (self._size[0]/self.__start_painter_mult, self._size[1]/self.__start_painter_mult)
+        self.__original_size = (self._size[0]/self.__start_painter_mult,
+                                self._size[1]/self.__start_painter_mult)
 
         self._show_creature = None
 
@@ -90,11 +97,15 @@ class Window:
                     (pygame.key.get_mods() in (KMOD_LCTRL, KMOD_RCTRL)):
 
                     self.__until_event[self.zoomOut] = 10
+                elif key == K_PAGEDOWN:
+                    self.__until_event[self.moveLateralColumnDown] = 10
+                elif key == K_PAGEUP:
+                    self.__until_event[self.moveLateralColumnUp] = 10
             elif event.type == MOUSEBUTTONUP:
                 pos = self._painter.mapPointFromScreen(pygame.mouse.get_pos())
                 mask = (1 << (CREATURE_COLLISION_TYPE - 1))
 
-                for creature in self._creatures:
+                for creature in self.__simulation.creatures:
                     dist = creature.body.position.get_distance(pos)
                     if dist < creature.shape.radius:
                         clicked = creature
@@ -124,6 +135,12 @@ class Window:
                     self.__removeEvent(self.moveRight, apply_at_least_once=True)
                 elif key in (K_w, K_UP):
                     self.__removeEvent(self.moveUp, apply_at_least_once=True)
+                elif key == K_PAGEDOWN:
+                    self.__removeEvent(self.moveLateralColumnDown,
+                                       apply_at_least_once=True)
+                elif key == K_PAGEUP:
+                    self.__removeEvent(self.moveLateralColumnUp,
+                                       apply_at_least_once=True)
 
         events_to_remove = []
         for event, turns_until_event in self.__until_event.items():
@@ -172,7 +189,7 @@ class Window:
         self._screen.blit(
             textsurface,
             (start_point[0] + (self.__lat_column_size - text_size)/2,
-             start_point[1] + 20))
+             start_point[1] + 20 - self.__cur_lat_column_y_offset))
 
         labels = ('Species', 'Structure', 'Energy', 'Weight', 'Radius',
                   'Position', 'Speed', 'Vision Dist.', 'Vision Angle')
@@ -193,7 +210,7 @@ class Window:
 
         to_write_list = zip(labels, values)
 
-        start_y = start_point[1] + 50
+        start_y = start_point[1] + 50 - self.__cur_lat_column_y_offset
         self.__writeText(to_write_list, start_point, start_y)
 
         if creature is not None:
@@ -203,12 +220,13 @@ class Window:
                 self.__simulation.creature_config.materials.values()
             )
 
-            self.__writeText(materials_text, start_point, 230, double=True)
+            self.__writeText(materials_text, start_point,
+                             230 - self.__cur_lat_column_y_offset, double=True)
 
         textsurface = self._medium_font.render('Genes', False, (0, 0, 0))
         text_size, _ = textsurface.get_size()
 
-        materials_text_offset = 20*(
+        materials_text_offset = -self.__cur_lat_column_y_offset + 20*(
             1 + len(self.__simulation.creature_config.materials)//2)
         self._screen.blit(
             textsurface,
@@ -239,7 +257,20 @@ class Window:
                  creature.getTrait(f'{rule.name}_convertionrate'))
                 for rule in self.__simulation.creature_config.material_rules)
 
-            self.__writeText(rules_text, start_point, start_y)
+            self.__max_lat_column_y_offset = self.__writeText(
+                rules_text, start_point, start_y)
+        else:
+            self.__max_lat_column_y_offset = start_y
+
+        self.__max_lat_column_y_offset += (
+            self.__cur_lat_column_y_offset - screen_size[1]
+        )
+
+        if self.__max_lat_column_y_offset < 0:
+            self.__max_lat_column_y_offset = 0
+
+        if self.__cur_lat_column_y_offset > self.__max_lat_column_y_offset:
+            self.__cur_lat_column_y_offset = self.__max_lat_column_y_offset
 
     def __writeText(self, to_write_list, start_point, start_y, double=False):
 
@@ -298,3 +329,13 @@ class Window:
 
     def moveLeft(self):
         self._painter.xoffset += self.__moveOffset()
+
+    def moveLateralColumnUp(self):
+        self.__cur_lat_column_y_offset -= 1
+        if self.__cur_lat_column_y_offset < 0:
+            self.__cur_lat_column_y_offset = 0
+
+    def moveLateralColumnDown(self):
+        self.__cur_lat_column_y_offset += 1
+        if self.__cur_lat_column_y_offset > self.__max_lat_column_y_offset:
+            self.__cur_lat_column_y_offset = self.__max_lat_column_y_offset
