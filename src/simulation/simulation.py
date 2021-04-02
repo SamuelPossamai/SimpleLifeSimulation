@@ -3,6 +3,7 @@ import os
 import random
 from random import randint
 import json
+import importlib
 
 import pymunk
 
@@ -15,8 +16,6 @@ from .collisiontypes import (
 from ..plants.resource_ import Resource
 
 from ..creatures.creature import Creature, Species
-
-from ..interface.window import Window
 
 class Simulation:
 
@@ -79,8 +78,13 @@ class Simulation:
 
         self._use_graphic = use_graphic
         if use_graphic is True:
-            self.__interface = Window(self, screen_size, size, has_wall=use_wall,
-                                      ticks_per_second=ticks_per_second)
+
+            self.__interface_lib = importlib.import_module(
+                '.interface.pygame', 'src')
+
+            self.__interface = self.__interface_lib.Window(
+                self, screen_size, size, has_wall=use_wall,
+                ticks_per_second=ticks_per_second)
         else:
             self.__interface = None
 

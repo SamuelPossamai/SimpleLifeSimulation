@@ -12,7 +12,7 @@ from pygame.constants import (
 )
 # pylint: enable=no-name-in-module
 
-from ..simulation.collisiontypes import CREATURE_COLLISION_TYPE
+from ...simulation.collisiontypes import CREATURE_COLLISION_TYPE
 
 from .painter import Painter
 
