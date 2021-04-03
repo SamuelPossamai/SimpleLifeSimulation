@@ -3,7 +3,9 @@ from math import cos, sin
 
 import pygame
 
-class Painter:
+from ...simulation.simulationobject import SimulationObject
+
+class Painter(SimulationObject.Painter):
 
     def __init__(self, screen, multiplier):
 

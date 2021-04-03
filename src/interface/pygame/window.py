@@ -24,7 +24,7 @@ class Window:
         self.__use_wall = has_wall
 
         self.__simulation = simulation
-        self.__lat_column_size = 250
+        self.__lat_column_size = 300
 
         self._ticks = ticks_per_second
 
@@ -253,7 +253,7 @@ class Window:
 
         if creature is not None:
             rules_text = (
-                (str(rule), '%.1E' %
+                (str(rule), '%d%%' %
                  creature.getTrait(f'{rule.name}_convertionrate'))
                 for rule in self.__simulation.creature_config.material_rules)
 

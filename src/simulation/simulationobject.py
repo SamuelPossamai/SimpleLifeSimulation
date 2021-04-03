@@ -1,9 +1,29 @@
 
+from abc import ABC, abstractmethod
+
 import pymunk
 
-class SimulationObject:
+class SimulationObject(ABC):
 
     _fromDictClasses = {}
+
+    class Painter(ABC):
+
+        @abstractmethod
+        def drawCircle(self, color, center, radius, width=0):
+            pass
+
+        @abstractmethod
+        def drawLine(self, color, start, end, width=1):
+            pass
+
+        @abstractmethod
+        def drawRect(self, color, start, end, width=0):
+            pass
+
+        @abstractmethod
+        def drawArc(self, color, center, radius, angle, open_angle, width=None):
+            pass
 
     @classmethod
     def initclass(cls):
@@ -87,6 +107,10 @@ class SimulationObject:
                 'body_type': body.body_type
             }
         }
+
+    @abstractmethod
+    def draw(self, painter):
+        pass
 
 class CircleSimulationObject(SimulationObject):
 
