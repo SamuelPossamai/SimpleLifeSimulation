@@ -80,7 +80,7 @@ class Simulation:
         if use_graphic is True:
 
             self.__interface_lib = importlib.import_module(
-                '.interface.pygame', 'src')
+                '.interface.pygame', 'simplelifesimulation')
 
             self.__interface = self.__interface_lib.Window(
                 self, screen_size, size, has_wall=use_wall,
