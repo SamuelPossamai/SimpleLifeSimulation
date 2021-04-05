@@ -1,37 +1,23 @@
 #!/usr/bin/env python
 
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 DIR_PATH = os.path.abspath(os.path.dirname(__file__))
 
 with open(f'{DIR_PATH}/requirements.txt') as file:
     requirements = list(file)
 
+packages = find_packages()
+
+packages.append('simplelifesimulation.data')
+
 setup(
     name='SimpleLifeSimulation',
     version='0.1',
     install_requires=requirements,
-    packages=[
-        'simplelifesimulation',
-        'simplelifesimulation.creatures',
-        'simplelifesimulation.creatures.materials',
-        'simplelifesimulation.simulation',
-        'simplelifesimulation.plants',
-        'simplelifesimulation.interface',
-        'simplelifesimulation.interface.pygame',
-        'simplelifesimulation.data'
-    ],
+    packages=packages,
     package_dir={
-        'simplelifesimulation': 'simplelifesimulation',
-        'simplelifesimulation.creatures': 'simplelifesimulation/creatures',
-        'simplelifesimulation.creatures.materials':
-            'simplelifesimulation/creatures/materials',
-        'simplelifesimulation.simulation': 'simplelifesimulation/simulation',
-        'simplelifesimulation.plants': 'simplelifesimulation/plants',
-        'simplelifesimulation.interface': 'simplelifesimulation/interface',
-        'simplelifesimulation.interface.pygame':
-            'simplelifesimulation/interface/pygame',
         'simplelifesimulation.data': 'data'
     },
     package_data={
