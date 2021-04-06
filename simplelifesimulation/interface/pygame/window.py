@@ -167,6 +167,7 @@ class Window:
 
     def __drawSideInfo(self):
 
+        materials = self.__simulation.creature_config.materials
         screen_size = pygame.display.get_surface().get_size()
         start_point = screen_size[0] - self.__lat_column_size, 0
         creature = self._show_creature
@@ -216,8 +217,7 @@ class Window:
         if creature is not None:
             materials_text = (
                 (material.short_name, '%.1E' % creature.getMaterial(material))
-                for material in
-                self.__simulation.creature_config.materials.values()
+                for material in materials.values()
             )
 
             self.__writeText(materials_text, start_point,
@@ -231,7 +231,7 @@ class Window:
         self._screen.blit(
             textsurface,
             (start_point[0] + (self.__lat_column_size - text_size)/2,
-             start_point[1] + 230 + materials_text_offset))
+             start_point[1] + 250 + materials_text_offset))
 
         labels = ('Speed', 'Eating Speed', 'Vision Dist.', 'Vision Angle')
 
@@ -249,7 +249,7 @@ class Window:
         to_write_list = zip(labels, values)
 
         start_y = self.__writeText(to_write_list, start_point,
-                                   260 + materials_text_offset)
+                                   290 + materials_text_offset)
 
         if creature is not None:
             rules_text = (
@@ -259,11 +259,34 @@ class Window:
 
             self.__max_lat_column_y_offset = self.__writeText(
                 rules_text, start_point, start_y)
+
+            childqtd_text = []
+            childqtd_min_to_reproduce_text = []
+
+            for material_name, material in materials.items():
+
+                child_qtd = creature.getTrait(f'{material_name}_childqtd')
+                min_to_reproduce = creature.getTrait(
+                    f'{material_name}_childqtd_min_to_reproduce')
+
+                childqtd_text.append(
+                    (f'Child {material_name}', '%.2E' % child_qtd))
+                childqtd_min_to_reproduce_text.append(
+                    (f'{material_name} to reproduce',
+                     '%.2E' % (min_to_reproduce*child_qtd)))
+
+            start_y = self.__writeText(
+                childqtd_text, start_point, self.__max_lat_column_y_offset)
+            start_y = self.__writeText(
+                childqtd_min_to_reproduce_text, start_point, start_y)
+
+            self.__max_lat_column_y_offset = self.__writeText(
+                rules_text, start_point, start_y)
         else:
             self.__max_lat_column_y_offset = start_y
 
         self.__max_lat_column_y_offset += (
-            self.__cur_lat_column_y_offset - screen_size[1]
+            self.__cur_lat_column_y_offset - screen_size[1] + 30
         )
 
         if self.__max_lat_column_y_offset < 0:
@@ -331,11 +354,11 @@ class Window:
         self._painter.xoffset += self.__moveOffset()
 
     def moveLateralColumnUp(self):
-        self.__cur_lat_column_y_offset -= 1
+        self.__cur_lat_column_y_offset -= 10
         if self.__cur_lat_column_y_offset < 0:
             self.__cur_lat_column_y_offset = 0
 
     def moveLateralColumnDown(self):
-        self.__cur_lat_column_y_offset += 1
+        self.__cur_lat_column_y_offset += 10
         if self.__cur_lat_column_y_offset > self.__max_lat_column_y_offset:
             self.__cur_lat_column_y_offset = self.__max_lat_column_y_offset
