@@ -8,7 +8,8 @@ import pygame
 from pygame.constants import (
     QUIT, KEYDOWN, K_ESCAPE, K_SPACE, K_p, MOUSEBUTTONUP, K_EQUALS, K_KP_PLUS,
     K_KP_MINUS, K_MINUS, KMOD_LCTRL, KMOD_RCTRL, K_a, K_s, K_d, K_w, K_LEFT,
-    K_DOWN, K_RIGHT, K_UP, KEYUP, K_PAGEDOWN, K_PAGEUP
+    K_DOWN, K_RIGHT, K_UP, KEYUP, K_PAGEDOWN, K_PAGEUP, MOUSEBUTTONDOWN,
+    MOUSEMOTION
 )
 # pylint: enable=no-name-in-module
 
@@ -56,6 +57,8 @@ class Window:
 
         self._show_creature = None
 
+        self.__grab_lateral_screen_point = None
+
     def update(self):
 
         pygame.display.set_caption('Simulation')
@@ -101,8 +104,39 @@ class Window:
                     self.__until_event[self.moveLateralColumnDown] = 10
                 elif key == K_PAGEUP:
                     self.__until_event[self.moveLateralColumnUp] = 10
+
+            elif event.type == MOUSEBUTTONDOWN:
+
+                screen_pos = pygame.mouse.get_pos()
+
+                if screen_pos[0] > self._size[0]:
+                    self.__grab_lateral_screen_point = screen_pos
+                    continue
+
+            elif event.type == MOUSEMOTION:
+
+                if self.__grab_lateral_screen_point is not None:
+
+                    new_mouse_pos = pygame.mouse.get_pos()
+
+                    pos_y_diff = self.__grab_lateral_screen_point[1] - \
+                        new_mouse_pos[1]
+
+                    if pos_y_diff > 0:
+                        self.moveLateralColumnDown(pos_y_diff)
+                    else:
+                        self.moveLateralColumnUp(-pos_y_diff)
+
+                    self.__grab_lateral_screen_point = new_mouse_pos
+
             elif event.type == MOUSEBUTTONUP:
+
+                if self.__grab_lateral_screen_point is not None:
+                    self.__grab_lateral_screen_point = None
+                    continue
+
                 pos = self._painter.mapPointFromScreen(pygame.mouse.get_pos())
+
                 mask = (1 << (CREATURE_COLLISION_TYPE - 1))
 
                 for creature in self.__simulation.creatures:
@@ -353,12 +387,12 @@ class Window:
     def moveLeft(self):
         self._painter.xoffset += self.__moveOffset()
 
-    def moveLateralColumnUp(self):
-        self.__cur_lat_column_y_offset -= 10
+    def moveLateralColumnUp(self, quantity=10):
+        self.__cur_lat_column_y_offset -= quantity
         if self.__cur_lat_column_y_offset < 0:
             self.__cur_lat_column_y_offset = 0
 
-    def moveLateralColumnDown(self):
-        self.__cur_lat_column_y_offset += 10
+    def moveLateralColumnDown(self, quantity=10):
+        self.__cur_lat_column_y_offset += quantity
         if self.__cur_lat_column_y_offset > self.__max_lat_column_y_offset:
             self.__cur_lat_column_y_offset = self.__max_lat_column_y_offset
