@@ -66,8 +66,6 @@ class Simulation:
 
         self._quiet = quiet
 
-        self._paused = False
-
         if out_file is not None:
             try:
                 os.remove(out_file)
@@ -123,8 +121,6 @@ class Simulation:
         self._creatures = []
         self._resources = []
 
-        self._running = True
-
         if in_file is None:
 
             for _ in range(randint(self._population_size_min,
@@ -162,31 +158,29 @@ class Simulation:
                              self._size[1]*(0.1 + 0.8*random.random()),
                              20000000, 0)
 
+    def step(self):
+
+        for _ in range(self._physics_steps_per_frame):
+
+            self._space.step(self._dt)
+
+            for creature in self._creatures:
+                creature.act(self)
+
+            for resource in self._resources:
+                resource.step(self)
+
+            self.__ticks_to_save -= 1
+            if self.__ticks_to_save <= 0:
+                self.__ticks_to_save = 1000
+                self.save()
+
     def run(self):
-
-        while self._running:
-
-            if self._paused is False:
-
-                for _ in range(self._physics_steps_per_frame):
-                    self._space.step(self._dt)
-
-                for creature in self._creatures:
-                    creature.act(self)
-
-                for resource in self._resources:
-                    resource.step(self)
-
-                self.__ticks_to_save -= 1
-                if self.__ticks_to_save <= 0:
-                    self.__ticks_to_save = 1000
-                    self.save()
-
-            if self._use_graphic is True:
-                self.__interface.update()
-
-    def quit(self):
-        self._running = False
+        if self._use_graphic is True:
+            self.__interface.run()
+        else:
+            while True:
+                self.step()
 
     def save(self):
 

@@ -59,6 +59,9 @@ class Window:
 
         self.__grab_lateral_screen_point = None
 
+        self._running = True
+        self._paused = False
+
     def update(self):
 
         pygame.display.set_caption('Simulation')
@@ -72,11 +75,20 @@ class Window:
 
         self._clock.tick(self._ticks)
 
+    def run(self):
+
+        while self._running:
+
+            if self._paused is False:
+                self.__simulation.step()
+
+            self.update()
+
     def __processEvents(self):
 
         for event in pygame.event.get():
             if event.type == QUIT:
-                self.__simulation.quit()
+                self.quit()
             elif event.type == KEYDOWN:
                 key = event.key
                 if key == K_ESCAPE:
@@ -391,6 +403,9 @@ class Window:
         self.__cur_lat_column_y_offset -= quantity
         if self.__cur_lat_column_y_offset < 0:
             self.__cur_lat_column_y_offset = 0
+
+    def quit(self):
+        self._running = False
 
     def moveLateralColumnDown(self, quantity=10):
         self.__cur_lat_column_y_offset += quantity
