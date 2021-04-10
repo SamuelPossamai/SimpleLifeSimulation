@@ -23,7 +23,8 @@ class Simulation:
                  out_file=None, in_file=None, screen_size=None,
                  ticks_per_second=50, use_graphic=True, quiet=False,
                  creature_config=None, creature_materials_start=None,
-                 use_wall=True, resource_convert_interval=2000):
+                 use_wall=True, resource_convert_interval=2000,
+                 user_interface=None):
 
         self.__creature_config = creature_config
         self.__start_materials = creature_materials_start
@@ -77,8 +78,7 @@ class Simulation:
         self._use_graphic = use_graphic
         if use_graphic is True:
 
-            self.__interface_lib = importlib.import_module(
-                '.interface.pygame', 'simplelifesimulation')
+            self.__interface_lib = importlib.import_module(*user_interface)
 
             self.__interface = self.__interface_lib.Window(
                 self, screen_size, size, has_wall=use_wall,
