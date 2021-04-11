@@ -1,9 +1,13 @@
 
+import itertools
+
 from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Color, Ellipse
 from kivy.app import App
 from kivy.clock import Clock
+
+from .painter import Painter
 
 class Window(App):
 
@@ -15,6 +19,8 @@ class Window(App):
 
         Clock.schedule_interval(self.step, 1/ticks_per_second)
 
+        self.__painter = Painter(300/size)
+
     def step(self, _dt):
         self.__simulation.step()
 
@@ -22,15 +28,9 @@ class Window(App):
 
         with self.__widget.canvas:
 
-            for creature in self.__simulation.creatures:
-                Color(0, 0, 255, mode='rgb')
-                Ellipse(pos=creature.body.position,
-                        size=(2*creature.shape.radius, 2*creature.shape.radius))
-
-            for resource in self.__simulation.resources:
-                Color(0, 255, 0, mode='rgb')
-                Ellipse(pos=resource.body.position,
-                        size=(2*resource.shape.radius, 2*resource.shape.radius))
+            for obj in itertools.chain(self.__simulation.resources,
+                                       self.__simulation.creatures):
+                obj.draw(self.__painter)
 
     def add_rects(self, label, widget, count, *largs):
         label.text = str(int(label.text) + count)
