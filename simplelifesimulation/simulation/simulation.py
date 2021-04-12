@@ -13,7 +13,7 @@ from .collisiontypes import (
     VISION_SENSOR_COLLISION_TYPE, RESOURCE_COLLISION_TYPE, WALL_COLLISION_TYPE
 )
 
-from ..plants.resource_ import Resource
+from ..resources.plant import Plant
 
 from ..creatures.creature import Creature, Species
 
@@ -232,8 +232,8 @@ class Simulation:
 
     def newResource(self, x, y, ext_rsc, int_rsc):
 
-        resource = Resource(self._space, x, y, ext_rsc, int_rsc,
-                            convert_interval=self.__resource_convert_interval)
+        resource = Plant(self._space, x, y, ext_rsc, int_rsc,
+                         convert_interval=self.__resource_convert_interval)
 
         self._resources.append(resource)
 

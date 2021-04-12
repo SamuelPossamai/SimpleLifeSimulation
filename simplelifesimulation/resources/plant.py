@@ -6,7 +6,7 @@ import pymunk
 from ..simulation.simulationobject import CircleSimulationObject
 from ..simulation.collisiontypes import RESOURCE_COLLISION_TYPE
 
-class Resource(CircleSimulationObject):
+class Plant(CircleSimulationObject):
 
     def __init__(self, space, *args, **kwargs):
 
@@ -14,7 +14,7 @@ class Resource(CircleSimulationObject):
 
             info = args[0]
 
-            resource_info = info.get('resource', {})
+            resource_info = info.get('plant', {})
 
             self._ext_rsc = resource_info.get('internal', 0)
             self._int_rsc = resource_info.get('external', 0)
@@ -109,7 +109,7 @@ class Resource(CircleSimulationObject):
 
         base_dict = super().toDict()
 
-        base_dict['resource'] = {
+        base_dict['plant'] = {
             'internal': self._ext_rsc,
             'external': self._int_rsc,
             'ticks-to-convert': self.__steps_to_convert,
@@ -118,4 +118,4 @@ class Resource(CircleSimulationObject):
 
         return base_dict
 
-Resource.initclass()
+Plant.initclass()
