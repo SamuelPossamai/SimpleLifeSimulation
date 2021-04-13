@@ -1,4 +1,5 @@
 
+from collections.abc import MutableMapping
 from collections import namedtuple
 import json
 
@@ -130,6 +131,71 @@ def __loadMaterial(name, material, loaded_materials, all_materials):
     )
 
     return material
+
+class MaterialsGroup(MutableMapping):
+
+    def __init__(self, *args, **kwargs):
+        self.__materials = dict(*args, **kwargs)
+        self.__mass = None
+        self.__radius = None
+        self.__mass_radius_ready = False
+
+    def __getitem__(self, key):
+        return self.__materials[key]
+
+    def __setitem__(self, key, value):
+        self.__materials[key] = value
+        self.__mass_radius_ready = False
+
+    def __delitem__(self, key):
+        del self.__materials[key]
+        self.__mass_radius_ready = False
+
+    def __iter__(self):
+        return iter(self.__materials)
+
+    def __len__(self):
+        return len(self.__materials)
+
+    def items(self):
+        return self.__materials.items()
+
+    def values(self):
+        return self.__materials.values()
+
+    def keys(self):
+        return self.__materials.keys()
+
+    def get(self, key, *args):
+        return self.__materials.get(key, *args)
+
+    def __calcMassAndRadius(self):
+        total_mass = 0
+        total_volume = 0
+        for material, qtd in self.__materials.items():
+            total_mass += material.mass*qtd
+            total_volume += material.mass*qtd/material.density
+
+        final_mass = total_mass*Creature.MASS_MULTIPLIER
+        final_radius = sqrt(total_volume*Creature.MASS_MULTIPLIER)
+
+        self.__mass_radius_ready = True
+        self.__mass = final_mass
+        self.__radius = final_radius
+
+        return final_mass, final_radius
+
+    @property
+    def mass(self):
+        if self.__mass_radius_ready:
+            return self.__mass
+        return self.__calcMassAndRadius[0]
+
+    @property
+    def radius(self):
+        if self.__mass_radius_ready:
+            return self.__radius
+        return self.__calcMassAndRadius[1]
 
 MaterialList = namedtuple('MaterialList', (
     'materials', 'energy_materials', 'structure_materials', 'waste_materials',
