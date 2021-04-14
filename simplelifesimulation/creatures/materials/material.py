@@ -1,4 +1,5 @@
 
+from math import sqrt
 from collections.abc import MutableMapping
 from collections import namedtuple
 import json
@@ -134,6 +135,8 @@ def __loadMaterial(name, material, loaded_materials, all_materials):
 
 class MaterialsGroup(MutableMapping):
 
+    MASS_MULTIPLIER = 1/10000
+
     def __init__(self, *args, **kwargs):
         self.__materials = dict(*args, **kwargs)
         self.__mass = None
@@ -176,8 +179,8 @@ class MaterialsGroup(MutableMapping):
             total_mass += material.mass*qtd
             total_volume += material.mass*qtd/material.density
 
-        final_mass = total_mass*Creature.MASS_MULTIPLIER
-        final_radius = sqrt(total_volume*Creature.MASS_MULTIPLIER)
+        final_mass = total_mass*MaterialsGroup.MASS_MULTIPLIER
+        final_radius = sqrt(total_volume*MaterialsGroup.MASS_MULTIPLIER)
 
         self.__mass_radius_ready = True
         self.__mass = final_mass
@@ -189,13 +192,13 @@ class MaterialsGroup(MutableMapping):
     def mass(self):
         if self.__mass_radius_ready:
             return self.__mass
-        return self.__calcMassAndRadius[0]
+        return self.__calcMassAndRadius()[0]
 
     @property
     def radius(self):
         if self.__mass_radius_ready:
             return self.__radius
-        return self.__calcMassAndRadius[1]
+        return self.__calcMassAndRadius()[1]
 
 MaterialList = namedtuple('MaterialList', (
     'materials', 'energy_materials', 'structure_materials', 'waste_materials',

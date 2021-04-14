@@ -11,6 +11,7 @@ from ..simulation.collisiontypes import CREATURE_COLLISION_TYPE
 from .behaviours import BasicBehaviour
 from .species import Species
 from .sensors import VisionSensor
+from .materials.material import MaterialsGroup
 
 class Creature(CircleSimulationObject):
 
@@ -27,21 +28,22 @@ class Creature(CircleSimulationObject):
 
     EnergyMaterialInfo = namedtuple('EnergyMaterialInfo', ('priority',))
 
-    MASS_MULTIPLIER = 1/10000
+    MASS_MULTIPLIER = MaterialsGroup.MASS_MULTIPLIER
 
     def __init__(self, space, *args, **kwargs):
 
-        self.__materials = kwargs.pop('materials', None)
+        self.__materials = MaterialsGroup(kwargs.pop('materials', None))
         self.__config = kwargs.pop('config', None)
 
         if self.__config is None:
             self.__config = Creature.Config()
 
         if self.__materials is None:
-            self.__materials = {material: 0 for material in
-                                self.__config.materials.values()}
+            self.__materials = MaterialsGroup({
+                material: 0 for material in self.__config.materials.values()
+            })
         else:
-            self.__materials = self.__materials.copy()
+            self.__materials = MaterialsGroup(self.__materials)
 
         if len(args) == 1 and not kwargs:
 
@@ -131,7 +133,8 @@ class Creature(CircleSimulationObject):
             self.__species = parent.species.getChildSpecies(
                 self.__config.traits, self.__traits)
 
-        mass, radius = self.__getMassAndRadius()
+        mass = self.__materials.mass
+        radius = self.__materials.radius
 
         super().__init__(space, mass, radius, x, y)
 
@@ -252,21 +255,10 @@ class Creature(CircleSimulationObject):
         if new_action is not None:
             self._action = new_action
 
-    def __getMassAndRadius(self):
-        total_mass = 0
-        total_volume = 0
-        for material, qtd in self.__materials.items():
-            total_mass += material.mass*qtd
-            total_volume += material.mass*qtd/material.density
-
-        final_mass = total_mass*Creature.MASS_MULTIPLIER
-        final_radius = sqrt(total_volume*Creature.MASS_MULTIPLIER)
-
-        return final_mass, final_radius
-
     def __updateSelf(self):
 
-        self.body.mass, new_radius = self.__getMassAndRadius()
+        self.body.mass = self.__materials.mass
+        new_radius = self.__materials.radius
 
         if not isclose(new_radius, self.shape.radius, rel_tol=0.05):
             self.shape.unsafe_set_radius(new_radius)
