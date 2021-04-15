@@ -200,15 +200,8 @@ def main():
         loadMaterials(materials_config_file)
 
     materials = materials_all.materials
-    energy_materials = materials_all.energy_materials
-    structure_materials = materials_all.structure_materials
-    waste_materials = materials_all.waste_materials
 
-    creature_config_kwargs['materials'] = materials
-    creature_config_kwargs['energy_materials'] = energy_materials
-    creature_config_kwargs['structure_materials'] = structure_materials
-    creature_config_kwargs['waste_materials'] = waste_materials
-    creature_config_kwargs['plant_material'] = materials_all.plant_material
+    creature_config_kwargs['materials'] = materials_all
 
     if material_rules_config_file is None:
         material_rules_config_file = base_file_path.joinpath(
@@ -230,8 +223,8 @@ def main():
     }
 
     creature_config_kwargs['traits'] = getCreatureTraits(
-        materials, energy_materials, waste_materials, convertion_rules,
-        initial_materials)
+        materials, materials_all.energy_materials,
+        materials_all.waste_materials, convertion_rules, initial_materials)
 
     creature_config = None
     if creature_config_kwargs:

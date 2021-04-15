@@ -213,7 +213,7 @@ class Window:
 
     def __drawSideInfo(self):
 
-        materials = self.__simulation.creature_config.materials
+        materials = self.__simulation.creature_config.materials.materials
         screen_size = pygame.display.get_surface().get_size()
         start_point = screen_size[0] - self.__lat_column_size, 0
         creature = self._show_creature
