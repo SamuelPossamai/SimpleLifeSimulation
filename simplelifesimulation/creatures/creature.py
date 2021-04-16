@@ -30,8 +30,9 @@ class Creature(CircleSimulationObject):
 
     def __init__(self, space, *args, **kwargs):
 
-        self.__materials = MaterialsGroup(kwargs.pop('materials', None))
         self.__config = kwargs.pop('config', None)
+        self.__materials = MaterialsGroup(kwargs.pop('materials', None),
+                                          self.__config.materials)
 
         if self.__config is None:
             self.__config = Creature.Config()
@@ -40,9 +41,10 @@ class Creature(CircleSimulationObject):
             self.__materials = MaterialsGroup({
                 material: 0 for material in
                 self.__config.materials.materials.values()
-            })
+            }, self.__config.materials)
         else:
-            self.__materials = MaterialsGroup(self.__materials)
+            self.__materials = MaterialsGroup(
+                self.__materials, self.__config.materials)
 
         if len(args) == 1 and not kwargs:
 
@@ -276,18 +278,8 @@ class Creature(CircleSimulationObject):
             rule.convert(self.__structure, self.__materials,
                          self.getTrait(f'{rule.name}_convertionrate'))
 
-        structure = 0
-        for material in self.__config.materials.structure_materials:
-            structure += \
-                material.structure_efficiency*self.__materials[material]
-
-        energy = 0
-        for material in self.__config.materials.energy_materials:
-            energy += \
-                material.energy_efficiency*self.__materials[material]
-
-        self.__structure = structure
-        self.__energy = energy
+        self.__structure = self.__materials.structure
+        self.__energy = self.__materials.energy
 
         energy_consume_vision = (0.1 + self.getTrait('visiondistance'))*\
             (1 + self.getTrait('visionangle'))

@@ -137,8 +137,9 @@ class MaterialsGroup(MutableMapping):
 
     MASS_MULTIPLIER = 1/10000
 
-    def __init__(self, *args, **kwargs):
-        self.__materials = dict(*args, **kwargs)
+    def __init__(self, materials, config):
+        self.__materials = dict(materials)
+        self.__config = config
         self.__mass = None
         self.__radius = None
         self.__mass_radius_ready = False
@@ -199,6 +200,22 @@ class MaterialsGroup(MutableMapping):
         if self.__mass_radius_ready:
             return self.__radius
         return self.__calcMassAndRadius()[1]
+
+    @property
+    def structure(self):
+        structure = 0
+        for material in self.__config.structure_materials:
+            structure += \
+                material.structure_efficiency*self.__materials[material]
+
+        return structure
+
+    @property
+    def energy(self):
+        energy = 0
+        for material in self.__config.energy_materials:
+            energy += material.energy_efficiency*self.__materials[material]
+        return energy
 
 MaterialList = namedtuple('MaterialList', (
     'materials', 'energy_materials', 'structure_materials', 'waste_materials',
