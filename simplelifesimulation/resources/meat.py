@@ -6,9 +6,15 @@ import pymunk
 from ..simulation.simulationobject import CircleSimulationObject
 from ..simulation.collisiontypes import MEAT_COLLISION_TYPE
 
+from ..creatures.materials.material import MaterialsGroup
+
 class Meat(CircleSimulationObject):
 
     def __init__(self, space, *args, **kwargs):
+
+        self.__config = kwargs.pop('config', None)
+        self.__materials = MaterialsGroup(
+            kwargs.pop('materials', None), self.__config)
 
         if len(args) == 1 and not kwargs:
 
@@ -22,9 +28,7 @@ class Meat(CircleSimulationObject):
         else:
             self.__construct(space, *args, **kwargs)
 
-    def __construct(self, space, x, y, materials):
-
-        self.__materials = self.__materials.copy()
+    def __construct(self, space, x, y):
 
         super().__init__(space, 1, self.__getRadius(), x, y)
 
@@ -39,9 +43,9 @@ class Meat(CircleSimulationObject):
         pass
 
     def __getRadius(self):
-        pass
+        return self.__materials.radius
 
-    def draw(self, painter, color=(255, 255, 50)):
+    def draw(self, painter, color=(255, 100, 100)):
         if self.shape.radius > 0:
             super().draw(painter, color)
 
@@ -50,7 +54,7 @@ class Meat(CircleSimulationObject):
         base_dict = super().toDict()
 
         base_dict['meat'] = {
-            'materials': self.__materials
+            'materials': self.__materials.getSerializable()
         }
 
         return base_dict

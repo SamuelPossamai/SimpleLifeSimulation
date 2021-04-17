@@ -217,6 +217,13 @@ class MaterialsGroup(MutableMapping):
             energy += material.energy_efficiency*self.__materials[material]
         return energy
 
+    @property
+    def getSerializable(self):
+        return {
+            material.name: quantity for material, quantity in
+            self.__materials.items()
+        }
+
 MaterialList = namedtuple('MaterialList', (
     'materials', 'energy_materials', 'structure_materials', 'waste_materials',
     'plant_material'

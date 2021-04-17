@@ -1,4 +1,5 @@
 
+import itertools
 import os
 import random
 from random import randint
@@ -14,6 +15,7 @@ from .collisiontypes import (
 )
 
 from ..resources.plant import Plant
+from ..resources.meat import Meat
 
 from ..creatures.creature import Creature, Species
 
@@ -120,6 +122,7 @@ class Simulation:
 
         self._creatures = []
         self._resources = []
+        self.__meat_rscs = []
 
         if in_file is None:
 
@@ -145,6 +148,12 @@ class Simulation:
                 (Resource.fromDict(self._space, resource)
                 for resource in in_file_content.get('resources', ()))
                 if resource is not None
+            ]
+            self.__meat_rscs = [
+                meat for meat in
+                (Meat.fromDict(self._space, meat)
+                for meat in in_file_content.get('meats', ()))
+                if meat is not None
             ]
 
         if self.__use_wall is True:
@@ -193,7 +202,8 @@ class Simulation:
                 'species': [species.toDict() for species in
                             Species.getAllSpecies()],
                 'resources': [rsc.toDict() for rsc in self._resources],
-                'creatures': [creature.toDict() for creature in self._creatures]
+                'creatures': [creature.toDict() for creature in self._creatures],
+                'meats': [meat.toDict() for meat in self.__meat_rscs],
             }, file)
 
     @property
@@ -202,7 +212,7 @@ class Simulation:
 
     @property
     def resources(self):
-        return self._resources
+        return itertools.chain(self._resources, self.__meat_rscs)
 
     @property
     def creature_config(self):
@@ -243,6 +253,24 @@ class Simulation:
 
         try:
             self._resources.remove(resource)
+        except ValueError:
+            return False
+
+        resource.destroy()
+        return True
+
+    def newMeatResource(self, x, y, materials):
+
+        resource = Meat(self._space, x, y, materials=materials)
+
+        self.__meat_rscs.append(resource)
+
+        return resource
+
+    def delMeatResource(self, resource):
+
+        try:
+            self.__meat_rscs.remove(resource)
         except ValueError:
             return False
 

@@ -300,7 +300,7 @@ class Creature(CircleSimulationObject):
                 total_rsc += self.__materials.get(material)*material.mass
 
             simulation.delCreature(self)
-            simulation.newResource(*self.body.position, total_rsc, 0)
+            simulation.newMeatResource(*self.body.position, self.__materials)
             return
 
         self.__consumeEnergy(base_energy_consume)
@@ -522,8 +522,7 @@ class Creature(CircleSimulationObject):
             'id': self._id,
             'species': self.__species.name,
             'traits': self.__traits,
-            'materials': {material.name: quantity for material, quantity in
-                          self.__materials.items()}
+            'materials': self.__materials.getSerializable()
         }
 
         return base_dict
