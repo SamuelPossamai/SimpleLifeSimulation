@@ -9,7 +9,7 @@ class CreatureMaterial:
     def __init__(self, name, description=None, mass=1, density=1,
                  structure_efficiency=0, energy_efficiency=0,
                  is_plant_material=False, waste_material=None, is_waste=False,
-                 short_name=None):
+                 short_name=None, decomposition_rate=1e-5):
 
         self.__name = name
         self.__desc = description
@@ -21,6 +21,7 @@ class CreatureMaterial:
         self.__related_rules = set()
         self.__waste_material = waste_material
         self.__is_plant_material = is_plant_material
+        self.__decompose = decomposition_rate
 
         if short_name is None:
             if len(name) > 2:
@@ -95,6 +96,10 @@ class CreatureMaterial:
     def is_waste(self):
         return self.__is_waste
 
+    @property
+    def decomposition_rate(self):
+        return self.__decompose
+
     def __str__(self):
         return self.__name
 
@@ -128,7 +133,8 @@ def __loadMaterial(name, material, loaded_materials, all_materials):
         structure_efficiency=material.get('structure_efficiency', 0),
         is_waste=material.get('is_waste', False),
         is_plant_material=material.get('is_plant_material', False),
-        waste_material=waste_material
+        waste_material=waste_material,
+        decomposition_rate=material.get('decomposition_rate', 1e-5)
     )
 
     return material
