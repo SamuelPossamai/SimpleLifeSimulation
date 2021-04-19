@@ -7,29 +7,52 @@
     "energy": {
         "energy_efficiency": 1,
         "waste_material": "waste",
+        "undigested material": "undigested energy",
         "decomposition_rate": 0.05
     },
     "heavy structure": {
         "structure_efficiency": 0.8,
         "density": 3,
-        "decomposition_rate": 1e-5
+        "decomposition_rate": 1e-5,
+        "undigested material": "undigested heavy structure"
     },
     "normal structure": {
         "structure_efficiency": 1,
-        "decomposition_rate": 5e-5
+        "decomposition_rate": 5e-5,
+        "undigested material": "undigested normal structure"
     },
     "light structure": {
         "structure_efficiency": 0.5,
         "density": 0.5,
-        "decomposition_rate": 1e-3
+        "decomposition_rate": 1e-3,
+        "undigested material": "undigested light structure"
     },
     "storage": {
         "density": 4,
-        "decomposition_rate": 5e-4
+        "decomposition_rate": 5e-4,
+        "undigested material": "undigested storage"
     },
     "waste": {
         "is_waste": true,
         "density": 2,
         "decomposition_rate": 0.02
+    },
+    "undigested energy": {
+        "decomposition_rate": 0.05
+    },
+    "undigested heavy structure": {
+        "density": 3,
+        "decomposition_rate": 1e-5
+    },
+    "undigested normal structure": {
+        "decomposition_rate": 5e-5
+    },
+    "undigested light structure": {
+        "density": 0.5,
+        "decomposition_rate": 1e-3
+    },
+    "undigested storage": {
+        "density": 4,
+        "decomposition_rate": 5e-4
     }
 }
