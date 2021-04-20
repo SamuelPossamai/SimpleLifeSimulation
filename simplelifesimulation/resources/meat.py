@@ -15,6 +15,7 @@ class Meat(CircleSimulationObject):
         self.__config = kwargs.pop('config', None)
         self.__materials = MaterialsGroup(
             kwargs.pop('materials', None), self.__config)
+        self.__decomposed = 0
 
         if len(args) == 1 and not kwargs:
 
@@ -37,7 +38,12 @@ class Meat(CircleSimulationObject):
             categories=(1 << (MEAT_COLLISION_TYPE - 1)))
 
     def step(self, simulation):
-        pass
+        for material, qtd in self.__materials.items():
+
+            diff_qtd = Math.ceil(material.decomposition_rate*qtd)
+
+            self.__materials[material] -= diff_qtd
+            self.__decomposed += diff_qtd*material.mass
 
     def consume(self, _simulation, quantity):
         pass
