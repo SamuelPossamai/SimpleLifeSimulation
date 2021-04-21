@@ -164,6 +164,34 @@ class MaterialsGroup(MutableMapping):
         self.__radius = None
         self.__mass_radius_ready = False
 
+    def merge(self, other, multiplier=1):
+
+        for material, qtd in other.__materials:
+            self.__materials[material] = \
+                self.__materials.get(material, 0) + multiplier*qtd
+
+        self.__mass_radius_ready = False
+
+    def __add__(self, other):
+        if not isinstance(other, MaterialsGroup):
+            return NotImplemented
+
+        output = MaterialsGroup(self.__materials, self.__config)
+
+        output.merge(other)
+
+        return output
+
+    def __sub__(self, other):
+        if not isinstance(other, MaterialsGroup):
+            return NotImplemented
+
+        output = MaterialsGroup(self.__materials, self.__config, multiplier=-1)
+
+        output.merge(other)
+
+        return output
+
     def __getitem__(self, key):
         return self.__materials[key]
 
