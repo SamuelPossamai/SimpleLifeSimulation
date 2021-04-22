@@ -157,7 +157,7 @@ class MaterialsGroup(MutableMapping):
 
     MASS_MULTIPLIER = 1/10000
 
-    def __init__(self, materials, config):
+    def __init__(self, materials, config=None):
         self.__materials = dict(materials)
         self.__config = config
         self.__mass = None
@@ -166,7 +166,7 @@ class MaterialsGroup(MutableMapping):
 
     def merge(self, other, multiplier=1):
 
-        for material, qtd in other.__materials:
+        for material, qtd in other.__materials.items():
             self.__materials[material] = \
                 self.__materials.get(material, 0) + multiplier*qtd
 
@@ -251,6 +251,10 @@ class MaterialsGroup(MutableMapping):
 
     @property
     def structure(self):
+
+        if self.__config is None:
+            return float('NaN')
+
         structure = 0
         for material in self.__config.structure_materials:
             structure += \
@@ -260,6 +264,10 @@ class MaterialsGroup(MutableMapping):
 
     @property
     def energy(self):
+
+        if self.__config is None:
+            return float('NaN')
+
         energy = 0
         for material in self.__config.energy_materials:
             energy += material.energy_efficiency*self.__materials[material]

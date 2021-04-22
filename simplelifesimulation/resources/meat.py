@@ -12,7 +12,7 @@ class Meat(CircleSimulationObject):
 
     def __init__(self, space, *args, **kwargs):
 
-        self.__config = kwargs.pop('config', None)
+        self.__config = kwargs.pop('materials_config', None)
         self.__materials = MaterialsGroup(
             kwargs.pop('materials', None), self.__config)
         self.__decomposed = 0

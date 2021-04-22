@@ -203,15 +203,17 @@ class Creature(CircleSimulationObject):
 
         eat_speed_base = (0.3 + self.getTrait('eatingspeed'))/3
         eat_speed = 40*self.__config.eating_multiplier*eat_speed_base
-        energy_gained = resource.consume(simulation, self.body.mass*eat_speed)
+        materials_gained = resource.consume(
+            simulation, self.body.mass*eat_speed)
 
-        if energy_gained <= 0:
+        mass_gained = materials_gained.mass
+
+        if mass_gained <= 0:
             return
 
-        self.__materials[self.__config.materials.plant_material] += \
-            energy_gained
+        self.__materials.merge(materials_gained)
 
-        self.__spent_energy += int((eat_speed_base/2)*energy_gained)
+        self.__spent_energy += int((eat_speed_base/2)*mass_gained)
 
         self._is_eating = 5
 

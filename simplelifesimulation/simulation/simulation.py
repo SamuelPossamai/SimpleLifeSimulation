@@ -243,7 +243,8 @@ class Simulation:
     def newResource(self, x, y, ext_rsc, int_rsc):
 
         resource = Plant(self._space, x, y, ext_rsc, int_rsc,
-                         convert_interval=self.__resource_convert_interval)
+                         convert_interval=self.__resource_convert_interval,
+                         materials_config=self.__creature_config.materials)
 
         self._resources.append(resource)
 
@@ -261,7 +262,8 @@ class Simulation:
 
     def newMeatResource(self, x, y, materials):
 
-        resource = Meat(self._space, x, y, materials=materials)
+        resource = Meat(self._space, x, y, materials=materials,
+                        materials_config=self.__creature_config.materials)
 
         self.__meat_rscs.append(resource)
 

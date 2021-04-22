@@ -3,12 +3,16 @@ from math import sqrt
 
 import pymunk
 
+from ..creatures.materials.material import MaterialsGroup
+
 from ..simulation.simulationobject import CircleSimulationObject
 from ..simulation.collisiontypes import RESOURCE_COLLISION_TYPE
 
 class Plant(CircleSimulationObject):
 
     def __init__(self, space, *args, **kwargs):
+
+        self.__materials_config = kwargs.pop('materials_config', None)
 
         if len(args) == 1 and not kwargs:
 
@@ -96,7 +100,10 @@ class Plant(CircleSimulationObject):
         new_radius = self.__getRadius()
         if new_radius != self.shape.radius:
             self.shape.unsafe_set_radius(new_radius)
-        return quantity
+
+        return MaterialsGroup({
+            self.__materials_config.plant_material: quantity
+        })
 
     def __getRadius(self):
         return sqrt(self._ext_rsc/20000)
