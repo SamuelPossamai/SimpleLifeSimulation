@@ -258,7 +258,7 @@ class Window:
         to_write_list = zip(labels, values)
 
         start_y = start_point[1] + 50 - self.__cur_lat_column_y_offset
-        self.__writeText(to_write_list, start_point, start_y)
+        last_y_end = self.__writeText(to_write_list, start_point, start_y)
 
         if creature is not None:
             materials_text = (
@@ -266,7 +266,7 @@ class Window:
                 for material in materials.values()
             )
 
-            self.__writeText(materials_text, start_point,
+            last_y_end = self.__writeText(materials_text, start_point,
                              230 - self.__cur_lat_column_y_offset, double=True)
 
         textsurface = self._medium_font.render('Genes', False, (0, 0, 0))
@@ -277,7 +277,7 @@ class Window:
         self._screen.blit(
             textsurface,
             (start_point[0] + (self.__lat_column_size - text_size)/2,
-             start_point[1] + 250 + materials_text_offset))
+             last_y_end + 10))
 
         labels = ('Speed', 'Eating Speed', 'Vision Dist.', 'Vision Angle')
 
@@ -295,7 +295,7 @@ class Window:
         to_write_list = zip(labels, values)
 
         start_y = self.__writeText(to_write_list, start_point,
-                                   290 + materials_text_offset)
+                                   last_y_end + 40)
 
         if creature is not None:
             rules_text = (
@@ -311,14 +311,19 @@ class Window:
 
             for material_name, material in materials.items():
 
+                if len(material_name) > 15:
+                    material_label = material.short_name
+                else:
+                    material_label = material_name
+
                 child_qtd = creature.getTrait(f'{material_name}_childqtd')
                 min_to_reproduce = creature.getTrait(
                     f'{material_name}_childqtd_min_to_reproduce')
 
                 childqtd_text.append(
-                    (f'Child {material_name}', '%.2E' % child_qtd))
+                    (f'Child {material_label}', '%.2E' % child_qtd))
                 childqtd_min_to_reproduce_text.append(
-                    (f'{material_name} to reproduce',
+                    (f'{material_label} to reproduce',
                      '%.2E' % (min_to_reproduce*child_qtd)))
 
             start_y = self.__writeText(

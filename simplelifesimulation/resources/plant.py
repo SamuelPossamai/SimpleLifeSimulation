@@ -94,7 +94,9 @@ class Plant(CircleSimulationObject):
             new_radius = self.__getRadius()
             if new_radius != self.shape.radius:
                 self.shape.unsafe_set_radius(new_radius)
-            return consumed
+            return MaterialsGroup({
+                self.__materials_config.plant_material: consumed
+            })
 
         self._ext_rsc -= quantity
         new_radius = self.__getRadius()
