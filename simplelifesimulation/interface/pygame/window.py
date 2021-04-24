@@ -311,6 +311,9 @@ class Window:
 
             for material_name, material in materials.items():
 
+                if material.ignore_for_child:
+                    continue
+
                 if len(material_name) > 15:
                     material_label = material.short_name
                 else:

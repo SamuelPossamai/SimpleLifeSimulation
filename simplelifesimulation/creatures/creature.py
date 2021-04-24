@@ -166,6 +166,10 @@ class Creature(CircleSimulationObject):
         child_materials = {}
         for material_name, material in \
                 self.__config.materials.materials.items():
+
+            if material.ignore_for_child:
+                continue
+
             material_qtd = self.__materials.get(material, 0)
 
             child_qtd = self.getTrait(f'{material_name}_childqtd')
@@ -309,6 +313,10 @@ class Creature(CircleSimulationObject):
 
         for material_name, material in \
                 self.__config.materials.materials.items():
+
+            if material.ignore_for_child:
+                continue
+
             material_qtd = self.__materials.get(material, 0)
 
             child_qtd = self.getTrait(f'{material_name}_childqtd')

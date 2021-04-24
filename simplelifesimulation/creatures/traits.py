@@ -85,6 +85,9 @@ def getCreatureTraits(materials, energy_materials, waste_materials,
     traits = CREATURE_BASE_TRAITS.copy()
 
     for material_name, material in materials.items():
+        if material.ignore_for_child:
+            continue
+
         traits.append(CreatureTrait(
             f'{material_name}_childqtd', 1.e4, 1.e7, integer_only=True,
             exponential_random=True, proportional_mutation=True,

@@ -2,7 +2,8 @@
     "plant material": {
         "is_plant_material": true,
         "density": 1.5,
-        "decomposition_rate": 0.01
+        "decomposition_rate": 0.01,
+        "ignore_for_child": true
     },
     "energy": {
         "energy_efficiency": 1,
@@ -38,21 +39,26 @@
         "decomposition_rate": 0.02
     },
     "undigested energy": {
-        "decomposition_rate": 0.05
+        "decomposition_rate": 0.05,
+        "ignore_for_child": true
     },
     "undigested heavy structure": {
         "density": 3,
-        "decomposition_rate": 1e-5
+        "decomposition_rate": 1e-5,
+        "ignore_for_child": true
     },
     "undigested normal structure": {
-        "decomposition_rate": 5e-5
+        "decomposition_rate": 5e-5,
+        "ignore_for_child": true
     },
     "undigested light structure": {
         "density": 0.5,
-        "decomposition_rate": 1e-3
+        "decomposition_rate": 1e-3,
+        "ignore_for_child": true
     },
     "undigested storage": {
         "density": 4,
-        "decomposition_rate": 5e-4
+        "decomposition_rate": 5e-4,
+        "ignore_for_child": true
     }
 }

@@ -10,7 +10,7 @@ class CreatureMaterial:
                  structure_efficiency=0, energy_efficiency=0,
                  is_plant_material=False, waste_material=None, is_waste=False,
                  short_name=None, decomposition_rate=1e-5,
-                 undigested_material=None):
+                 undigested_material=None, ignore_for_child=False):
 
         self.__name = name
         self.__desc = description
@@ -24,6 +24,7 @@ class CreatureMaterial:
         self.__is_plant_material = is_plant_material
         self.__decompose = decomposition_rate
         self.__undigested = undigested_material
+        self.__ignore_for_child = ignore_for_child
 
         if short_name is None:
             if len(name) > 2:
@@ -106,6 +107,10 @@ class CreatureMaterial:
     def undigested_material(self):
         return self.__undigested
 
+    @property
+    def ignore_for_child(self):
+        return self.__ignore_for_child
+
     def __str__(self):
         return self.__name
 
@@ -148,7 +153,8 @@ def __loadMaterial(name, material, loaded_materials, all_materials):
         is_plant_material=material.get('is_plant_material', False),
         waste_material=required_materials[0],
         undigested_material=required_materials[1],
-        decomposition_rate=material.get('decomposition_rate', 1e-5)
+        decomposition_rate=material.get('decomposition_rate', 1e-5),
+        ignore_for_child=material.get('ignore_for_child', False)
     )
 
     return material
