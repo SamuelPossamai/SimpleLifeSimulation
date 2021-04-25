@@ -98,7 +98,7 @@
         ],
         "speed": 0.15
     },
-    "digest heavy structure": {
+    "destroy heavy structure": {
         "input": [
             {
                 "material": "heavy structure",
@@ -117,7 +117,7 @@
         ],
         "speed": 0.03
     },
-    "digest normal structure": {
+    "destroy normal structure": {
         "input": [
             {
                 "material": "normal structure",
@@ -136,7 +136,7 @@
         ],
         "speed": 0.2
     },
-    "digest light structure": {
+    "destroy light structure": {
         "input": [
             {
                 "material": "light structure",
@@ -174,7 +174,7 @@
         ],
         "speed": 0.2
     },
-    "digest storage": {
+    "destroy storage": {
         "input": [
             {
                 "material": "storage",
@@ -192,5 +192,100 @@
             }
         ],
         "speed": 0.3
+    },
+    "digest energy": {
+        "input": [
+            {
+                "material": "undigested energy",
+                "quantity": 2
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 1
+            },
+            {
+                "material": "waste",
+                "quantity": 1
+            }
+        ],
+        "speed": 20
+    },
+    "digest heavy structure": {
+        "input": [
+            {
+                "material": "undigested heavy structure",
+                "quantity": 3
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 1
+            },
+            {
+                "material": "waste",
+                "quantity": 2
+            }
+        ],
+        "speed": 0.3
+    },
+    "digest normal structure": {
+        "input": [
+            {
+                "material": "undigested normal structure",
+                "quantity": 2
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 1
+            },
+            {
+                "material": "waste",
+                "quantity": 1
+            }
+        ],
+        "speed": 2
+    },
+    "digest light structure": {
+        "input": [
+            {
+                "material": "undigested light structure",
+                "quantity": 4
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 1
+            },
+            {
+                "material": "waste",
+                "quantity": 3
+            }
+        ],
+        "speed": 1
+    },
+    "digest storage": {
+        "input": [
+            {
+                "material": "undigested storage",
+                "quantity": 2
+            },
+            {
+                "material": "waste",
+                "quantity": 1
+            }
+        ],
+        "output": [
+            {
+                "material": "energy",
+                "quantity": 3
+            }
+        ],
+        "speed": 3
     }
 }
