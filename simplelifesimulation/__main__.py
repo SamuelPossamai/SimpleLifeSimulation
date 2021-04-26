@@ -159,6 +159,10 @@ def main():
         '-g', '--graphic-interface', default='pygame',
         help='Choose which user interface to use'
     )
+    parser.add_argument(
+        '--energy-consume-multiplier', default=1, type=float,
+        help='Creature energy consume multiplier'
+    )
 
     args = parser.parse_args()
 
@@ -167,7 +171,9 @@ def main():
     else:
         screen_size = None
 
-    creature_config_kwargs = {}
+    creature_config_kwargs = {
+        'energy_consume_multiplier': args.energy_consume_multiplier
+    }
 
     material_rules_config_file = args.material_rules_config
     materials_config_file = args.materials_config
