@@ -4,7 +4,7 @@ from math import sqrt
 import pymunk
 
 from ..simulation.simulationobject import CircleSimulationObject
-from ..simulation.collisiontypes import MEAT_COLLISION_TYPE
+from ..simulation.collisiontypes import RESOURCE_COLLISION_TYPE
 
 from ..creatures.materials.material import MaterialsGroup
 
@@ -33,9 +33,12 @@ class Meat(CircleSimulationObject):
 
         super().__init__(space, 1, self.__getRadius(), x, y)
 
-        self.shape.collision_type = MEAT_COLLISION_TYPE
+        self.shape.collision_type = RESOURCE_COLLISION_TYPE
         self.shape.filter = pymunk.ShapeFilter(
-            categories=(1 << (MEAT_COLLISION_TYPE - 1)))
+            categories=(1 << (RESOURCE_COLLISION_TYPE - 1)))
+
+    def merge(self, other):
+        return MaterialsGroup({})
 
     def step(self, simulation):
         for material, qtd in self.__materials.items():

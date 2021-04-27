@@ -32,6 +32,9 @@ class Plant(CircleSimulationObject):
 
     def merge(self, other):
 
+        if not isinstance(other, Plant):
+            return None
+
         if other._ext_rsc > self._ext_rsc:
             return other.merge(self)
 
