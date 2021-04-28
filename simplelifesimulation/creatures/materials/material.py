@@ -234,20 +234,23 @@ class MaterialsGroup(MutableMapping):
             total_mass += material.mass*qtd
             total_volume += material.mass*qtd/material.density
 
-        final_mass = total_mass*MaterialsGroup.MASS_MULTIPLIER
         final_radius = sqrt(total_volume*MaterialsGroup.MASS_MULTIPLIER)
 
         self.__mass_radius_ready = True
-        self.__mass = final_mass
+        self.__mass = total_mass
         self.__radius = final_radius
 
-        return final_mass, final_radius
+        return total_mass, final_radius
 
     @property
-    def mass(self):
+    def base_mass(self):
         if self.__mass_radius_ready:
             return self.__mass
         return self.__calcMassAndRadius()[0]
+
+    @property
+    def mass(self):
+        return self.base_mass*MaterialsGroup.MASS_MULTIPLIER
 
     @property
     def radius(self):

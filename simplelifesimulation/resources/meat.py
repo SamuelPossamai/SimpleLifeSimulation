@@ -1,5 +1,5 @@
 
-from math import sqrt
+from math import sqrt, ceil
 
 import pymunk
 
@@ -49,7 +49,28 @@ class Meat(CircleSimulationObject):
             self.__decomposed += diff_qtd*material.mass
 
     def consume(self, _simulation, quantity):
-        pass
+
+        base_mass = self.__materials.base_mass
+
+        mult = quantity/base_mass
+
+        consumed_materials = {}
+
+        for material, qtd in self.__materials.items():
+            removed_qtd = ceil(qtd*mult/material.mass)
+
+            if removed_qtd > qtd:
+                removed_qtd = qtd
+
+            self.__materials[material] = qtd - removed_qtd
+
+            undigested_material = material.undigested_material
+            if undigested_material is None:
+                undigested_material = material
+
+            consumed_materials[undigested_material] = removed_qtd
+
+        return MaterialsGroup(consumed_materials)
 
     def __getRadius(self):
         return self.__materials.radius
