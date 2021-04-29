@@ -301,12 +301,7 @@ class Creature(CircleSimulationObject):
         self.__spent_energy = 0
 
         if base_energy_consume > self.__energy:
-            total_rsc = 0
-            for material in self.__config.materials.materials.values():
-                total_rsc += self.__materials.get(material)*material.mass
-
-            simulation.delCreature(self)
-            simulation.newMeatResource(*self.body.position, self.__materials)
+            self.kill()
             return
 
         self.__consumeEnergy(base_energy_consume)
@@ -382,6 +377,10 @@ class Creature(CircleSimulationObject):
                 simulation.newResource(*self.body.position, waste_qtd, 0)
 
         self.__updateSelf()
+
+    def kill(self, simulation):
+        simulation.delCreature(self)
+        simulation.newMeatResource(*self.body.position, self.__materials)
 
     def __doSpeed(self, factor):
 

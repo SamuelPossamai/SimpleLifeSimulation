@@ -9,7 +9,7 @@ from pygame.constants import (
     QUIT, KEYDOWN, K_ESCAPE, K_SPACE, K_p, MOUSEBUTTONUP, K_EQUALS, K_KP_PLUS,
     K_KP_MINUS, K_MINUS, KMOD_LCTRL, KMOD_RCTRL, K_a, K_s, K_d, K_w, K_LEFT,
     K_DOWN, K_RIGHT, K_UP, KEYUP, K_PAGEDOWN, K_PAGEUP, MOUSEBUTTONDOWN,
-    MOUSEMOTION
+    MOUSEMOTION, K_DELETE
 )
 # pylint: enable=no-name-in-module
 
@@ -116,6 +116,8 @@ class Window:
                     self.__until_event[self.moveLateralColumnDown] = 10
                 elif key == K_PAGEUP:
                     self.__until_event[self.moveLateralColumnUp] = 10
+                elif key == K_DELETE:
+                    self._show_creature.kill(self.__simulation)
 
             elif event.type == MOUSEBUTTONDOWN:
 
