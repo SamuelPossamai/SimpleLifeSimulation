@@ -31,7 +31,7 @@ class Meat(CircleSimulationObject):
 
     def __construct(self, space, x, y):
 
-        super().__init__(space, 1, self.__getRadius(), x, y)
+        super().__init__(space, 1e8, self.__getRadius(), x, y)
 
         self.shape.collision_type = RESOURCE_COLLISION_TYPE
         self.shape.filter = pymunk.ShapeFilter(
