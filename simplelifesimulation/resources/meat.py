@@ -31,7 +31,7 @@ class Meat(CircleSimulationObject):
 
     def __construct(self, space, x, y):
 
-        super().__init__(space, 1e8, self.__getRadius(), x, y)
+        super().__init__(space, 1e8, self.__materials.radius, x, y)
 
         self.shape.collision_type = RESOURCE_COLLISION_TYPE
         self.shape.filter = pymunk.ShapeFilter(
@@ -52,6 +52,9 @@ class Meat(CircleSimulationObject):
 
         base_mass = self.__materials.base_mass
 
+        if base_mass == 0:
+            return
+
         mult = quantity/base_mass
 
         consumed_materials = {}
@@ -70,10 +73,9 @@ class Meat(CircleSimulationObject):
 
             consumed_materials[undigested_material] = removed_qtd
 
-        return MaterialsGroup(consumed_materials)
+        self.shape.unsafe_set_radius(self.__materials.radius)
 
-    def __getRadius(self):
-        return self.__materials.radius
+        return MaterialsGroup(consumed_materials)
 
     def draw(self, painter, color=(255, 100, 100)):
         if self.shape.radius > 0:

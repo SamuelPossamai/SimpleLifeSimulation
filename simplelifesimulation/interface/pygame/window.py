@@ -117,7 +117,8 @@ class Window:
                 elif key == K_PAGEUP:
                     self.__until_event[self.moveLateralColumnUp] = 10
                 elif key == K_DELETE:
-                    self._show_creature.kill(self.__simulation)
+                    if self._show_creature is not None:
+                        self._show_creature.kill(self.__simulation)
 
             elif event.type == MOUSEBUTTONDOWN:
 
