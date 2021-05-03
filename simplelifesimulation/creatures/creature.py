@@ -301,7 +301,7 @@ class Creature(CircleSimulationObject):
         self.__spent_energy = 0
 
         if base_energy_consume > self.__energy:
-            self.kill()
+            self.kill(simulation)
             return
 
         self.__consumeEnergy(base_energy_consume)
