@@ -6,6 +6,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Color, Ellipse
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.core.window import Window as KivyWindow
 
 from .painter import Painter
 
@@ -32,23 +33,9 @@ class Window(App):
                                        self.__simulation.creatures):
                 obj.draw(self.__painter)
 
-    def add_rects(self, label, widget, count, *largs):
-        label.text = str(int(label.text) + count)
-        with widget.canvas:
-            for x in range(count):
-                Color(r(), 1, 1, mode='hsv')
-                Circle(pos=(r() * widget.width + widget.x,
-                               r() * widget.height + widget.y), size=(20, 20))
-
-    def double_rects(self, label, widget, *largs):
-        count = int(label.text)
-        self.add_rects(label, widget, count, *largs)
-
-    def reset_rects(self, label, widget, *largs):
-        label.text = '0'
-
-
     def build(self):
+
+        KivyWindow.clearcolor = (1, 1, 1, 1)
 
         self.__widget = Widget()
 
