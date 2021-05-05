@@ -227,6 +227,26 @@ class Window:
                          (start_point[0], start_point[1],
                           self.__lat_column_size, screen_size[1]))
 
+        textsurface = self._medium_font.render('Environment', False,
+                                               (0, 0, 0))
+        text_size, _ = textsurface.get_size()
+
+        self._screen.blit(
+            textsurface,
+            (start_point[0] + (self.__lat_column_size - text_size)/2,
+             start_point[1] + 20 - self.__cur_lat_column_y_offset))
+
+        to_write_list = (
+            ('Creatures Total Mass', str(0)),
+            ('Plants Total Mass', str(0)),
+            ('Meat Total Mass', str(0)),
+            ('Non Allocated Mass', str(0)),
+            ('Total Mass', str(0))
+        )
+
+        start_y = start_point[1] + 50 - self.__cur_lat_column_y_offset
+        last_y_end = self.__writeText(to_write_list, start_point, start_y)
+
         if creature is None:
             creature_number_text = '-'
         else:
@@ -239,7 +259,7 @@ class Window:
         self._screen.blit(
             textsurface,
             (start_point[0] + (self.__lat_column_size - text_size)/2,
-             start_point[1] + 20 - self.__cur_lat_column_y_offset))
+             last_y_end + 10))
 
         labels = ('Species', 'Structure', 'Energy', 'Weight', 'Radius',
                   'Position', 'Speed', 'Vision Dist.', 'Vision Angle')
@@ -260,7 +280,7 @@ class Window:
 
         to_write_list = zip(labels, values)
 
-        start_y = start_point[1] + 50 - self.__cur_lat_column_y_offset
+        start_y = last_y_end + 40
         last_y_end = self.__writeText(to_write_list, start_point, start_y)
 
         if creature is not None:
@@ -270,7 +290,7 @@ class Window:
             )
 
             last_y_end = self.__writeText(materials_text, start_point,
-                             230 - self.__cur_lat_column_y_offset, double=True)
+                                          last_y_end + 10, double=True)
 
         textsurface = self._medium_font.render('Genes', False, (0, 0, 0))
         text_size, _ = textsurface.get_size()
