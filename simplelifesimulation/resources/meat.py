@@ -37,6 +37,10 @@ class Meat(CircleSimulationObject):
         self.shape.filter = pymunk.ShapeFilter(
             categories=(1 << (RESOURCE_COLLISION_TYPE - 1)))
 
+    @property
+    def materials_mass(self):
+        return self.__materials.mass
+
     def merge(self, other):
         return MaterialsGroup({})
 

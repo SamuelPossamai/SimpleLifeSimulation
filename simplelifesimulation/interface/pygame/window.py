@@ -245,21 +245,30 @@ class Window:
 
         resources_total_mass = 0
         non_alocated_total_mass = 0
-        for resource in self.__simulation.resources:
+        for resource in self.__simulation.plant_resources:
             resources_total_mass += resource.external_resources
             non_alocated_total_mass += resource.internal_resources
 
-        resources_total_mass = round(resources_total_mass*Creature.MASS_MULTIPLIER)
-        non_alocated_total_mass = round(non_alocated_total_mass*Creature.MASS_MULTIPLIER)
+        resources_total_mass = round(
+            resources_total_mass*Creature.MASS_MULTIPLIER)
+        non_alocated_total_mass = round(
+            non_alocated_total_mass*Creature.MASS_MULTIPLIER)
+
+        meat_total_mass = 0
+        for meat in self.__simulation.meat_resources:
+            meat_total_mass += meat.materials_mass
+
+        meat_total_mass = round(meat_total_mass)
 
         to_write_list = (
             ('Creatures Total Mass', str(creature_total_mass)),
             ('Plants Total Mass', str(resources_total_mass)),
-            ('Meat Total Mass', str(0)),
+            ('Meat Total Mass', str(meat_total_mass)),
             ('Non Allocated Mass', str(non_alocated_total_mass)),
             ('Total Mass', str(creature_total_mass +
                                resources_total_mass +
-                               non_alocated_total_mass))
+                               non_alocated_total_mass +
+                               meat_total_mass))
         )
 
         start_y = start_point[1] + 50 - self.__cur_lat_column_y_offset

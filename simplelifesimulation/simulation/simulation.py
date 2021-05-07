@@ -215,6 +215,14 @@ class Simulation:
         return itertools.chain(self._resources, self.__meat_rscs)
 
     @property
+    def plant_resources(self):
+        return self._resources
+
+    @property
+    def meat_resources(self):
+        return self.__meat_rscs
+
+    @property
     def creature_config(self):
         return self.__creature_config
 
