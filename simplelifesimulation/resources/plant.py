@@ -30,6 +30,14 @@ class Plant(CircleSimulationObject):
         else:
             self.__construct(space, *args, **kwargs)
 
+    @property
+    def internal_resources(self):
+        return self._int_rsc
+
+    @property
+    def external_resources(self):
+        return self._ext_rsc
+
     def merge(self, other):
 
         if not isinstance(other, Plant):

@@ -14,6 +14,7 @@ from pygame.constants import (
 # pylint: enable=no-name-in-module
 
 from ...simulation.collisiontypes import CREATURE_COLLISION_TYPE
+from ...creatures.creature import Creature
 
 from .painter import Painter
 
@@ -236,12 +237,29 @@ class Window:
             (start_point[0] + (self.__lat_column_size - text_size)/2,
              start_point[1] + 20 - self.__cur_lat_column_y_offset))
 
+        creature_total_mass = 0
+        for creature in self.__simulation.creatures:
+            creature_total_mass += creature.body.mass
+
+        creature_total_mass = round(creature_total_mass)
+
+        resources_total_mass = 0
+        non_alocated_total_mass = 0
+        for resource in self.__simulation.resources:
+            resources_total_mass += resource.external_resources
+            non_alocated_total_mass += resource.internal_resources
+
+        resources_total_mass = round(resources_total_mass*Creature.MASS_MULTIPLIER)
+        non_alocated_total_mass = round(non_alocated_total_mass*Creature.MASS_MULTIPLIER)
+
         to_write_list = (
-            ('Creatures Total Mass', str(0)),
-            ('Plants Total Mass', str(0)),
+            ('Creatures Total Mass', str(creature_total_mass)),
+            ('Plants Total Mass', str(resources_total_mass)),
             ('Meat Total Mass', str(0)),
-            ('Non Allocated Mass', str(0)),
-            ('Total Mass', str(0))
+            ('Non Allocated Mass', str(non_alocated_total_mass)),
+            ('Total Mass', str(creature_total_mass +
+                               resources_total_mass +
+                               non_alocated_total_mass))
         )
 
         start_y = start_point[1] + 50 - self.__cur_lat_column_y_offset
